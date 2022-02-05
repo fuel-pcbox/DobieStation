@@ -1,15 +1,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "ee_jit.hpp"
+#include <ee/jit/ee_jit.hpp>
 #include "emotion.hpp"
-#include "emotiondisasm.hpp"
-#include "emotioninterpreter.hpp"
-#include "vu.hpp"
+#include <ee/interpreter/emotiondisasm.hpp>
+#include <ee/interpreter/emotioninterpreter.hpp>
+#include <ee/vu/vu.hpp>
 
-#include "../errors.hpp"
-#include "../emulator.hpp"
-#include "../sif.hpp"
+#include <util/errors.hpp>
+#include <emulator.hpp>
+#include <sif.hpp>
 
 //#define SKIPMPEG_ON
 

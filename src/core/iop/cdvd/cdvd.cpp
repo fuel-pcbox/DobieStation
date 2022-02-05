@@ -6,12 +6,10 @@
 #include "cso_reader.hpp"
 #include "iso_reader.hpp"
 #include "chd_reader.hpp"
-
-#include "../iop_dma.hpp"
-#include "../iop_intc.hpp"
-
-#include "../../errors.hpp"
-#include "../../scheduler.hpp"
+#include <iop/iop_dma.hpp>
+#include <iop/iop_intc.hpp>
+#include <util/errors.hpp>
+#include <scheduler.hpp>
 
 using namespace std;
 

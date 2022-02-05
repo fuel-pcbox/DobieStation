@@ -1,5 +1,5 @@
 #include "spu.hpp"
-#include "../../errors.hpp"
+#include <util/errors.hpp>
 
 uint32_t SPU::translate_reverb_offset(int offset)
 {

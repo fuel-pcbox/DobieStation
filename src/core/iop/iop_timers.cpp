@@ -2,9 +2,9 @@
 #include <cstdio>
 #include "iop_timers.hpp"
 #include "iop_intc.hpp"
-#include "../emulator.hpp"
-#include "../errors.hpp"
-#include "../scheduler.hpp"
+#include <emulator.hpp>
+#include <util/errors.hpp>
+#include <scheduler.hpp>
 
 IOPTiming::IOPTiming(IOP_INTC* intc, Scheduler* scheduler) : intc(intc), scheduler(scheduler)
 {

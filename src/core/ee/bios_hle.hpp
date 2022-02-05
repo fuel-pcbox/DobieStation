@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "emotion.hpp"
+#include <ee/emotion.hpp>
 
 enum CALL_PARAMS
 {

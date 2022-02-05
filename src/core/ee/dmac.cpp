@@ -3,8 +3,8 @@
 #include <cstdlib>
 #include "dmac.hpp"
 
-#include "../emulator.hpp"
-#include "../errors.hpp"
+#include <emulator.hpp>
+#include <util/errors.hpp>
 
 const char* DMAC::CHAN(int index)
 {

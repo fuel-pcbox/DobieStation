@@ -8,7 +8,7 @@
 #include <string>
 
 #include "../core/emulator.hpp"
-#include "../core/errors.hpp"
+#include "../core/util/errors.hpp"
 
 #define GSDUMP_BUFFERED_MESSAGES 100000
 

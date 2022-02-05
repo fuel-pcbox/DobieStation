@@ -6,11 +6,11 @@
 #include <sstream>
 #include <cstring>
 #include "spu.hpp"
-#include "../iop_dma.hpp"
-#include "../iop_intc.hpp"
+#include <iop/iop_dma.hpp>
+#include <iop/iop_intc.hpp>
 #include "spu_adpcm.hpp"
-#include "../../audio/utils.hpp"
-#include "../../errors.hpp"
+#include <util/audio.hpp>
+#include <util/errors.hpp>
 
 /**
  * Notes on "AutoDMA", as it seems to not be documented anywhere else

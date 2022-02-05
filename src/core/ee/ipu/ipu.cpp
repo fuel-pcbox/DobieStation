@@ -4,9 +4,9 @@
 #include <cstring>
 #include <limits>
 #include "ipu.hpp"
-#include "../dmac.hpp"
-#include "../intc.hpp"
-#include "../../errors.hpp"
+#include <ee/dmac.hpp>
+#include <ee/intc.hpp>
+#include <util/errors.hpp>
 
 #define printf(fmt, ...)(0)
 

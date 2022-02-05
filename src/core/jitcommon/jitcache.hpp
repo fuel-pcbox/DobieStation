@@ -3,7 +3,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <string>
-#include "../errors.hpp"
+#include <util/errors.hpp>
 
 /*!
  * A record to keep track of a JIT block in a JIT heap. Points to the x86 code/literals, as well as some block_data

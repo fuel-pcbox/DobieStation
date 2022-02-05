@@ -3,11 +3,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
-#include "emulator.hpp"
-#include "errors.hpp"
+#include <emulator.hpp>
+#include <util/errors.hpp>
 
-#include "ee/vu_jit.hpp"
-#include "ee/ee_jit.hpp"
+#include <ee/vu/vu_jit.hpp>
+#include <ee/jit/ee_jit.hpp>
 
 /* Notes of timings from PS2*/
 /*

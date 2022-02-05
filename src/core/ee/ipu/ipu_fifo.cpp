@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "ipu_fifo.hpp"
-#include "../../errors.hpp"
+#include <util/errors.hpp>
 
 bool IPU_FIFO::get_bits(uint32_t &data, int bits)
 {

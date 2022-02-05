@@ -1,5 +1,5 @@
 #pragma once
-#include "vu.hpp"
+#include <ee/vu/vu.hpp>
 
 //This is essentially a wrapper around VU0 with access to VU1
 class Cop2

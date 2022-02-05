@@ -2,7 +2,7 @@
 #include "emotion.hpp"
 #include "intc.hpp"
 
-#include "../scheduler.hpp"
+#include <scheduler.hpp>
 
 INTC::INTC(EmotionEngine* cpu, Scheduler* scheduler) : cpu(cpu), scheduler(scheduler)
 {

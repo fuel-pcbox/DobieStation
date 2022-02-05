@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include "../ee/emotion.hpp"
+#include <ee/emotion.hpp>
 
 namespace IR
 {

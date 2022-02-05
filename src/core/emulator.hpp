@@ -7,24 +7,24 @@
 #include "ee/intc.hpp"
 #include "ee/ipu/ipu.hpp"
 #include "ee/timers.hpp"
-#include "ee/vif.hpp"
-#include "ee/vu.hpp"
+#include "ee/vu/vif.hpp"
+#include "ee/vu/vu.hpp"
 
 #include "iop/cdvd/cdvd.hpp"
-#include "iop/gamepad.hpp"
+#include "iop/sio2/gamepad.hpp"
 #include "iop/iop.hpp"
 #include "iop/iop_dma.hpp"
 #include "iop/iop_intc.hpp"
 #include "iop/iop_timers.hpp"
-#include "iop/memcard.hpp"
-#include "iop/sio2.hpp"
+#include "iop/sio2/memcard.hpp"
+#include "iop/sio2/sio2.hpp"
 #include "iop/spu/spu.hpp"
-#include "iop/firewire.hpp"
+#include "iop/sio2/firewire.hpp"
 
-#include "int128.hpp"
-#include "gs.hpp"
-#include "gif.hpp"
-#include "sif.hpp"
+#include <util/int128.hpp>
+#include <gs/gs.hpp>
+#include <gs/gif.hpp>
+#include <sif.hpp>
 #include "scheduler.hpp"
 
 enum SKIP_HACK

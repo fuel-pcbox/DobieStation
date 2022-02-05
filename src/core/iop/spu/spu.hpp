@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <fstream>
 #include "spu_envelope.hpp"
-#include "../../audio/utils.hpp"
+#include <util/audio.hpp>
 #include "spu_adpcm.hpp"
 #include "spu_utils.hpp"
 

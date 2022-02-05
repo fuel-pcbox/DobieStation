@@ -3,8 +3,8 @@
 #include <cstdlib>
 #include "intc.hpp"
 #include "timers.hpp"
-#include "../errors.hpp"
-#include "../scheduler.hpp"
+#include <util/errors.hpp>
+#include <scheduler.hpp>
 
 EmotionTiming::EmotionTiming(INTC* intc, Scheduler* scheduler) : intc(intc), scheduler(scheduler)
 {

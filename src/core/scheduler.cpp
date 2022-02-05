@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
-#include "errors.hpp"
+#include <util/errors.hpp>
 #include "scheduler.hpp"
 
 using TimestampLimit = std::numeric_limits<int64_t>;

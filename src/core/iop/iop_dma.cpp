@@ -2,11 +2,11 @@
 #include "cdvd/cdvd.hpp"
 #include "iop_dma.hpp"
 #include "iop_intc.hpp"
-#include "sio2.hpp"
+#include <iop/sio2/sio2.hpp>
 #include "spu/spu.hpp"
 
-#include "../errors.hpp"
-#include "../sif.hpp"
+#include <util/errors.hpp>
+#include <sif.hpp>
 
 IOP_DMA::IOP_DMA(IOP_INTC* intc, CDVD_Drive* cdvd, SubsystemInterface* sif, SIO2* sio2, class SPU* spu, class SPU* spu2) :
     intc(intc), cdvd(cdvd), sif(sif), sio2(sio2), spu(spu), spu2(spu2)
