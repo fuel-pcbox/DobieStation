@@ -28,13 +28,13 @@ class EmuThread : public QThread
         std::atomic_bool abort;
         std::atomic<uint32_t> pause_status;
         QMutex emu_mutex;
-        Emulator e;
+        core::Emulator e;
 
         std::chrono::system_clock::time_point old_frametime;
         std::ifstream gsdump;
         std::atomic_bool gsdump_reading;
         std::atomic_bool block_run_loop;
-        GSMessage* gsdump_read_buffer;
+        gs::GSMessage* gsdump_read_buffer;
         int buffered_gs_messages;
         int current_gs_message;
 
@@ -45,14 +45,14 @@ class EmuThread : public QThread
         ~EmuThread();
         void reset();
 
-        void set_skip_BIOS_hack(SKIP_HACK skip);
+        void set_skip_BIOS_hack(core::SKIP_HACK skip);
         void set_wavout(bool state);
-        void set_ee_mode(CPU_MODE mode);
-        void set_vu0_mode(CPU_MODE mode);
-        void set_vu1_mode(CPU_MODE mode);
+        void set_ee_mode(core::CPU_MODE mode);
+        void set_vu0_mode(core::CPU_MODE mode);
+        void set_vu1_mode(core::CPU_MODE mode);
         void load_BIOS(const uint8_t* BIOS);
         void load_ELF(QString name, const uint8_t* ELF, uint64_t ELF_size);
-        void load_CDVD(const char* name, CDVD_CONTAINER type);
+        void load_CDVD(const char* name, cdvd::CDVD_CONTAINER type);
         void load_memcard(int port, const char* name);
 
         bool load_state(const char* name);
@@ -60,7 +60,7 @@ class EmuThread : public QThread
         bool gsdump_read(const char* name);
         void gsdump_write_toggle();
         void gsdump_single_frame();
-        GSMessage& get_next_gsdump_message();
+        gs::GSMessage& get_next_gsdump_message();
         bool gsdump_eof();
         std::atomic_bool frame_advance;
     protected:
@@ -73,9 +73,9 @@ class EmuThread : public QThread
         void rom_loaded(QString name, QString serial);
     public slots:
         void shutdown();
-        void press_key(PAD_BUTTON button);
-        void release_key(PAD_BUTTON button);
-        void update_joystick(JOYSTICK joystick, JOYSTICK_AXIS axis, uint8_t val);
+        void press_key(sio2::PAD_BUTTON button);
+        void release_key(sio2::PAD_BUTTON button);
+        void update_joystick(sio2::JOYSTICK joystick, sio2::JOYSTICK_AXIS axis, uint8_t val);
         void pause(PAUSE_EVENT event);
         void unpause(PAUSE_EVENT event);
 };

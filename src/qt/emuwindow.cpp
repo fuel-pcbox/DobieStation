@@ -213,25 +213,25 @@ int EmuWindow::load_exec(const char* file_name, bool skip_BIOS)
         );
 
         if (skip_BIOS)
-            emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_ELF);
+            emu_thread.set_skip_BIOS_hack(core::SKIP_HACK::LOAD_ELF);
     }
     else if (QString::compare(ext, "iso", Qt::CaseInsensitive) == 0)
     {
-        emu_thread.load_CDVD(file_name, CDVD_CONTAINER::ISO);
+        emu_thread.load_CDVD(file_name, cdvd::CDVD_CONTAINER::ISO);
         if (skip_BIOS)
-            emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_DISC);
+            emu_thread.set_skip_BIOS_hack(core::SKIP_HACK::LOAD_DISC);
     }
     else if (QString::compare(ext, "cso", Qt::CaseInsensitive) == 0)
     {
-        emu_thread.load_CDVD(file_name, CDVD_CONTAINER::CISO);
+        emu_thread.load_CDVD(file_name, cdvd::CDVD_CONTAINER::CISO);
         if (skip_BIOS)
-            emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_DISC);
+            emu_thread.set_skip_BIOS_hack(core::SKIP_HACK::LOAD_DISC);
     }
     else if (QString::compare(ext, "bin", Qt::CaseInsensitive) == 0)
     {
-        emu_thread.load_CDVD(file_name, CDVD_CONTAINER::BIN_CUE);
+        emu_thread.load_CDVD(file_name, cdvd::CDVD_CONTAINER::BIN_CUE);
         if (skip_BIOS)
-            emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_DISC);
+            emu_thread.set_skip_BIOS_hack(core::SKIP_HACK::LOAD_DISC);
     }
     else if (QString::compare(ext, "gsd", Qt::CaseInsensitive) == 0)
         emu_thread.gsdump_read(file_name);
@@ -511,66 +511,66 @@ void EmuWindow::keyPressEvent(QKeyEvent *event)
     switch (event->key())
     {
         case Qt::Key_Up:
-            emit press_key(PAD_BUTTON::UP);
+            emit press_key(sio2::PAD_BUTTON::UP);
             break;
         case Qt::Key_Down:
-            emit press_key(PAD_BUTTON::DOWN);
+            emit press_key(sio2::PAD_BUTTON::DOWN);
             break;
         case Qt::Key_Left:
-            emit press_key(PAD_BUTTON::LEFT);
+            emit press_key(sio2::PAD_BUTTON::LEFT);
             break;
         case Qt::Key_Right:
-            emit press_key(PAD_BUTTON::RIGHT);
+            emit press_key(sio2::PAD_BUTTON::RIGHT);
             break;
         case Qt::Key_Z:
-            emit press_key(PAD_BUTTON::CROSS);
+            emit press_key(sio2::PAD_BUTTON::CROSS);
             break;
         case Qt::Key_X:
-            emit press_key(PAD_BUTTON::CIRCLE );
+            emit press_key(sio2::PAD_BUTTON::CIRCLE );
             break;
         case Qt::Key_A:
-            emit press_key(PAD_BUTTON::SQUARE);
+            emit press_key(sio2::PAD_BUTTON::SQUARE);
             break;
         case Qt::Key_S:
-            emit press_key(PAD_BUTTON::TRIANGLE );
+            emit press_key(sio2::PAD_BUTTON::TRIANGLE );
             break;
         case Qt::Key_Q:
-            emit press_key(PAD_BUTTON::L1);
+            emit press_key(sio2::PAD_BUTTON::L1);
             break;
         case Qt::Key_W:
-            emit press_key(PAD_BUTTON::R1);
+            emit press_key(sio2::PAD_BUTTON::R1);
             break;
         case Qt::Key_Return:
-            emit press_key(PAD_BUTTON::START);
+            emit press_key(sio2::PAD_BUTTON::START);
             break;
         case Qt::Key_Space:
-            emit press_key(PAD_BUTTON::SELECT);
+            emit press_key(sio2::PAD_BUTTON::SELECT);
             break;
         case Qt::Key_Period:
             emu_thread.unpause(PAUSE_EVENT::FRAME_ADVANCE);
             break;
         case Qt::Key_R:
-            emit update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::Y, 0x00);
+            emit update_joystick(sio2::JOYSTICK::LEFT, sio2::JOYSTICK_AXIS::Y, 0x00);
             break;
         case Qt::Key_F:
-            emit update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::Y, 0xFF);
+            emit update_joystick(sio2::JOYSTICK::LEFT, sio2::JOYSTICK_AXIS::Y, 0xFF);
             break;
         case Qt::Key_G:
-            emit update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::X, 0xFF);
+            emit update_joystick(sio2::JOYSTICK::LEFT, sio2::JOYSTICK_AXIS::X, 0xFF);
             break;
         case Qt::Key_D:
-            emit update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::X, 0x00);
+            emit update_joystick(sio2::JOYSTICK::LEFT, sio2::JOYSTICK_AXIS::X, 0x00);
             break;
         case Qt::Key_I:
-            emit update_joystick(JOYSTICK::RIGHT,JOYSTICK_AXIS::Y, 0x00); 
+            emit update_joystick(sio2::JOYSTICK::RIGHT, sio2::JOYSTICK_AXIS::Y, 0x00);
             break;
         case Qt::Key_K:
-            emit update_joystick(JOYSTICK::RIGHT,JOYSTICK_AXIS::Y, 0xFF);
+            emit update_joystick(sio2::JOYSTICK::RIGHT, sio2::JOYSTICK_AXIS::Y, 0xFF);
         case Qt::Key_J:
-            emit update_joystick(JOYSTICK::RIGHT,JOYSTICK_AXIS::X, 0xFF); 
+            emit update_joystick(sio2::JOYSTICK::RIGHT, sio2::JOYSTICK_AXIS::X, 0xFF);
             break;
         case Qt::Key_L:
-             emit update_joystick(JOYSTICK::RIGHT,JOYSTICK_AXIS::X, 0x00);
+             emit update_joystick(sio2::JOYSTICK::RIGHT, sio2::JOYSTICK_AXIS::X, 0x00);
              break;
         case Qt::Key_F1:
             if(!Settings::instance().recent_roms.isEmpty())
@@ -598,56 +598,56 @@ void EmuWindow::keyReleaseEvent(QKeyEvent *event)
     switch (event->key())
     {
         case Qt::Key_Up:
-            emit release_key(PAD_BUTTON::UP);
+            emit release_key(sio2::PAD_BUTTON::UP);
             break;
         case Qt::Key_Down:
-            emit release_key(PAD_BUTTON::DOWN);
+            emit release_key(sio2::PAD_BUTTON::DOWN);
             break;
         case Qt::Key_Left:
-            emit release_key(PAD_BUTTON::LEFT);
+            emit release_key(sio2::PAD_BUTTON::LEFT);
             break;
         case Qt::Key_Right:
-            emit release_key(PAD_BUTTON::RIGHT);
+            emit release_key(sio2::PAD_BUTTON::RIGHT);
             break;
         case Qt::Key_Z:
-            emit release_key(PAD_BUTTON::CROSS);
+            emit release_key(sio2::PAD_BUTTON::CROSS);
             break;
         case Qt::Key_X:
-            emit release_key(PAD_BUTTON::CIRCLE );
+            emit release_key(sio2::PAD_BUTTON::CIRCLE );
             break;
         case Qt::Key_A:
-            emit release_key(PAD_BUTTON::SQUARE);
+            emit release_key(sio2::PAD_BUTTON::SQUARE);
             break;
         case Qt::Key_S:
-            emit release_key(PAD_BUTTON::TRIANGLE);
+            emit release_key(sio2::PAD_BUTTON::TRIANGLE);
             break;
         case Qt::Key_Q:
-            emit release_key(PAD_BUTTON::L1);
+            emit release_key(sio2::PAD_BUTTON::L1);
             break;
         case Qt::Key_W:
-            emit release_key(PAD_BUTTON::R1);
+            emit release_key(sio2::PAD_BUTTON::R1);
             break;
         case Qt::Key_Return:
-            emit release_key(PAD_BUTTON::START);
+            emit release_key(sio2::PAD_BUTTON::START);
             break;
         case Qt::Key_Space:
-            emit release_key(PAD_BUTTON::SELECT);
+            emit release_key(sio2::PAD_BUTTON::SELECT);
             break;
         case Qt::Key_R:
         case Qt::Key_F:
-            emit update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::Y, 0x80);
+            emit update_joystick(sio2::JOYSTICK::LEFT, sio2::JOYSTICK_AXIS::Y, 0x80);
             break;
         case Qt::Key_D:
         case Qt::Key_G:
-            emit update_joystick(JOYSTICK::LEFT, JOYSTICK_AXIS::X, 0x80);
+            emit update_joystick(sio2::JOYSTICK::LEFT, sio2::JOYSTICK_AXIS::X, 0x80);
             break;
         case Qt::Key_I:
         case Qt::Key_K:
-            emit update_joystick(JOYSTICK::RIGHT, JOYSTICK_AXIS::Y, 0x80);
+            emit update_joystick(sio2::JOYSTICK::RIGHT, sio2::JOYSTICK_AXIS::Y, 0x80);
             break;
         case Qt::Key_J:
         case Qt::Key_L:
-            emit update_joystick(JOYSTICK::RIGHT, JOYSTICK_AXIS::X,0x80);
+            emit update_joystick(sio2::JOYSTICK::RIGHT, sio2::JOYSTICK_AXIS::X,0x80);
             break;
     }
 }
@@ -819,7 +819,7 @@ void EmuWindow::show_render_view()
 
 void EmuWindow::update_status()
 {
-    CPU_MODE mode;
+    core::CPU_MODE mode;
 
     if (Settings::instance().d_theme) // Dark Theme colour change  
     {
@@ -871,12 +871,12 @@ void EmuWindow::update_status()
 
     if (Settings::instance().ee_jit_enabled)
     {
-        mode = CPU_MODE::JIT;
+        mode = core::CPU_MODE::JIT;
         ee_mode->setText("EE: JIT");
     }
     else
     {
-        mode = CPU_MODE::INTERPRETER;
+        mode = core::CPU_MODE::INTERPRETER;
         ee_mode->setText("EE: Interpreter");
     }
 
@@ -884,24 +884,24 @@ void EmuWindow::update_status()
 
     if (Settings::instance().vu0_jit_enabled)
     {
-        mode = CPU_MODE::JIT;
+        mode = core::CPU_MODE::JIT;
         vu0_mode->setText("VU0: JIT");
     }
     else
     {
-        mode = CPU_MODE::INTERPRETER;
+        mode = core::CPU_MODE::INTERPRETER;
         vu0_mode->setText("VU0: Interpreter");
     }
     emu_thread.set_vu0_mode(mode);
 
     if (Settings::instance().vu1_jit_enabled)
     {
-        mode = CPU_MODE::JIT;
+        mode = core::CPU_MODE::JIT;
         vu1_mode->setText("VU1: JIT");
     }
     else
     {
-        mode = CPU_MODE::INTERPRETER;
+        mode = core::CPU_MODE::INTERPRETER;
         vu1_mode->setText("VU1: Interpreter");
     }
     emu_thread.set_vu1_mode(mode);
