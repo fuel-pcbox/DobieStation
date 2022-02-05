@@ -13,6 +13,8 @@ Based off reference by unknownbrackets:
 
 namespace cdvd
 {
+    constexpr uint32_t IDX_COMPRESS_BIT = 0x80000000;
+    
     constexpr uint32_t FOURCC(const char chars[4])
     {
         return
@@ -41,9 +43,6 @@ namespace cdvd
         uint8_t index_shift;
         uint8_t reserved[2];
     };
-
-#define IDX_COMPRESS_BIT (0x80000000)
-
 
     CSO_Reader::CSO_Reader() :
         m_size(0), m_shift(0), m_blocksize(0), m_version(0), m_virtptr(0),

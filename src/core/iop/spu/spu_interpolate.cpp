@@ -1,9 +1,9 @@
 #include "spu.hpp"
-#include <cmath>
 #include <cfenv>
-#ifndef M_PI
-    #define M_PI 3.14159265358979323846
-#endif
+#include <numbers>
+
+/* Requires C++20 */
+constexpr auto PI = std::numbers::pi;
 
 namespace spu
 {
@@ -19,9 +19,9 @@ namespace spu
         for (uint32_t n = 0; n < 512; n++)
         {
             double k = 0.5 + n;
-            double s = (sin(M_PI * k * 2.048 / 1024));
-            double t = (cos(M_PI * k * 2.000 / 1023) - 1) * 0.50;
-            double u = (cos(M_PI * k * 4.000 / 1023) - 1) * 0.08;
+            double s = (sin(PI * k * 2.048 / 1024));
+            double t = (cos(PI * k * 2.000 / 1023) - 1) * 0.50;
+            double u = (cos(PI * k * 4.000 / 1023) - 1) * 0.08;
             double r = s * (t + u + 1.0) / k;
             table[511 - n] = r;
         }

@@ -29,6 +29,19 @@
 
 namespace core
 {
+    /* NTSC Interlaced Timings */
+    /* 4920115.2 EE cycles to be exact FPS of 59.94005994005994hz */
+    constexpr uint32_t CYCLES_PER_FRAME = 4920115;
+    /* 4489019.391883126 Guess, exactly 23 HBLANK's before the end */
+    constexpr uint32_t VBLANK_START_CYCLES = 4489019;
+    constexpr uint32_t HBLANK_CYCLES = 18742;
+    /* CSR FIELD swap/vblank happens ~65622 cycles after the INTC VBLANK_START event */
+    constexpr uint32_t GS_VBLANK_DELAY = 65622;
+
+    /* These constants are used for the fast boot hack for.isos */
+    constexpr uint32_t EELOAD_START = 0x82000;
+    constexpr uint32_t EELOAD_SIZE = 0x20000;
+
     enum SKIP_HACK
     {
         NONE,

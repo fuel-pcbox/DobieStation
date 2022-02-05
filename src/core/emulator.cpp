@@ -9,36 +9,25 @@
 #include <ee/jit/ee_jit.hpp>
 #include <fmt/core.h>
 
-/* Notes of timings from PS2*/
+/* Notes of timings from the PS2 */
 /*
+    Note: Values were counted using EE Timers 0 at a 1/256 divider for V-BLANK cycles, H-BLANK's were counted with Timer 1 with CLK Source of H-BLANK
+    NTSC Non-Interlaced
+    V-BLANK Off for 2248960 bus cycles (within 256 cycles), 240 H-BLANK's
+    V-BLANK On for 215552 bus cycles (within 256 cycles), 23 H-BLANK's
+    EE Cycles Per Frame between 4929024 & 4929536
 
-Note: Values were counted using EE Timers 0 at a 1/256 divider for V-BLANK cycles, H-BLANK's were counted with Timer 1 with CLK Source of H-BLANK
-NTSC Non-Interlaced
-V-BLANK Off for 2248960 bus cycles (within 256 cycles), 240 H-BLANK's
-V-BLANK On for 215552 bus cycles (within 256 cycles), 23 H-BLANK's
-EE Cycles Per Frame between 4929024 & 4929536
-
-PAL Non-Interlaced
-V-BLANK Off for 2717696 bus cycles (within 256 cycles), 288 H-BLANK's
-V-BLANK On for 245504 bus cycles (within 256 cycles), 26 H-BLANK's
-EE Cycles Per Frame between 5926400 & 5926912
+    PAL Non-Interlaced
+    V-BLANK Off for 2717696 bus cycles (within 256 cycles), 288 H-BLANK's
+    V-BLANK On for 245504 bus cycles (within 256 cycles), 26 H-BLANK's
+    EE Cycles Per Frame between 5926400 & 5926912
 */
 
 /*
-//NTSC Non-Interlaced Timings
-#define CYCLES_PER_FRAME 4929486 //4929486.849336438 EE cycles to be exact FPS of 59.82610543726237hz
-#define VBLANK_START_CYCLES 4498391 //4498391.041219564 EE cycles to be exact, exactly 23 HBLANK's before the end
+NTSC Non-Interlaced Timings
+constexpr uint32_t CYCLES_PER_FRAME = 4929486; // 4929486.849336438 EE cycles to be exact FPS of 59.82610543726237hz
+constexpr uint32_t VBLANK_START_CYCLES = 4498391; // 4498391.041219564 EE cycles to be exact, exactly 23 HBLANK's before the end
 */
-
-//NTSC Interlaced Timings
-#define CYCLES_PER_FRAME 4920115 //4920115.2 EE cycles to be exact FPS of 59.94005994005994hz
-#define VBLANK_START_CYCLES 4489019 //4489019.391883126 Guess, exactly 23 HBLANK's before the end
-#define HBLANK_CYCLES 18742
-#define GS_VBLANK_DELAY 65622 //CSR FIELD swap/vblank happens ~65622 cycles after the INTC VBLANK_START event
-
-//These constants are used for the fast boot hack for .isos
-#define EELOAD_START 0x82000
-#define EELOAD_SIZE 0x20000
 
 namespace core
 {

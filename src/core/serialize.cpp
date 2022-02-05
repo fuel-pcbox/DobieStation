@@ -2,9 +2,10 @@
 #include <cstring>
 #include "emulator.hpp"
 
-#define VER_MAJOR 0
-#define VER_MINOR 0
-#define VER_REV 50
+/* DobieStation version */
+constexpr uint32_t VER_MAJOR = 0;
+constexpr uint32_t VER_MINOR = 0;
+constexpr uint32_t VER_REV = 50;
 
 namespace core
 {

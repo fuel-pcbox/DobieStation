@@ -14,6 +14,11 @@ namespace iop
 
 namespace spu
 {
+    /* SPU constants */
+    constexpr uint32_t SPU_CORE0_MEMIN = 0x2000;
+    constexpr uint32_t SPU_CORE1_MEMIN = 0x2400;
+    constexpr uint32_t REVERB_REG_BASE = 0x2E4;
+
     struct VoiceMix
     {
         bool dry_l;

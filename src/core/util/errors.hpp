@@ -1,7 +1,7 @@
 #pragma once
 #include <stdexcept>
 
-#define ERROR_STRING_MAX_LENGTH 255
+constexpr uint32_t ERROR_STRING_MAX_LENGTH = 255;
 
 class Errors
 {

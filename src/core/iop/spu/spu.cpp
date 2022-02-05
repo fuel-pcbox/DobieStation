@@ -20,10 +20,6 @@
 * Bit 2 seems to be used for block reading (ADMA read), how exactly that functions is unknown.
 */
 
-#define SPU_CORE0_MEMIN 0x2000
-#define SPU_CORE1_MEMIN 0x2400
-#define REVERB_REG_BASE 0x2E4
-
 namespace spu
 {
     uint16_t SPU::spdif_irq = 0;
