@@ -233,12 +233,6 @@ int EmuWindow::load_exec(const char* file_name, bool skip_BIOS)
         if (skip_BIOS)
             emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_DISC);
     }
-    else if (QString::compare(ext, "chd", Qt::CaseInsensitive) == 0)
-    {
-        emu_thread.load_CDVD(file_name, CDVD_CONTAINER::CHD);
-        if (skip_BIOS)
-            emu_thread.set_skip_BIOS_hack(SKIP_HACK::LOAD_DISC);
-    }
     else if (QString::compare(ext, "gsd", Qt::CaseInsensitive) == 0)
         emu_thread.gsdump_read(file_name);
     else

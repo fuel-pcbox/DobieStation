@@ -59,7 +59,6 @@ add_library(${TARGET}
     iop/cdvd/cdvd.cpp
     iop/cdvd/cso_reader.cpp
     iop/cdvd/iso_reader.cpp
-    iop/cdvd/chd_reader.cpp
     iop/sio2/firewire.cpp
     iop/sio2/gamepad.cpp
     iop/sio2/memcard.cpp
@@ -93,5 +92,5 @@ target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(Dobie::Core ALIAS ${TARGET})
 
 # Add include directories
-target_link_libraries(${TARGET} Threads::Threads libchdr zlib)
+target_link_libraries(${TARGET} ${CONAN_LIBS})
 dobie_cxx_compile_options(${TARGET})
