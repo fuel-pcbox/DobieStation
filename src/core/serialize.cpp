@@ -6,13 +6,11 @@
 #define VER_MINOR 0
 #define VER_REV 50
 
-using namespace std;
-
 namespace core
 {
     bool Emulator::request_load_state(const char* file_name)
     {
-        ifstream state(file_name, ios::binary);
+        std::ifstream state(file_name, std::ios::binary);
         if (!state.is_open())
             return false;
         state.close();
@@ -23,7 +21,7 @@ namespace core
 
     bool Emulator::request_save_state(const char* file_name)
     {
-        ofstream state(file_name, ios::binary);
+        std::ofstream state(file_name, std::ios::binary);
         if (!state.is_open())
             return false;
         state.close();
@@ -36,7 +34,7 @@ namespace core
     {
         load_requested = false;
         printf("[Emulator] Loading state...\n");
-        ifstream state(file_name, ios::binary);
+        std::ifstream state(file_name, std::ios::binary);
         if (!state.is_open())
         {
             Errors::non_fatal("Failed to load save state");
@@ -125,7 +123,7 @@ namespace core
     {
         save_requested = false;
         printf("[Emulator] Saving state...\n");
-        ofstream state(file_name, ios::binary);
+        std::ofstream state(file_name, std::ios::binary);
         if (!state.is_open())
         {
             Errors::non_fatal("Failed to save state");
@@ -196,7 +194,7 @@ namespace core
         printf("Success!\n");
     }
 
-    void SubsystemInterface::load_state(ifstream& state)
+    void SubsystemInterface::load_state(std::ifstream& state)
     {
         state.read((char*)&mscom, sizeof(mscom));
         state.read((char*)&smcom, sizeof(smcom));
@@ -220,7 +218,7 @@ namespace core
             SIF1_FIFO.push(buffer[i]);
     }
 
-    void SubsystemInterface::save_state(ofstream& state)
+    void SubsystemInterface::save_state(std::ofstream& state)
     {
         state.write((char*)&mscom, sizeof(mscom));
         state.write((char*)&smcom, sizeof(smcom));
@@ -252,7 +250,7 @@ namespace core
             SIF1_FIFO.push(buffer[i]);
     }
 
-    void Scheduler::load_state(ifstream& state)
+    void Scheduler::load_state(std::ifstream& state)
     {
         state.read((char*)&ee_cycles, sizeof(ee_cycles));
         state.read((char*)&bus_cycles, sizeof(bus_cycles));
@@ -289,7 +287,7 @@ namespace core
         }
     }
 
-    void Scheduler::save_state(ofstream& state)
+    void Scheduler::save_state(std::ofstream& state)
     {
         state.write((char*)&ee_cycles, sizeof(ee_cycles));
         state.write((char*)&bus_cycles, sizeof(bus_cycles));
@@ -318,7 +316,7 @@ namespace core
 
 namespace ee
 {
-    void EmotionEngine::load_state(ifstream& state)
+    void EmotionEngine::load_state(std::ifstream& state)
     {
         state.read((char*)&cycle_count, sizeof(cycle_count));
         state.read((char*)&cycles_to_run, sizeof(cycles_to_run));
@@ -341,7 +339,7 @@ namespace ee
         state.read((char*)&deci2handlers, sizeof(Deci2Handler) * deci2size);
     }
 
-    void EmotionEngine::save_state(ofstream& state)
+    void EmotionEngine::save_state(std::ofstream& state)
     {
         state.write((char*)&cycle_count, sizeof(cycle_count));
         state.write((char*)&cycles_to_run, sizeof(cycles_to_run));
@@ -364,7 +362,7 @@ namespace ee
         state.write((char*)&deci2handlers, sizeof(Deci2Handler) * deci2size);
     }
 
-    void Cop0::load_state(ifstream& state)
+    void Cop0::load_state(std::ifstream& state)
     {
         state.read((char*)&gpr, sizeof(gpr));
         state.read((char*)&status, sizeof(status));
@@ -381,7 +379,7 @@ namespace ee
             map_tlb(&tlb[i]);
     }
 
-    void Cop0::save_state(ofstream& state)
+    void Cop0::save_state(std::ofstream& state)
     {
         state.write((char*)&gpr, sizeof(gpr));
         state.write((char*)&status, sizeof(status));
@@ -394,7 +392,7 @@ namespace ee
         state.write((char*)&tlb, sizeof(tlb));
     }
 
-    void Cop1::load_state(ifstream& state)
+    void Cop1::load_state(std::ifstream& state)
     {
         for (int i = 0; i < 32; i++)
             state.read((char*)&gpr[i].u, sizeof(uint32_t));
@@ -402,7 +400,7 @@ namespace ee
         state.read((char*)&control, sizeof(control));
     }
 
-    void Cop1::save_state(ofstream& state)
+    void Cop1::save_state(std::ofstream& state)
     {
         for (int i = 0; i < 32; i++)
             state.write((char*)&gpr[i].u, sizeof(uint32_t));
@@ -410,7 +408,7 @@ namespace ee
         state.write((char*)&control, sizeof(control));
     }
 
-    void INTC::load_state(ifstream& state)
+    void INTC::load_state(std::ifstream& state)
     {
         state.read((char*)&INTC_MASK, sizeof(INTC_MASK));
         state.read((char*)&INTC_STAT, sizeof(INTC_STAT));
@@ -418,7 +416,7 @@ namespace ee
         state.read((char*)&read_stat_count, sizeof(read_stat_count));
     }
 
-    void INTC::save_state(ofstream& state)
+    void INTC::save_state(std::ofstream& state)
     {
         state.write((char*)&INTC_MASK, sizeof(INTC_MASK));
         state.write((char*)&INTC_STAT, sizeof(INTC_STAT));
@@ -426,19 +424,19 @@ namespace ee
         state.write((char*)&read_stat_count, sizeof(read_stat_count));
     }
 
-    void EmotionTiming::load_state(ifstream& state)
+    void EmotionTiming::load_state(std::ifstream& state)
     {
         state.read((char*)&timers, sizeof(timers));
         state.read((char*)&events, sizeof(events));
     }
 
-    void EmotionTiming::save_state(ofstream& state)
+    void EmotionTiming::save_state(std::ofstream& state)
     {
         state.write((char*)&timers, sizeof(timers));
         state.write((char*)&events, sizeof(events));
     }
 
-    void DMAC::load_state(ifstream& state)
+    void DMAC::load_state(std::ifstream& state)
     {
         state.read((char*)&channels, sizeof(channels));
 
@@ -474,7 +472,7 @@ namespace ee
         }
     }
 
-    void DMAC::save_state(ofstream& state)
+    void DMAC::save_state(std::ofstream& state)
     {
         state.write((char*)&channels, sizeof(channels));
 
@@ -511,7 +509,7 @@ namespace ee
 
 namespace iop
 {
-    void IOP::load_state(ifstream& state)
+    void IOP::load_state(std::ifstream& state)
     {
         state.read((char*)&gpr, sizeof(gpr));
         state.read((char*)&LO, sizeof(LO));
@@ -530,7 +528,7 @@ namespace iop
         state.read((char*)&cop0.EPC, sizeof(cop0.EPC));
     }
 
-    void IOP::save_state(ofstream& state)
+    void IOP::save_state(std::ofstream& state)
     {
         state.write((char*)&gpr, sizeof(gpr));
         state.write((char*)&LO, sizeof(LO));
@@ -549,31 +547,31 @@ namespace iop
         state.write((char*)&cop0.EPC, sizeof(cop0.EPC));
     }
 
-    void IOP_INTC::load_state(ifstream& state)
+    void IOP_INTC::load_state(std::ifstream& state)
     {
         state.read((char*)&I_CTRL, sizeof(I_CTRL));
         state.read((char*)&I_STAT, sizeof(I_STAT));
         state.read((char*)&I_MASK, sizeof(I_MASK));
     }
 
-    void IOP_INTC::save_state(ofstream& state)
+    void IOP_INTC::save_state(std::ofstream& state)
     {
         state.write((char*)&I_CTRL, sizeof(I_CTRL));
         state.write((char*)&I_STAT, sizeof(I_STAT));
         state.write((char*)&I_MASK, sizeof(I_MASK));
     }
 
-    void IOPTiming::load_state(ifstream& state)
+    void IOPTiming::load_state(std::ifstream& state)
     {
         state.read((char*)&timers, sizeof(timers));
     }
 
-    void IOPTiming::save_state(ofstream& state)
+    void IOPTiming::save_state(std::ofstream& state)
     {
         state.write((char*)&timers, sizeof(timers));
     }
 
-    void IOP_DMA::load_state(ifstream& state)
+    void IOP_DMA::load_state(std::ifstream& state)
     {
         state.read((char*)&channels, sizeof(channels));
 
@@ -601,7 +599,7 @@ namespace iop
         apply_dma_functions();
     }
 
-    void IOP_DMA::save_state(ofstream& state)
+    void IOP_DMA::save_state(std::ofstream& state)
     {
         state.write((char*)&channels, sizeof(channels));
 
@@ -624,7 +622,7 @@ namespace iop
 }
 namespace vu
 {
-    void VectorUnit::load_state(ifstream& state)
+    void VectorUnit::load_state(std::ifstream& state)
     {
         for (int i = 0; i < 32; i++)
             state.read((char*)&gpr[i].u, sizeof(uint32_t) * 4);
@@ -691,7 +689,7 @@ namespace vu
         state.read((char*)&ebit_delay_slot, sizeof(ebit_delay_slot));
     }
 
-    void VectorUnit::save_state(ofstream& state)
+    void VectorUnit::save_state(std::ofstream& state)
     {
         for (int i = 0; i < 32; i++)
             state.write((char*)&gpr[i].u, sizeof(uint32_t) * 4);
@@ -757,7 +755,7 @@ namespace vu
         state.write((char*)&ebit_delay_slot, sizeof(ebit_delay_slot));
     }
 
-    void VectorInterface::load_state(ifstream& state)
+    void VectorInterface::load_state(std::ifstream& state)
     {
         int size, internal_size;
         uint32_t FIFO_buffer[64];
@@ -809,7 +807,7 @@ namespace vu
         state.read((char*)&VIF_ERR, sizeof(VIF_ERR));
     }
 
-    void VectorInterface::save_state(ofstream& state)
+    void VectorInterface::save_state(std::ofstream& state)
     {
         int size = FIFO.size();
         int internal_size = internal_FIFO.size();
@@ -875,7 +873,7 @@ namespace vu
 
 namespace gs
 {
-    void GraphicsInterface::load_state(ifstream& state)
+    void GraphicsInterface::load_state(std::ifstream& state)
     {
         int size;
         uint128_t FIFO_buffer[16];
@@ -896,7 +894,7 @@ namespace gs
         state.read((char*)&gif_temporary_stop, sizeof(gif_temporary_stop));
     }
 
-    void GraphicsInterface::save_state(ofstream& state)
+    void GraphicsInterface::save_state(std::ofstream& state)
     {
         int size = FIFO.size();
         uint128_t FIFO_buffer[16];
@@ -925,7 +923,7 @@ namespace gs
 
 namespace cdvd
 {
-    void CDVD_Drive::load_state(ifstream& state)
+    void CDVD_Drive::load_state(std::ifstream& state)
     {
         state.read((char*)&file_size, sizeof(file_size));
         state.read((char*)&read_bytes_left, sizeof(read_bytes_left));
@@ -955,7 +953,7 @@ namespace cdvd
         state.read((char*)&rtc, sizeof(rtc));
     }
 
-    void CDVD_Drive::save_state(ofstream& state)
+    void CDVD_Drive::save_state(std::ofstream& state)
     {
         state.write((char*)&file_size, sizeof(file_size));
         state.write((char*)&read_bytes_left, sizeof(read_bytes_left));
@@ -988,7 +986,7 @@ namespace cdvd
 
 namespace sio2
 {
-    void Gamepad::load_state(ifstream& state)
+    void Gamepad::load_state(std::ifstream& state)
     {
         state.read((char*)&command_buffer, sizeof(command_buffer));
         state.read((char*)&rumble_values, sizeof(rumble_values));
@@ -1000,7 +998,7 @@ namespace sio2
         state.read((char*)&config_mode, sizeof(config_mode));
     }
 
-    void Gamepad::save_state(ofstream& state)
+    void Gamepad::save_state(std::ofstream& state)
     {
         state.write((char*)&command_buffer, sizeof(command_buffer));
         state.write((char*)&rumble_values, sizeof(rumble_values));
@@ -1015,7 +1013,7 @@ namespace sio2
 
 namespace spu
 {
-    void SPU::load_state(ifstream &state)
+    void SPU::load_state(std::ifstream &state)
     {
         state.read((char*)&voices, sizeof(voices));
         state.read((char*)&core_att, sizeof(core_att));
@@ -1055,7 +1053,7 @@ namespace spu
         state.read((char*)&voice_noise_gen, sizeof(voice_noise_gen));
     }
 
-    void SPU::save_state(ofstream &state)
+    void SPU::save_state(std::ofstream &state)
     {
         state.write((char*)&voices, sizeof(voices));
         state.write((char*)&core_att, sizeof(core_att));

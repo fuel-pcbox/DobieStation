@@ -12,8 +12,6 @@
 
 namespace cdvd
 {
-    using namespace std;
-
     //Values from PCSX2 - subject to change
     static uint64_t IOP_CLOCK = 36864000;
     static const int PSX_CD_READSPEED = 153600;
@@ -80,7 +78,7 @@ namespace cdvd
         n_command_event_id = scheduler->register_function([this] (uint64_t param) { handle_N_command(); });
     }
 
-    string CDVD_Drive::get_ps2_exec_path()
+    std::string CDVD_Drive::get_ps2_exec_path()
     {
         if (!container->is_open())
             return "";
@@ -93,7 +91,7 @@ namespace cdvd
         while (strncmp("cdrom0:\\", cnf + pos, 7))
             pos++;
 
-        string path;
+        std::string path;
         while (strncmp(";1", cnf + pos, 2))
         {
             path += cnf[pos];
@@ -103,7 +101,7 @@ namespace cdvd
         return path + ";1";
     }
 
-    string CDVD_Drive::get_serial()
+    std::string CDVD_Drive::get_serial()
     {
         if (disc_type == CDVD_DISC_PSCD)
         {
@@ -122,7 +120,7 @@ namespace cdvd
 
         pos += 8;
 
-        string blorp(cnf + pos, cnf + pos + 11);
+        std::string blorp(cnf + pos, cnf + pos + 11);
         delete[] cnf;
         return blorp;
     }
@@ -371,7 +369,7 @@ namespace cdvd
         return true;
     }
 
-    uint8_t* CDVD_Drive::read_file(string name, uint32_t& file_size)
+    uint8_t* CDVD_Drive::read_file(std::string name, uint32_t& file_size)
     {
         uint8_t* root_extent = new uint8_t[root_len];
         container->seek(root_location, std::ios::beg);
@@ -954,7 +952,7 @@ namespace cdvd
         //This performs some kind of encryption/checksum with the game's serial?
         memset(cdkey, 0, 16);
 
-        string serial = get_serial();
+        std::string serial = get_serial();
 
         int32_t letters = (int32_t)((serial[3] & 0x7F) << 0) |
                     (int32_t)((serial[2] & 0x7F) << 7) |

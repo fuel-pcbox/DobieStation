@@ -8,8 +8,6 @@
 
 namespace sio2
 {
-    using namespace std;
-
     SIO2::SIO2(iop::IOP_INTC* intc, Gamepad* pad, Memcard* memcard) : 
         intc(intc), pad(pad), memcard(memcard)
     {
@@ -18,7 +16,7 @@ namespace sio2
 
     void SIO2::reset()
     {
-        queue<uint8_t> empty;
+        std::queue<uint8_t> empty;
         FIFO.swap(empty);
         active_command = SIO_DEVICE::NONE;
         control = 0;

@@ -11,8 +11,6 @@
 
 namespace gs
 {
-    using namespace std;
-
     //Swizzling tables - we declare these outside the class to prevent a stack overflow
     //Globals are allocated in a different memory segment of the executable
 
@@ -233,7 +231,7 @@ namespace gs
         printf("[GS_t] Starting GS Thread\n");
 
         bool gsdump_recording = false;
-        ofstream gsdump_file;
+        std::ofstream gsdump_file;
 
         try
         {
@@ -387,7 +385,7 @@ namespace gs
                             if (!gsdump_recording)
                             {
                                 printf("(start)\n");
-                                gsdump_file.open("gsdump.gsd", ios::out | ios::binary);
+                                gsdump_file.open("gsdump.gsd", std::ios::out | std::ios::binary);
                                 if (!gsdump_file.is_open())
                                     Errors::die("gs dump file failed to open");
                                 gsdump_recording = true;
@@ -509,8 +507,8 @@ namespace gs
     void GraphicsSynthesizerThread::memdump(uint32_t* target, uint16_t& width, uint16_t& height)
     {
         SCISSOR s = current_ctx->scissor;
-        width = min(static_cast<uint16_t>(s.x2 - s.x1), (uint16_t)current_ctx->frame.width);
-        height = min(static_cast<uint16_t>(s.y2 - s.y1), (uint16_t)480);
+        width = std::min(static_cast<uint16_t>(s.x2 - s.x1), (uint16_t)current_ctx->frame.width);
+        height = std::min(static_cast<uint16_t>(s.y2 - s.y1), (uint16_t)480);
         int yy = 0;
         for (int y = s.y1; y < s.y2; y++)
         {
@@ -597,8 +595,8 @@ namespace gs
         //Get overall picture height, largest will likely cover whole screen
         if (reg.PMODE.circuit1 && reg.PMODE.circuit2)
         {
-            height = max(reg.DISPLAY1.height, reg.DISPLAY2.height);
-            width = max(reg.DISPLAY1.width, reg.DISPLAY2.width);
+            height = std::max(reg.DISPLAY1.height, reg.DISPLAY2.height);
+            width = std::max(reg.DISPLAY1.width, reg.DISPLAY2.width);
         }
         else if (reg.PMODE.circuit1)
         {
@@ -1516,24 +1514,24 @@ namespace gs
                     case 0x00:
                         return z >= read_PSMCT32_block(base, width, x, y);
                     case 0x01:
-                        z = min(z, 0xFFFFFFU);
+                        z = std::min(z, 0xFFFFFFU);
                         return z >= (read_PSMCT32_block(base, width, x, y) & 0xFFFFFF);
                     case 0x02:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z >= read_PSMCT16_block(base, width, x, y);
                     case 0x0A:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z >= read_PSMCT16S_block(base, width, x, y);
                     case 0x30:
                         return z >= read_PSMCT32Z_block(base, width, x, y);
                     case 0x31:
-                        z = min(z, 0xFFFFFFU);
+                        z = std::min(z, 0xFFFFFFU);
                         return z >= (read_PSMCT32Z_block(base, width, x, y) & 0xFFFFFF);
                     case 0x32:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z >= read_PSMCT16Z_block(base, width, x, y);
                     case 0x3A:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z >= read_PSMCT16SZ_block(base, width, x, y);
                     default:
                         Errors::die("[GS_t] Unrecognized zbuf format $%02X\n", current_ctx->zbuf.format);
@@ -1545,24 +1543,24 @@ namespace gs
                     case 0x00:
                         return z > read_PSMCT32_block(base, width, x, y);
                     case 0x01:
-                        z = min(z, 0xFFFFFFU);
+                        z = std::min(z, 0xFFFFFFU);
                         return z > (read_PSMCT32_block(base, width, x, y) & 0xFFFFFF);
                     case 0x02:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z > read_PSMCT16_block(base, width, x, y);
                     case 0x0A:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z > read_PSMCT16S_block(base, width, x, y);
                     case 0x30:
                         return z > read_PSMCT32Z_block(base, width, x, y);
                     case 0x31:
-                        z = min(z, 0xFFFFFFU);
+                        z = std::min(z, 0xFFFFFFU);
                         return z > (read_PSMCT32Z_block(base, width, x, y) & 0xFFFFFF);
                     case 0x32:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z > read_PSMCT16Z_block(base, width, x, y);
                     case 0x3A:
-                        z = min(z, 0xFFFFU);
+                        z = std::min(z, 0xFFFFU);
                         return z > read_PSMCT16SZ_block(base, width, x, y);
                     default:
                         Errors::die("[GS_t] Unrecognized zbuf format $%02X\n", current_ctx->zbuf.format);
@@ -1927,30 +1925,30 @@ namespace gs
                     write_PSMCT32_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z);
                     break;
                 case 0x01:
-                    z = min(z, 0xFFFFFFU);
+                    z = std::min(z, 0xFFFFFFU);
                     write_PSMCT24_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z & 0xFFFFFF);
                     break;
                 case 0x02:
-                    z = min(z, 0xFFFFU);
+                    z = std::min(z, 0xFFFFU);
                     write_PSMCT16_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z & 0xFFFF);
                     break;
                 case 0x0A:
-                    z = min(z, 0xFFFFU);
+                    z = std::min(z, 0xFFFFU);
                     write_PSMCT16S_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z & 0xFFFF);
                     break;
                 case 0x30:
                     write_PSMCT32Z_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z);
                     break;
                 case 0x31:
-                    z = min(z, 0xFFFFFFU);
+                    z = std::min(z, 0xFFFFFFU);
                     write_PSMCT24Z_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z & 0xFFFFFF);
                     break;
                 case 0x32:
-                    z = min(z, 0xFFFFU);
+                    z = std::min(z, 0xFFFFU);
                     write_PSMCT16Z_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z & 0xFFFF);
                     break;
                 case 0x3A:
-                    z = min(z, 0xFFFFU);
+                    z = std::min(z, 0xFFFFU);
                     write_PSMCT16SZ_block(current_ctx->zbuf.base_pointer, current_ctx->frame.width, x, y, z & 0xFFFF);
                     break;
             }
@@ -2068,8 +2066,8 @@ namespace gs
         bool is_steep = false;
         if (abs(v2.x - v1.x) < abs(v2.y - v1.y))
         {
-            swap(v1.x, v1.y);
-            swap(v2.x, v2.y);
+            std::swap(v1.x, v1.y);
+            std::swap(v2.x, v2.y);
             is_steep = true;
             printf("Steep\n");
             min_x = min_y;
@@ -2079,7 +2077,7 @@ namespace gs
         //Make line left-to-right (or top to bottom in steep cases)
         if (v1.x > v2.x)
         {
-            swap(v1, v2);
+            std::swap(v1, v2);
         }
 
         TexLookupInfo tex_info;
@@ -2578,20 +2576,20 @@ namespace gs
 
         //Order by counter-clockwise winding order
         if (orient2D(v1, v2, v3) < 0)
-            swap(v2, v3);
+            std::swap(v2, v3);
 
         int32_t divider = orient2D(v1, v2, v3);
         //Calculate bounding box of triangle
-        int32_t min_x = min({v1.x, v2.x, v3.x});
-        int32_t min_y = min({v1.y, v2.y, v3.y});
-        int32_t max_x = max({v1.x, v2.x, v3.x});
-        int32_t max_y = max({v1.y, v2.y, v3.y});
+        int32_t min_x = std::min({v1.x, v2.x, v3.x});
+        int32_t min_y = std::min({v1.y, v2.y, v3.y});
+        int32_t max_x = std::max({v1.x, v2.x, v3.x});
+        int32_t max_y = std::max({v1.y, v2.y, v3.y});
     
         //Automatic scissoring test
-        min_x = max(min_x, (int32_t)current_ctx->scissor.x1);
-        min_y = max(min_y, (int32_t)current_ctx->scissor.y1);
-        max_x = min(max_x, (int32_t)current_ctx->scissor.x2 + 0x10);
-        max_y = min(max_y, (int32_t)current_ctx->scissor.y2 + 0x10);
+        min_x = std::max(min_x, (int32_t)current_ctx->scissor.x1);
+        min_y = std::max(min_y, (int32_t)current_ctx->scissor.y1);
+        max_x = std::min(max_x, (int32_t)current_ctx->scissor.x2 + 0x10);
+        max_y = std::min(max_y, (int32_t)current_ctx->scissor.y2 + 0x10);
 
         if (max_y == min_y && min_x == max_x)
             return;
@@ -3565,7 +3563,7 @@ namespace gs
         }
 
         //Determine mipmap level
-        info.mipmap_level = min((int32_t)info.LOD, (int32_t)current_ctx->tex1.max_MIP_level);
+        info.mipmap_level = std::min((int32_t)info.LOD, (int32_t)current_ctx->tex1.max_MIP_level);
 
         if (info.mipmap_level < 0)
             info.mipmap_level = 0;
@@ -3615,7 +3613,7 @@ namespace gs
                 {
                     offset = (info.tex_width * info.tex_height) >> (i << 1);
                     info.tex_base += (offset * format_sizes[current_ctx->tex0.format]);
-                    info.buffer_width = max(info.buffer_width >> 1, 64U);
+                    info.buffer_width = std::max(info.buffer_width >> 1, 64U);
                 }
             }
             else
@@ -3626,8 +3624,8 @@ namespace gs
             info.tex_width >>= info.mipmap_level;
             info.tex_height >>= info.mipmap_level;
 
-            info.tex_width = max((int)info.tex_width, 1);
-            info.tex_height = max((int)info.tex_height, 1);
+            info.tex_width = std::max((int)info.tex_width, 1);
+            info.tex_height = std::max((int)info.tex_height, 1);
         }
     }
 
@@ -5405,7 +5403,7 @@ namespace gs
         emitter_tex.MOV32_REG(temp2, color);
     }
 
-    void GraphicsSynthesizerThread::load_state(ifstream *state)
+    void GraphicsSynthesizerThread::load_state(std::ifstream *state)
     {
         state->read((char*)local_mem, 1024 * 1024 * 4);
         state->read((char*)&IMR, sizeof(IMR));
@@ -5462,7 +5460,7 @@ namespace gs
         state->read((char*)&num_vertices, sizeof(num_vertices));
     }
 
-    void GraphicsSynthesizerThread::save_state(ofstream *state)
+    void GraphicsSynthesizerThread::save_state(std::ofstream *state)
     {
         state->write((char*)local_mem, 1024 * 1024 * 4);
         state->write((char*)&IMR, sizeof(IMR));

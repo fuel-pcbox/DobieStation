@@ -894,11 +894,8 @@ namespace vu
             }
         }
 
-
-        using namespace std;
-
-        ofstream file;
-        string name = "microvu" + to_string(get_id()) + "_" + to_string(crc) + ".txt";
+        std::ofstream file;
+        std::string name = "microvu" + std::to_string(get_id()) + "_" + std::to_string(crc) + ".txt";
 
         file.open(name);
 
@@ -911,25 +908,25 @@ namespace vu
         {
             if (is_branch_target[i / 8])
             {
-                file << endl;
-                file << "Branch target $" << setfill('0') << setw(4) << right << hex << i << ":";
-                file << endl;
+                file << std::endl;
+                file << "Branch target $" << std::setfill('0') << std::setw(4) << std::right << std::hex << i << ":";
+                file << std::endl;
             }
             //PC
-            file << "[$" << setfill('0') << setw(4) << right << hex << i << "] ";
+            file << "[$" << std::setfill('0') << std::setw(4) << std::right << std::hex << i << "] ";
 
             //Raw instructions
             uint32_t lower = read_instr<uint32_t>(i);
             uint32_t upper = read_instr<uint32_t>(i + 4);
 
-            file << setw(8) << hex << upper << ":" << setw(8) << lower << " ";
-            file << setfill(' ') << setw(30) << left << vu::disasm::upper(i, upper);
+            file << std::setw(8) << std::hex << upper << ":" << std::setw(8) << lower << " ";
+            file << std::setfill(' ') << std::setw(30) << std::left << vu::disasm::upper(i, upper);
 
             if (upper & (1 << 31))
                 file << vu::disasm::loi(lower);
             else
                 file << vu::disasm::lower(i, lower);
-            file << endl;
+            file << std::endl;
         }
         file.close();
     }

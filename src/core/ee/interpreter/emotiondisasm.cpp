@@ -7,15 +7,13 @@ namespace ee
 {
     namespace interpreter
     {
-        using namespace std;
-
         #define RS ((instruction >> 21) & 0x1F)
         #define RT ((instruction >> 16) & 0x1F)
         #define RD ((instruction >> 11) & 0x1F)
         #define SA ((instruction >> 6 ) & 0x1F)
         #define IMM ((int16_t)(instruction & 0xFFFF))
 
-        string disasm_instr(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_instr(uint32_t instruction, uint32_t instr_addr)
         {
             if (!instruction)
                 return "nop";
@@ -133,34 +131,34 @@ namespace ee
             }
         }
 
-        string disasm_j(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_j(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_jump("j", instruction, instr_addr);
         }
 
-        string disasm_jal(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_jal(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_jump("jal", instruction, instr_addr);
         }
 
-        string disasm_jump(const string opcode, uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_jump(const std::string opcode, uint32_t instruction, uint32_t instr_addr)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t addr = (instruction & 0x3FFFFFF) << 2;
             addr += (instr_addr + 4) & 0xF0000000;
-            output << "$" << setfill('0') << setw(8) << hex << addr;
+            output << "$" << std::setfill('0') << std::setw(8) << std::hex << addr;
 
             return opcode + " " + output.str();
         }
 
-        string disasm_bne(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_bne(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_branch_equality("bne", instruction, instr_addr);
         }
 
-        string disasm_branch_equality(string opcode, uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_branch_equality(std::string opcode, uint32_t instruction, uint32_t instr_addr)
         {
-            stringstream output;
+            std::stringstream output;
             int offset = IMM;
             offset <<=2;
             uint64_t rs = RS;
@@ -171,20 +169,20 @@ namespace ee
                 opcode += "z";
             else
                 output << EmotionEngine::REG(rt) << ", ";
-            output << "$" << setfill('0') << setw(8) << hex << (instr_addr + offset + 4);
+            output << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + offset + 4);
 
             return opcode + " " + output.str();
         }
 
-        string disasm_addiu(uint32_t instruction)
+        std::string disasm_addiu(uint32_t instruction)
         {
             return disasm_math("addiu", instruction);
         }
 
-        string disasm_regimm(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_regimm(uint32_t instruction, uint32_t instr_addr)
         {
-            stringstream output;
-            string opcode = "";
+            std::stringstream output;
+            std::string opcode = "";
             switch (RT)
             {
                 case 0x00:
@@ -221,27 +219,27 @@ namespace ee
             int32_t offset = IMM;
             offset <<= 2;
             output << EmotionEngine::REG(RS) << ", "
-                   << "$" << setfill('0') << setw(8) << hex << (instr_addr + offset + 4);
+                   << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + offset + 4);
 
             return opcode + " " + output.str();
 
         }
 
-        string disasm_mtsab(uint32_t instruction)
+        std::string disasm_mtsab(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "mtsab " << EmotionEngine::REG(RS) << ", " << (uint16_t)IMM;
             return output.str();
         }
 
-        string disasm_mtsah(uint32_t instruction)
+        std::string disasm_mtsah(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "mtsah " << EmotionEngine::REG(RS) << ", " << (uint16_t)IMM;
             return output.str();
         }
 
-        string disasm_special(uint32_t instruction)
+        std::string disasm_special(uint32_t instruction)
         {
             switch (instruction & 0x3F)
             {
@@ -342,24 +340,24 @@ namespace ee
             }
         }
 
-        string disasm_sll(uint32_t instruction)
+        std::string disasm_sll(uint32_t instruction)
         {
             return disasm_special_shift("sll", instruction);
         }
 
-        string disasm_srl(uint32_t instruction)
+        std::string disasm_srl(uint32_t instruction)
         {
             return disasm_special_shift("srl", instruction);
         }
 
-        string disasm_sra(uint32_t instruction)
+        std::string disasm_sra(uint32_t instruction)
         {
             return disasm_special_shift("sra", instruction);
         }
 
-        string disasm_variableshift(const string opcode, uint32_t instruction)
+        std::string disasm_variableshift(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RD) << ", "
                    << EmotionEngine::REG(RT) << ", "
                    << EmotionEngine::REG(RS);
@@ -367,34 +365,34 @@ namespace ee
             return opcode + " " + output.str();
         }
 
-        string disasm_sllv(uint32_t instruction)
+        std::string disasm_sllv(uint32_t instruction)
         {
             return disasm_variableshift("sllv", instruction);
         }
 
-        string disasm_srlv(uint32_t instruction)
+        std::string disasm_srlv(uint32_t instruction)
         {
             return disasm_variableshift("srlv", instruction);
         }
 
-        string disasm_srav(uint32_t instruction)
+        std::string disasm_srav(uint32_t instruction)
         {
             return disasm_variableshift("srav", instruction);
         }
 
-        string disasm_jr(uint32_t instruction)
+        std::string disasm_jr(uint32_t instruction)
         {
-            stringstream output;
-            string opcode = "jr";
+            std::stringstream output;
+            std::string opcode = "jr";
             output << EmotionEngine::REG(RS);
 
             return opcode + " " + output.str();
         }
 
-        string disasm_jalr(uint32_t instruction)
+        std::string disasm_jalr(uint32_t instruction)
         {
-            stringstream output;
-            string opcode = "jalr";
+            std::stringstream output;
+            std::string opcode = "jalr";
             if (RD != 31)
                 output << EmotionEngine::REG(RD) << ", ";
             output << EmotionEngine::REG(RS);
@@ -402,9 +400,9 @@ namespace ee
             return opcode + " " + output.str();
         }
 
-        string disasm_conditional_move(const string opcode, uint32_t instruction)
+        std::string disasm_conditional_move(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RD) << ", "
                    << EmotionEngine::REG(RS) << ", "
                    << EmotionEngine::REG(RT);
@@ -412,107 +410,107 @@ namespace ee
             return opcode + " " + output.str();
         }
 
-        string disasm_movz(uint32_t instruction)
+        std::string disasm_movz(uint32_t instruction)
         {
             return disasm_conditional_move("movz", instruction);
         }
 
-        string disasm_movn(uint32_t instruction)
+        std::string disasm_movn(uint32_t instruction)
         {
             return disasm_conditional_move("movn", instruction);
         }
 
-        string disasm_syscall_ee(uint32_t instruction)
+        std::string disasm_syscall_ee(uint32_t instruction)
         {
-            stringstream output;
-            string opcode = "syscall";
+            std::stringstream output;
+            std::string opcode = "syscall";
             uint32_t code = (instruction >> 6) & 0xFFFFF;
-            output << "$" << setfill('0') << setw(8) << hex << code;
+            output << "$" << std::setfill('0') << std::setw(8) << std::hex << code;
 
             return opcode + " " + output.str();
         }
 
-        string disasm_movereg(const string opcode, uint32_t instruction)
+        std::string disasm_movereg(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RD);
             return opcode + " " + output.str();
         }
 
-        string disasm_mfhi(uint32_t instruction)
+        std::string disasm_mfhi(uint32_t instruction)
         {
             return disasm_movereg("mfhi", instruction);
         }
 
-        string disasm_moveto(const string opcode, uint32_t instruction)
+        std::string disasm_moveto(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RS);
             return opcode + " " + output.str();
         }
 
-        string disasm_mthi(uint32_t instruction)
+        std::string disasm_mthi(uint32_t instruction)
         {
             return disasm_moveto("mthi", instruction);
         }
 
-        string disasm_mflo(uint32_t instruction)
+        std::string disasm_mflo(uint32_t instruction)
         {
             return disasm_movereg("mflo", instruction);
         }
 
-        string disasm_mtlo(uint32_t instruction)
+        std::string disasm_mtlo(uint32_t instruction)
         {
             return disasm_moveto("mtlo", instruction);
         }
 
-        string disasm_dsllv(uint32_t instruction)
+        std::string disasm_dsllv(uint32_t instruction)
         {
             return disasm_variableshift("dsllv", instruction);
         }
 
-        string disasm_dsrlv(uint32_t instruction)
+        std::string disasm_dsrlv(uint32_t instruction)
         {
             return disasm_variableshift("dsrlv", instruction);
         }
 
-        string disasm_dsrav(uint32_t instruction)
+        std::string disasm_dsrav(uint32_t instruction)
         {
             return disasm_variableshift("dsrav", instruction);
         }
 
-        string disasm_mult(uint32_t instruction)
+        std::string disasm_mult(uint32_t instruction)
         {
             return disasm_special_simplemath("mult", instruction);
         }
 
-        string disasm_multu(uint32_t instruction)
+        std::string disasm_multu(uint32_t instruction)
         {
             return disasm_special_simplemath("multu", instruction);
         }
 
-        string disasm_division(const string opcode, uint32_t instruction)
+        std::string disasm_division(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RS) << ", "
                    << EmotionEngine::REG(RT);
 
             return opcode + " " + output.str();
         }
 
-        string disasm_div(uint32_t instruction)
+        std::string disasm_div(uint32_t instruction)
         {
             return disasm_division("div", instruction);
         }
 
-        string disasm_divu(uint32_t instruction)
+        std::string disasm_divu(uint32_t instruction)
         {
             return disasm_division("divu", instruction);
         }
 
-        string disasm_special_simplemath(const string opcode, uint32_t instruction)
+        std::string disasm_special_simplemath(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RD) << ", "
                    << EmotionEngine::REG(RS) << ", "
                    << EmotionEngine::REG(RT);
@@ -520,381 +518,381 @@ namespace ee
             return opcode + " " + output.str();
         }
 
-        string disasm_add(uint32_t instruction)
+        std::string disasm_add(uint32_t instruction)
         {
             return disasm_special_simplemath("add", instruction);
         }
 
-        string disasm_addu(uint32_t instruction)
+        std::string disasm_addu(uint32_t instruction)
         {
             return disasm_special_simplemath("addu", instruction);
         }
 
-        string disasm_sub(uint32_t instruction)
+        std::string disasm_sub(uint32_t instruction)
         {
             return disasm_special_simplemath("sub", instruction);
         }
 
-        string disasm_subu(uint32_t instruction)
+        std::string disasm_subu(uint32_t instruction)
         {
             return disasm_special_simplemath("subu", instruction);
         }
 
-        string disasm_and_ee(uint32_t instruction)
+        std::string disasm_and_ee(uint32_t instruction)
         {
             return disasm_special_simplemath("and", instruction);
         }
 
-        string disasm_or_ee(uint32_t instruction)
+        std::string disasm_or_ee(uint32_t instruction)
         {
             return disasm_special_simplemath("or", instruction);
         }
 
-        string disasm_xor_ee(uint32_t instruction)
+        std::string disasm_xor_ee(uint32_t instruction)
         {
             return disasm_special_simplemath("xor", instruction);
         }
 
-        string disasm_nor(uint32_t instruction)
+        std::string disasm_nor(uint32_t instruction)
         {
             return disasm_special_simplemath("nor", instruction);
         }
 
-        string disasm_mfsa(uint32_t instruction)
+        std::string disasm_mfsa(uint32_t instruction)
         {
             return disasm_movereg("mfsa", instruction);
         }
 
-        string disasm_mtsa(uint32_t instruction)
+        std::string disasm_mtsa(uint32_t instruction)
         {
             return disasm_moveto("mtsa", instruction);
         }
 
-        string disasm_slt(uint32_t instruction)
+        std::string disasm_slt(uint32_t instruction)
         {
             return disasm_special_simplemath("slt", instruction);
         }
 
-        string disasm_sltu(uint32_t instruction)
+        std::string disasm_sltu(uint32_t instruction)
         {
             return disasm_special_simplemath("sltu", instruction);
         }
 
-        string disasm_dadd(uint32_t instruction)
+        std::string disasm_dadd(uint32_t instruction)
         {
             return disasm_special_simplemath("dadd", instruction);
         }
 
-        string disasm_daddu(uint32_t instruction)
+        std::string disasm_daddu(uint32_t instruction)
         {
             if (RT == 0)
                 return disasm_move(instruction);
             return disasm_special_simplemath("daddu", instruction);
         }
 
-        string disasm_dsub(uint32_t instruction)
+        std::string disasm_dsub(uint32_t instruction)
         {
             return disasm_special_simplemath("dsub", instruction);
         }
 
-        string disasm_dsubu(uint32_t instruction)
+        std::string disasm_dsubu(uint32_t instruction)
         {
             return disasm_special_simplemath("dsubu", instruction);
         }
 
-        string disasm_special_shift(const string opcode, uint32_t instruction)
+        std::string disasm_special_shift(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RD) << ", "
                    << EmotionEngine::REG(RT) << ", "
                    << SA;
             return opcode + " " + output.str();
         }
 
-        string disasm_dsll(uint32_t instruction)
+        std::string disasm_dsll(uint32_t instruction)
         {
             return disasm_special_shift("dsll", instruction);
         }
 
-        string disasm_dsrl(uint32_t instruction)
+        std::string disasm_dsrl(uint32_t instruction)
         {
             return disasm_special_shift("dsrl", instruction);
         }
 
-        string disasm_dsra(uint32_t instruction)
+        std::string disasm_dsra(uint32_t instruction)
         {
             return disasm_special_shift("dsra", instruction);
         }
 
-        string disasm_dsll32(uint32_t instruction)
+        std::string disasm_dsll32(uint32_t instruction)
         {
             return disasm_special_shift("dsll32", instruction);
         }
 
-        string disasm_dsrl32(uint32_t instruction)
+        std::string disasm_dsrl32(uint32_t instruction)
         {
             return disasm_special_shift("dsrl32", instruction);
         }
 
-        string disasm_dsra32(uint32_t instruction)
+        std::string disasm_dsra32(uint32_t instruction)
         {
             return disasm_special_shift("dsra32", instruction);
         }
 
 
-        string disasm_beq(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_beq(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_branch_equality("beq", instruction, instr_addr);
         }
 
 
-        string disasm_branch_inequality(const std::string opcode, uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_branch_inequality(const std::string opcode, uint32_t instruction, uint32_t instr_addr)
         {
-            stringstream output;
+            std::stringstream output;
             int32_t offset = IMM;
             offset <<= 2;
 
             output << EmotionEngine::REG(RS) << ", "
-                   << "$" << setfill('0') << setw(8) << hex << (instr_addr + offset + 4);
+                   << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + offset + 4);
 
             return opcode + " " + output.str();
 
         }
 
-        string disasm_blez(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_blez(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_branch_inequality("blez", instruction, instr_addr);
         }
 
-        string disasm_bgtz(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_bgtz(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_branch_inequality("bgtz", instruction, instr_addr);
         }
 
-        string disasm_math(const string opcode, uint32_t instruction)
+        std::string disasm_math(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RT) << ", " << EmotionEngine::REG(RS) << ", "
-                   << "$" << setfill('0') << setw(4) << hex << IMM;
+                   << "$" << std::setfill('0') << std::setw(4) << std::hex << IMM;
             return opcode + " " + output.str();
         }
 
-        string disasm_addi(uint32_t instruction)
+        std::string disasm_addi(uint32_t instruction)
         {
             return disasm_math("addi", instruction);
         }
 
-        string disasm_slti(uint32_t instruction)
+        std::string disasm_slti(uint32_t instruction)
         {
             return disasm_math("slti", instruction);
         }
 
-        string disasm_sltiu(uint32_t instruction)
+        std::string disasm_sltiu(uint32_t instruction)
         {
             return disasm_math("sltiu", instruction);
         }
 
-        string disasm_andi(uint32_t instruction)
+        std::string disasm_andi(uint32_t instruction)
         {
             return disasm_math("andi", instruction);
         }
 
-        string disasm_ori(uint32_t instruction)
+        std::string disasm_ori(uint32_t instruction)
         {
             if (IMM == 0)
                 return disasm_move(instruction);
             return disasm_math("ori", instruction);
         }
 
-        string disasm_move(uint32_t instruction)
+        std::string disasm_move(uint32_t instruction)
         {
-            stringstream output;
-            string opcode = "move";
+            std::stringstream output;
+            std::string opcode = "move";
             output << EmotionEngine::REG(RD) << ", "
                    << EmotionEngine::REG(RS);
 
             return opcode + " " + output.str();
         }
 
-        string disasm_xori(uint32_t instruction)
+        std::string disasm_xori(uint32_t instruction)
         {
             return disasm_math("xori", instruction);
         }
 
-        string disasm_lui(uint32_t instruction)
+        std::string disasm_lui(uint32_t instruction)
         {
-            stringstream output;
-            string opcode = "lui";
+            std::stringstream output;
+            std::string opcode = "lui";
             output << EmotionEngine::REG(RT) << ", "
-                   << "$" << setfill('0') << setw(4) << hex << IMM;
+                   << "$" << std::setfill('0') << std::setw(4) << std::hex << IMM;
 
             return opcode + " " + output.str();
         }
 
-        string disasm_beql(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_beql(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_branch_equality("beql", instruction, instr_addr);
         }
 
-        string disasm_bnel(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_bnel(uint32_t instruction, uint32_t instr_addr)
         {
             return disasm_branch_equality("bnel", instruction, instr_addr);
         }
 
-        string disasm_daddi(uint32_t instruction)
+        std::string disasm_daddi(uint32_t instruction)
         {
             return disasm_math("daddi", instruction);
         }
 
-        string disasm_daddiu(uint32_t instruction)
+        std::string disasm_daddiu(uint32_t instruction)
         {
             return disasm_math("daddiu", instruction);
         }
 
-        string disasm_loadstore(const std::string opcode, uint32_t instruction)
+        std::string disasm_loadstore(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RT) << ", "
                    << IMM
                    << "{" << EmotionEngine::REG(RS) << "}";
             return opcode + " " + output.str();
         }
 
-        string disasm_cop2_loadstore(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_loadstore(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "vf" << RT << ", "
                    << IMM
                    << "{" << EmotionEngine::REG(RS) << "}";
             return opcode + " " + output.str();
         }
 
-        string disasm_ldl(uint32_t instruction)
+        std::string disasm_ldl(uint32_t instruction)
         {
             return disasm_loadstore("ldl", instruction);
         }
 
-        string disasm_ldr(uint32_t instruction)
+        std::string disasm_ldr(uint32_t instruction)
         {
             return disasm_loadstore("ldr", instruction);
         }
 
-        string disasm_lq(uint32_t instruction)
+        std::string disasm_lq(uint32_t instruction)
         {
             return disasm_loadstore("lq", instruction);
         }
 
-        string disasm_sq(uint32_t instruction)
+        std::string disasm_sq(uint32_t instruction)
         {
             return disasm_loadstore("sq", instruction);
         }
 
-        string disasm_lb(uint32_t instruction)
+        std::string disasm_lb(uint32_t instruction)
         {
             return disasm_loadstore("lb", instruction);
         }
 
-        string disasm_lh(uint32_t instruction)
+        std::string disasm_lh(uint32_t instruction)
         {
             return disasm_loadstore("lh", instruction);
         }
 
-        string disasm_lwl(uint32_t instruction)
+        std::string disasm_lwl(uint32_t instruction)
         {
             return disasm_loadstore("lwl", instruction);
         }
 
-        string disasm_lw(uint32_t instruction)
+        std::string disasm_lw(uint32_t instruction)
         {
             return disasm_loadstore("lw", instruction);
         }
 
-        string disasm_lbu(uint32_t instruction)
+        std::string disasm_lbu(uint32_t instruction)
         {
             return disasm_loadstore("lbu", instruction);
         }
 
-        string disasm_lhu(uint32_t instruction)
+        std::string disasm_lhu(uint32_t instruction)
         {
             return disasm_loadstore("lhu", instruction);
         }
 
-        string disasm_lwr(uint32_t instruction)
+        std::string disasm_lwr(uint32_t instruction)
         {
             return disasm_loadstore("lwr", instruction);
         }
 
-        string disasm_lwu(uint32_t instruction)
+        std::string disasm_lwu(uint32_t instruction)
         {
             return disasm_loadstore("lwu", instruction);
         }
 
-        string disasm_sb(uint32_t instruction)
+        std::string disasm_sb(uint32_t instruction)
         {
             return disasm_loadstore("sb", instruction);
         }
 
-        string disasm_sh(uint32_t instruction)
+        std::string disasm_sh(uint32_t instruction)
         {
             return disasm_loadstore("sh", instruction);
         }
 
-        string disasm_swl(uint32_t instruction)
+        std::string disasm_swl(uint32_t instruction)
         {
             return disasm_loadstore("swl", instruction);
         }
 
-        string disasm_sw(uint32_t instruction)
+        std::string disasm_sw(uint32_t instruction)
         {
             return disasm_loadstore("sw", instruction);
         }
 
-        string disasm_sdl(uint32_t instruction)
+        std::string disasm_sdl(uint32_t instruction)
         {
             return disasm_loadstore("sdl", instruction);
         }
 
-        string disasm_sdr(uint32_t instruction)
+        std::string disasm_sdr(uint32_t instruction)
         {
             return disasm_loadstore("sdr", instruction);
         }
 
-        string disasm_swr(uint32_t instruction)
+        std::string disasm_swr(uint32_t instruction)
         {
             return disasm_loadstore("swr", instruction);
         }
 
-        string disasm_lwc1(uint32_t instruction)
+        std::string disasm_lwc1(uint32_t instruction)
         {
             return disasm_loadstore("lwc1", instruction);
         }
 
-        string disasm_lqc2(uint32_t instruction)
+        std::string disasm_lqc2(uint32_t instruction)
         {
             return disasm_cop2_loadstore("lqc2", instruction);
         }
 
-        string disasm_ld(uint32_t instruction)
+        std::string disasm_ld(uint32_t instruction)
         {
             return disasm_loadstore("ld", instruction);
         }
 
-        string disasm_swc1(uint32_t instruction)
+        std::string disasm_swc1(uint32_t instruction)
         {
             return disasm_loadstore("swc1", instruction);
         }
 
-        string disasm_sqc2(uint32_t instruction)
+        std::string disasm_sqc2(uint32_t instruction)
         {
             return disasm_cop2_loadstore("sqc2", instruction);
         }
 
-        string disasm_sd(uint32_t instruction)
+        std::string disasm_sd(uint32_t instruction)
         {
             return disasm_loadstore("sd", instruction);
         }
 
-        string disasm_cop(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_cop(uint32_t instruction, uint32_t instr_addr)
         {
             uint16_t op = RS;
             uint8_t cop_id = ((instruction >> 26) & 0x3);
@@ -949,9 +947,9 @@ namespace ee
             }
         }
 
-        string disasm_cop_move(string opcode, uint32_t instruction)
+        std::string disasm_cop_move(std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
 
             int cop_id = (instruction >> 26) & 0x3;
 
@@ -961,27 +959,27 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop_mfc(uint32_t instruction)
+        std::string disasm_cop_mfc(uint32_t instruction)
         {
             return disasm_cop_move("mfc", instruction);
         }
 
-        string disasm_cop_mtc(uint32_t instruction)
+        std::string disasm_cop_mtc(uint32_t instruction)
         {
             return disasm_cop_move("mtc", instruction);
         }
 
-        string disasm_cop_cfc(uint32_t instruction)
+        std::string disasm_cop_cfc(uint32_t instruction)
         {
             return disasm_cop_move("cfc", instruction);
         }
 
-        string disasm_cop_ctc(uint32_t instruction)
+        std::string disasm_cop_ctc(uint32_t instruction)
         {
             return disasm_cop_move("ctc", instruction);
         }
 
-        string disasm_cop_s(uint32_t instruction)
+        std::string disasm_cop_s(uint32_t instruction)
         {
             uint8_t op = instruction & 0x3F;
             switch (op)
@@ -1037,9 +1035,9 @@ namespace ee
             }
         }
 
-        string disasm_fpu_math(const string opcode, uint32_t instruction)
+        std::string disasm_fpu_math(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "f" << SA << ", "
                    << "f" << RD << ", "
                    << "f" << RT;
@@ -1047,188 +1045,188 @@ namespace ee
             return opcode + " " + output.str();
         }
 
-        string disasm_fpu_add(uint32_t instruction)
+        std::string disasm_fpu_add(uint32_t instruction)
         {
             return disasm_fpu_math("add.s", instruction);
         }
 
-        string disasm_fpu_sub(uint32_t instruction)
+        std::string disasm_fpu_sub(uint32_t instruction)
         {
             return disasm_fpu_math("sub.s", instruction);
         }
 
-        string disasm_fpu_mul(uint32_t instruction)
+        std::string disasm_fpu_mul(uint32_t instruction)
         {
             return disasm_fpu_math("mul.s", instruction);
         }
 
-        string disasm_fpu_div(uint32_t instruction)
+        std::string disasm_fpu_div(uint32_t instruction)
         {
             return disasm_fpu_math("div.s", instruction);
         }
 
-        string disasm_fpu_sqrt(uint32_t instruction)
+        std::string disasm_fpu_sqrt(uint32_t instruction)
         {
             return disasm_fpu_singleop_math("sqrt.s", instruction);
         }
 
-        string disasm_fpu_abs(uint32_t instruction)
+        std::string disasm_fpu_abs(uint32_t instruction)
         {
             return disasm_fpu_singleop_math("abs.s", instruction);
         }
 
-        string disasm_fpu_singleop_math(const string opcode, uint32_t instruction)
+        std::string disasm_fpu_singleop_math(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "f" << SA << ", "
                    << "f" << RD;
 
             return opcode + " " + output.str();
         }
 
-        string disasm_fpu_mov(uint32_t instruction)
+        std::string disasm_fpu_mov(uint32_t instruction)
         {
             return disasm_fpu_singleop_math("mov.s", instruction);
         }
 
-        string disasm_fpu_neg(uint32_t instruction)
+        std::string disasm_fpu_neg(uint32_t instruction)
         {
             return disasm_fpu_singleop_math("neg.s", instruction);
         }
 
-        string disasm_fpu_rsqrt(uint32_t instruction)
+        std::string disasm_fpu_rsqrt(uint32_t instruction)
         {
             return disasm_fpu_singleop_math("rsqrt.s", instruction);
         }
 
-        string disasm_fpu_acc(const string opcode, uint32_t instruction)
+        std::string disasm_fpu_acc(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "f" << RD << ", "
                    << "f" << RT;
 
             return opcode + " " + output.str();
         }
 
-        string disasm_fpu_adda(uint32_t instruction)
+        std::string disasm_fpu_adda(uint32_t instruction)
         {
             return disasm_fpu_acc("adda.s", instruction);
         }
 
-        string disasm_fpu_suba(uint32_t instruction)
+        std::string disasm_fpu_suba(uint32_t instruction)
         {
             return disasm_fpu_acc("suba.s", instruction);
         }
 
-        string disasm_fpu_mula(uint32_t instruction)
+        std::string disasm_fpu_mula(uint32_t instruction)
         {
             return disasm_fpu_acc("mula.s", instruction);
         }
 
-        string disasm_fpu_madd(uint32_t instruction)
+        std::string disasm_fpu_madd(uint32_t instruction)
         {
             return disasm_fpu_math("madd.s", instruction);
         }
 
-        string disasm_fpu_msub(uint32_t instruction)
+        std::string disasm_fpu_msub(uint32_t instruction)
         {
             return disasm_fpu_math("msub.s", instruction);
         }
 
-        string disasm_fpu_madda(uint32_t instruction)
+        std::string disasm_fpu_madda(uint32_t instruction)
         {
             return disasm_fpu_acc("madda.s", instruction);
         }
 
-        string disasm_fpu_msuba(uint32_t instruction)
+        std::string disasm_fpu_msuba(uint32_t instruction)
         {
             return disasm_fpu_acc("msuba.s", instruction);
         }
 
-        string disasm_fpu_convert(const string opcode, uint32_t instruction)
+        std::string disasm_fpu_convert(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "f" << SA << ", "
                    << "f" << RD;
 
             return opcode + " " + output.str();
         }
 
-        string disasm_fpu_cvt_w_s(uint32_t instruction)
+        std::string disasm_fpu_cvt_w_s(uint32_t instruction)
         {
             return disasm_fpu_convert("cvt.w.s", instruction);
         }
 
-        string disasm_fpu_compare(const string opcode, uint32_t instruction)
+        std::string disasm_fpu_compare(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "f" << RD << ", "
                    << "f" << RT;
 
             return opcode + " " + output.str();
         }
 
-        string disasm_fpu_c_f_s(uint32_t instruction)
+        std::string disasm_fpu_c_f_s(uint32_t instruction)
         {
             return disasm_fpu_compare("c.f.s", instruction);
         }
 
-        string disasm_fpu_c_lt_s(uint32_t instruction)
+        std::string disasm_fpu_c_lt_s(uint32_t instruction)
         {
             return disasm_fpu_compare("c.lt.s", instruction);
         }
 
-        string disasm_fpu_c_eq_s(uint32_t instruction)
+        std::string disasm_fpu_c_eq_s(uint32_t instruction)
         {
             return disasm_fpu_compare("c.eq.s", instruction);
         }
 
-        string disasm_fpu_c_le_s(uint32_t instruction)
+        std::string disasm_fpu_c_le_s(uint32_t instruction)
         {
             return disasm_fpu_compare("c.le.s", instruction);
         }
 
-        string disasm_cop_bc1(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_cop_bc1(uint32_t instruction, uint32_t instr_addr)
         {
 
-            stringstream output;
-            string opcode = "";
+            std::stringstream output;
+            std::string opcode = "";
             const static char* ops[] = {"bc1f", "bc1t", "bc1fl", "bc1tl"};
             int32_t offset = IMM << 2;
             uint8_t op = RT;
             if (op > 3)
                 return unknown_op("BC1", op, 2);
             opcode = ops[op];
-            output << "$" << setfill('0') << setw(8) << hex << (instr_addr + 4 + offset);
+            output << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + 4 + offset);
 
             return opcode + " " + output.str();
         }
 
-        string disasm_cop2_bc2(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_cop2_bc2(uint32_t instruction, uint32_t instr_addr)
         {
 
-            stringstream output;
-            string opcode = "";
+            std::stringstream output;
+            std::string opcode = "";
             const static char* ops[] = { "bc2f", "bc2fl", "bc2t", "bc2tl" };
             int32_t offset = IMM << 2;
             uint8_t op = RT;
             if (op > 3)
                 return unknown_op("BC2", op, 2);
             opcode = ops[op];
-            output << "$" << setfill('0') << setw(8) << hex << (instr_addr + 4 + offset);
+            output << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + 4 + offset);
 
             return opcode + " " + output.str();
         }
 
-        string disasm_cop_cvt_s_w(uint32_t instruction)
+        std::string disasm_cop_cvt_s_w(uint32_t instruction)
         {
             return disasm_fpu_convert("cvt.s.w", instruction);
         }
 
-        string get_dest_field(uint8_t field)
+        std::string get_dest_field(uint8_t field)
         {
             const static char vectors[] = {'w', 'z', 'y', 'x'};
-            string out;
+            std::string out;
             for (int i = 3; i >= 0; i--)
             {
                 if (field & (1 << i))
@@ -1237,15 +1235,15 @@ namespace ee
             return out;
         }
 
-        string get_fsf(uint8_t fsf)
+        std::string get_fsf(uint8_t fsf)
         {
-            const static string vectors[] = {"x", "y", "z", "w"};
+            const static std::string vectors[] = {"x", "y", "z", "w"};
             return vectors[fsf];
         }
 
-        string disasm_cop2_qmove(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_qmove(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << opcode;
             if (instruction & 1)
                 output << ".i";
@@ -1253,7 +1251,7 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2(uint32_t instruction)
+        std::string disasm_cop2(uint32_t instruction)
         {
             uint8_t op = RS;
             if (op >= 0x10)
@@ -1269,9 +1267,9 @@ namespace ee
             }
         }
 
-        string disasm_cop2_intmath(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_intmath(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t id = (instruction >> 6) & 0x1F;
             uint32_t is = (instruction >> 11) & 0x1F;
             uint32_t it = (instruction >> 16) & 0x1F;
@@ -1280,14 +1278,14 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2_special_simplemath(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_special_simplemath(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fd = (instruction >> 6) & 0x1F;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
-            string field = "." + get_dest_field(dest_field);
+            std::string field = "." + get_dest_field(dest_field);
             output << opcode << field;
             output << " vf" << fd;
             output << ", vf" << fs;
@@ -1295,10 +1293,10 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2_special_bc(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_special_bc(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
-            string bc_field = get_fsf(instruction & 0x3);
+            std::stringstream output;
+            std::string bc_field = get_fsf(instruction & 0x3);
             uint32_t fd = (instruction >> 6) & 0x1F;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
@@ -1309,9 +1307,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2_special_i(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_special_i(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fd = (instruction >> 6) & 0x1F;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t dest_field = (instruction >> 21) & 0xF;
@@ -1320,9 +1318,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2_special_q(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_special_q(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fd = (instruction >> 6) & 0x1F;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t dest_field = (instruction >> 21) & 0xF;
@@ -1331,7 +1329,7 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2_special(uint32_t instruction)
+        std::string disasm_cop2_special(uint32_t instruction)
         {
             uint8_t op = instruction & 0x3F;
             if (op >= 0x3C)
@@ -1432,154 +1430,154 @@ namespace ee
             }
         }
 
-        string disasm_vaddbc(uint32_t instruction)
+        std::string disasm_vaddbc(uint32_t instruction)
         {
             return disasm_cop2_special_bc("vadd", instruction);
         }
 
-        string disasm_vsubbc(uint32_t instruction)
+        std::string disasm_vsubbc(uint32_t instruction)
         {
             return disasm_cop2_special_bc("vsub", instruction);
         }
 
-        string disasm_vmaddbc(uint32_t instruction)
+        std::string disasm_vmaddbc(uint32_t instruction)
         {
             return disasm_cop2_special_bc("vmadd", instruction);
         }
 
-        string disasm_vmsubbc(uint32_t instruction)
+        std::string disasm_vmsubbc(uint32_t instruction)
         {
             return disasm_cop2_special_bc("vmsub", instruction);
         }
 
-        string disasm_vmaxbc(uint32_t instruction)
+        std::string disasm_vmaxbc(uint32_t instruction)
         {
             return disasm_cop2_special_bc("vmax", instruction);
         }
 
-        string disasm_vminibc(uint32_t instruction)
+        std::string disasm_vminibc(uint32_t instruction)
         {
             return disasm_cop2_special_bc("vmini", instruction);
         }
 
-        string disasm_vmulbc(uint32_t instruction)
+        std::string disasm_vmulbc(uint32_t instruction)
         {
             return disasm_cop2_special_bc("vmul", instruction);
         }
 
-        string disasm_vmulq(uint32_t instruction)
+        std::string disasm_vmulq(uint32_t instruction)
         {
             return disasm_cop2_special_q("vmul", instruction);
         }
 
-        string disasm_vmaxi(uint32_t instruction)
+        std::string disasm_vmaxi(uint32_t instruction)
         {
             return disasm_cop2_special_i("vmax", instruction);
         }
 
-        string disasm_vmuli(uint32_t instruction)
+        std::string disasm_vmuli(uint32_t instruction)
         {
             return disasm_cop2_special_i("vmul", instruction);
         }
 
-        string disasm_vminii(uint32_t instruction)
+        std::string disasm_vminii(uint32_t instruction)
         {
             return disasm_cop2_special_i("vmini", instruction);
         }
 
-        string disasm_vaddq(uint32_t instruction)
+        std::string disasm_vaddq(uint32_t instruction)
         {
             return disasm_cop2_special_q("vadd", instruction);
         }
 
-        string disasm_vmaddq(uint32_t instruction)
+        std::string disasm_vmaddq(uint32_t instruction)
         {
             return disasm_cop2_special_q("vmadd", instruction);
         }
 
-        string disasm_vaddi(uint32_t instruction)
+        std::string disasm_vaddi(uint32_t instruction)
         {
             return disasm_cop2_special_i("vadd", instruction);
         }
 
-        string disasm_vmaddi(uint32_t instruction)
+        std::string disasm_vmaddi(uint32_t instruction)
         {
             return disasm_cop2_special_i("vmadd", instruction);
         }
 
-        string disasm_vsubq(uint32_t instruction)
+        std::string disasm_vsubq(uint32_t instruction)
         {
             return disasm_cop2_special_q("vsub", instruction);
         }
 
-        string disasm_vmsubq(uint32_t instruction)
+        std::string disasm_vmsubq(uint32_t instruction)
         {
             return disasm_cop2_special_q("vmsub", instruction);
         }
 
-        string disasm_vsubi(uint32_t instruction)
+        std::string disasm_vsubi(uint32_t instruction)
         {
             return disasm_cop2_special_i("vsub", instruction);
         }
 
-        string disasm_vmsubi(uint32_t instruction)
+        std::string disasm_vmsubi(uint32_t instruction)
         {
             return disasm_cop2_special_i("vmsub", instruction);
         }
 
-        string disasm_vadd(uint32_t instruction)
+        std::string disasm_vadd(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vadd", instruction);
         }
 
-        string disasm_vmadd(uint32_t instruction)
+        std::string disasm_vmadd(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vmadd", instruction);
         }
 
-        string disasm_vmul(uint32_t instruction)
+        std::string disasm_vmul(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vmul", instruction);
         }
 
-        string disasm_vmax(uint32_t instruction)
+        std::string disasm_vmax(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vmax", instruction);
         }
 
-        string disasm_vsub(uint32_t instruction)
+        std::string disasm_vsub(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vsub", instruction);
         }
 
-        string disasm_vmsub(uint32_t instruction)
+        std::string disasm_vmsub(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vmsub", instruction);
         }
 
-        string disasm_vopmsub(uint32_t instruction)
+        std::string disasm_vopmsub(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vopmsub", instruction);
         }
 
-        string disasm_vmini(uint32_t instruction)
+        std::string disasm_vmini(uint32_t instruction)
         {
             return disasm_cop2_special_simplemath("vmini", instruction);
         }
 
-        string disasm_viadd(uint32_t instruction)
+        std::string disasm_viadd(uint32_t instruction)
         {
             return disasm_cop2_intmath("viadd", instruction);
         }
 
-        string disasm_visub(uint32_t instruction)
+        std::string disasm_visub(uint32_t instruction)
         {
             return disasm_cop2_intmath("visub", instruction);
         }
 
-        string disasm_viaddi(uint32_t instruction)
+        std::string disasm_viaddi(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             int8_t imm = (instruction >> 6) & 0x1F;
             imm = ((int8_t)(imm << 3)) >> 3;
             uint32_t is = (instruction >> 11) & 0x1F;
@@ -1588,28 +1586,28 @@ namespace ee
             return output.str();
         }
 
-        string disasm_vcallms(uint32_t instruction)
+        std::string disasm_vcallms(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t imm = (instruction >> 6) & 0x7FFF;
             imm *= 8;
-            output << "vcallms 0x" << setfill('0') << setw(8) << hex << imm;
+            output << "vcallms 0x" << std::setfill('0') << std::setw(8) << std::hex << imm;
             return output.str();
         }
 
-        string disasm_vcallmsr(uint32_t instruction)
+        std::string disasm_vcallmsr(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "vcallmsr CMSAR0";
             return output.str();
         }
 
-        string disasm_viand(uint32_t instruction)
+        std::string disasm_viand(uint32_t instruction)
         {
             return disasm_cop2_intmath("viand", instruction);
         }
 
-        string disasm_cop2_special2(uint32_t instruction)
+        std::string disasm_cop2_special2(uint32_t instruction)
         {
             uint16_t op = (instruction & 0x3) | ((instruction >> 4) & 0x7C);
             switch (op)
@@ -1730,34 +1728,34 @@ namespace ee
             }
         }
 
-        string disasm_cop2_special2_move(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_special2_move(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
-            string field = get_dest_field((instruction >> 21) & 0xF);
+            std::string field = get_dest_field((instruction >> 21) & 0xF);
             output << opcode << "." << field;
             output << " vf" << ft << ", vf" << fs;
             return output.str();
         }
 
-        string disasm_cop2_acc(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_acc(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
-            string field = "." + get_dest_field(dest_field);
+            std::string field = "." + get_dest_field(dest_field);
             output << opcode << field;
             output << " ACC, vf" << fs;
             output << ", vf" << ft;
             return output.str();
         }
 
-        string disasm_cop2_acc_bc(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_acc_bc(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
-            string bc_field = get_fsf(instruction & 0x3);
+            std::stringstream output;
+            std::string bc_field = get_fsf(instruction & 0x3);
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
             uint32_t dest_field = (instruction >> 21) & 0xF;
@@ -1767,9 +1765,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2_acc_i(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_acc_i(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
 
@@ -1778,9 +1776,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_cop2_acc_q(const string opcode, uint32_t instruction)
+        std::string disasm_cop2_acc_q(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
 
@@ -1789,242 +1787,242 @@ namespace ee
             return output.str();
         }
 
-        string disasm_vaddabc(uint32_t instruction)
+        std::string disasm_vaddabc(uint32_t instruction)
         {
             return disasm_cop2_acc_bc("vadda", instruction);
         }
 
-        string disasm_vsubabc(uint32_t instruction)
+        std::string disasm_vsubabc(uint32_t instruction)
         {
             return disasm_cop2_acc_bc("vsuba", instruction);
         }
 
-        string disasm_vmaddabc(uint32_t instruction)
+        std::string disasm_vmaddabc(uint32_t instruction)
         {
             return disasm_cop2_acc_bc("vmadda", instruction);
         }
 
-        string disasm_vmsubabc(uint32_t instruction)
+        std::string disasm_vmsubabc(uint32_t instruction)
         {
             return disasm_cop2_acc_bc("vmsuba", instruction);
         }
 
-        string disasm_vitof0(uint32_t instruction)
+        std::string disasm_vitof0(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vitof0", instruction);
         }
 
-        string disasm_vitof4(uint32_t instruction)
+        std::string disasm_vitof4(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vitof4", instruction);
         }
 
-        string disasm_vitof12(uint32_t instruction)
+        std::string disasm_vitof12(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vitof12", instruction);
         }
 
-        string disasm_vitof15(uint32_t instruction)
+        std::string disasm_vitof15(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vitof15", instruction);
         }
 
-        string disasm_vftoi0(uint32_t instruction)
+        std::string disasm_vftoi0(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vftoi0", instruction);
         }
 
-        string disasm_vftoi4(uint32_t instruction)
+        std::string disasm_vftoi4(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vftoi4", instruction);
         }
 
-        string disasm_vftoi12(uint32_t instruction)
+        std::string disasm_vftoi12(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vftoi12", instruction);
         }
 
-        string disasm_vftoi15(uint32_t instruction)
+        std::string disasm_vftoi15(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vftoi15", instruction);
         }
 
-        string disasm_vmulabc(uint32_t instruction)
+        std::string disasm_vmulabc(uint32_t instruction)
         {
             return disasm_cop2_acc_bc("vmula", instruction);
         }
 
-        string disasm_vmulaq(uint32_t instruction)
+        std::string disasm_vmulaq(uint32_t instruction)
         {
             return disasm_cop2_acc_q("vmulaq", instruction);
         }
 
-        string disasm_vabs(uint32_t instruction)
+        std::string disasm_vabs(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vabs", instruction);
         }
 
-        string disasm_vmulai(uint32_t instruction)
+        std::string disasm_vmulai(uint32_t instruction)
         {
             return disasm_cop2_acc_i("vmula", instruction);
         }
 
-        string disasm_vclip(uint32_t instruction)
+        std::string disasm_vclip(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
             output << "vclipw.xyz vf" << fs << ", vf" << ft;
             return output.str();
         }
 
-        string disasm_vaddaq(uint32_t instruction)
+        std::string disasm_vaddaq(uint32_t instruction)
         {
             return disasm_cop2_acc_q("vadda", instruction);
         }
 
-        string disasm_vmaddaq(uint32_t instruction)
+        std::string disasm_vmaddaq(uint32_t instruction)
         {
             return disasm_cop2_acc_q("vmadda", instruction);
         }
 
-        string disasm_vmaddai(uint32_t instruction)
+        std::string disasm_vmaddai(uint32_t instruction)
         {
             return disasm_cop2_acc_i("vmadda", instruction);
         }
 
-        string disasm_vmsubai(uint32_t instruction)
+        std::string disasm_vmsubai(uint32_t instruction)
         {
             return disasm_cop2_acc_i("vmsuba", instruction);
         }
 
-        string disasm_vadda(uint32_t instruction)
+        std::string disasm_vadda(uint32_t instruction)
         {
             return disasm_cop2_acc("vadda", instruction);
         }
 
-        string disasm_vaddai(uint32_t instruction)
+        std::string disasm_vaddai(uint32_t instruction)
         {
             return disasm_cop2_acc_i("vadda", instruction);
         }
 
-        string disasm_vmadda(uint32_t instruction)
+        std::string disasm_vmadda(uint32_t instruction)
         {
             return disasm_cop2_acc("vmadda", instruction);
         }
 
-        string disasm_vmula(uint32_t instruction)
+        std::string disasm_vmula(uint32_t instruction)
         {
             return disasm_cop2_acc("vmula", instruction);
         }
 
-        string disasm_vsuba(uint32_t instruction)
+        std::string disasm_vsuba(uint32_t instruction)
         {
             return disasm_cop2_acc("vsuba", instruction);
         }
 
-        string disasm_vmsuba(uint32_t instruction)
+        std::string disasm_vmsuba(uint32_t instruction)
         {
             return disasm_cop2_acc("vmsuba", instruction);
         }
 
-        string disasm_vopmula(uint32_t instruction)
+        std::string disasm_vopmula(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
             output << "vopmula.xyz ACC, vf" << fs << ", vf" << ft;
             return output.str();
         }
 
-        string disasm_vmove(uint32_t instruction)
+        std::string disasm_vmove(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vmove", instruction);
         }
 
-        string disasm_vmr32(uint32_t instruction)
+        std::string disasm_vmr32(uint32_t instruction)
         {
             return disasm_cop2_special2_move("vmr32", instruction);
         }
 
-        string disasm_vlqi(uint32_t instruction)
+        std::string disasm_vlqi(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t is = (instruction >> 11) & 0x1F;
             uint32_t dest = (instruction >> 16) & 0x1F;
-            string field = get_dest_field((instruction >> 21) & 0xF);
+            std::string field = get_dest_field((instruction >> 21) & 0xF);
             output << "vlqi." << field;
             output << " vf" << dest << ", (vi" << is << "++)";
             return output.str();
         }
 
-        string disasm_vsqi(uint32_t instruction)
+        std::string disasm_vsqi(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t it = (instruction >> 16) & 0x1F;
-            string field = get_dest_field((instruction >> 21) & 0xF);
+            std::string field = get_dest_field((instruction >> 21) & 0xF);
             output << "vsqi." << field;
             output << " vf" << fs << ", (vi" << it << "++)";
             return output.str();
         }
 
-        string disasm_vlqd(uint32_t instruction)
+        std::string disasm_vlqd(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t is = (instruction >> 11) & 0x1F;
             uint32_t dest = (instruction >> 16) & 0x1F;
-            string field = get_dest_field((instruction >> 21) & 0xF);
+            std::string field = get_dest_field((instruction >> 21) & 0xF);
             output << "vlqd." << field;
             output << " vf" << dest << ", (vi" << is << "++)";
             return output.str();
         }
 
-        string disasm_vsqd(uint32_t instruction)
+        std::string disasm_vsqd(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t it = (instruction >> 16) & 0x1F;
-            string field = get_dest_field((instruction >> 21) & 0xF);
+            std::string field = get_dest_field((instruction >> 21) & 0xF);
             output << "vsqd." << field;
             output << " vf" << fs << ", (vi" << it << "++)";
             return output.str();
         }
 
-        string disasm_vdiv(uint32_t instruction)
+        std::string disasm_vdiv(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
-            string fsf = get_fsf((instruction >> 21) & 0x3);
-            string ftf = get_fsf((instruction >> 23) & 0x3);
+            std::string fsf = get_fsf((instruction >> 21) & 0x3);
+            std::string ftf = get_fsf((instruction >> 23) & 0x3);
             output << "vdiv Q, vf" << fs << fsf << ", vf" << ft << ftf;
             return output.str();
         }
 
-        string disasm_vsqrt(uint32_t instruction)
+        std::string disasm_vsqrt(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t ft = (instruction >> 16) & 0x1F;
-            string ftf = get_fsf((instruction >> 23) & 0x3);
+            std::string ftf = get_fsf((instruction >> 23) & 0x3);
             output << "vsqrt Q, vf" << ft << ftf;
             return output.str();
         }
 
-        string disasm_vrsqrt(uint32_t instruction)
+        std::string disasm_vrsqrt(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
-            string fsf = get_fsf((instruction >> 21) & 0x3);
-            string ftf = get_fsf((instruction >> 23) & 0x3);
+            std::string fsf = get_fsf((instruction >> 21) & 0x3);
+            std::string ftf = get_fsf((instruction >> 23) & 0x3);
             output << "vrsqrt Q, vf" << fs << fsf << ", vf" << ft << ftf;
             return output.str();
         }
 
-        string disasm_vmtir(uint32_t instruction)
+        std::string disasm_vmtir(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
             uint32_t it = (instruction >> 16) & 0x1F;
             uint8_t fsf = (instruction >> 21) & 0x3;
@@ -2033,9 +2031,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_vmfir(uint32_t instruction)
+        std::string disasm_vmfir(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t is = (instruction >> 11) & 0x1F;
             uint32_t ft = (instruction >> 16) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
@@ -2044,9 +2042,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_vilwr(uint32_t instruction)
+        std::string disasm_vilwr(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t is = (instruction >> 11) & 0x1F;
             uint32_t it = (instruction >> 16) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
@@ -2055,9 +2053,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_viswr(uint32_t instruction)
+        std::string disasm_viswr(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t is = (instruction >> 11) & 0x1F;
             uint32_t it = (instruction >> 16) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
@@ -2066,9 +2064,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_vrnext(uint32_t instruction)
+        std::string disasm_vrnext(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t ft = (instruction >> 16) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
             output << "vrnext." << get_dest_field(dest_field);
@@ -2076,9 +2074,9 @@ namespace ee
             return output.str();
         }
 
-        string disasm_vrget(uint32_t instruction)
+        std::string disasm_vrget(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t ft = (instruction >> 16) & 0x1F;
             uint8_t dest_field = (instruction >> 21) & 0xF;
             output << "vrget." << get_dest_field(dest_field);
@@ -2086,50 +2084,50 @@ namespace ee
             return output.str();
         }
 
-        string disasm_vrinit(uint32_t instruction)
+        std::string disasm_vrinit(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
-            string fsf = "." + get_fsf((instruction >> 21) & 0x3);
+            std::string fsf = "." + get_fsf((instruction >> 21) & 0x3);
             output << "vrinit R, vf" << fs << fsf;
             return output.str();
         }
 
-        string disasm_vrxor(uint32_t instruction)
+        std::string disasm_vrxor(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             uint32_t fs = (instruction >> 11) & 0x1F;
-            string fsf = "." + get_fsf((instruction >> 21) & 0x3);
+            std::string fsf = "." + get_fsf((instruction >> 21) & 0x3);
             output << "vrxor R, vf" << fs << fsf;
             return output.str();
         }
 
-        string disasm_mmi_copy(const string opcode, uint32_t instruction)
+        std::string disasm_mmi_copy(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RD) << ", "
                    << EmotionEngine::REG(RT);
 
             return opcode + " " + output.str();
         }
 
-        string disasm_mmi_copy_hilo(const string opcode, uint32_t instruction)
+        std::string disasm_mmi_copy_hilo(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RD) << ", hi, lo";
 
             return opcode + " " + output.str();
         }
 
-        string disasm_mmi_copyto_hilo(const string opcode, uint32_t instruction)
+        std::string disasm_mmi_copyto_hilo(const std::string opcode, uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << EmotionEngine::REG(RS) << ", hi, lo";
 
             return opcode + " " + output.str();
         }
 
-        string disasm_mmi(uint32_t instruction, uint32_t instr_addr)
+        std::string disasm_mmi(uint32_t instruction, uint32_t instr_addr)
         {
             int op = instruction & 0x3F;
             switch (op)
@@ -2179,16 +2177,16 @@ namespace ee
             }
         }
 
-        string disasm_plzcw(uint32_t instruction)
+        std::string disasm_plzcw(uint32_t instruction)
         {
-            stringstream output;
-            string opcode = "plzcw";
+            std::stringstream output;
+            std::string opcode = "plzcw";
             output << EmotionEngine::REG(RD) << ", "
                    << EmotionEngine::REG(RS);
             return opcode + " " + output.str();
         }
 
-        string disasm_mmi0(uint32_t instruction)
+        std::string disasm_mmi0(uint32_t instruction)
         {
             int op = (instruction >> 6) & 0x1F;
             switch (op)
@@ -2248,19 +2246,19 @@ namespace ee
             }
         }
 
-        string disasm_psubb(uint32_t instruction)
+        std::string disasm_psubb(uint32_t instruction)
         {
             return disasm_special_simplemath("psubb", instruction);
         }
 
-        string disasm_pext5(uint32_t instruction)
+        std::string disasm_pext5(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "pext5 " << EmotionEngine::REG(RD) << ", " << EmotionEngine::REG(RT);
             return output.str();
         }
 
-        string disasm_mmi1(uint32_t instruction)
+        std::string disasm_mmi1(uint32_t instruction)
         {
             uint8_t op = (instruction >> 6) & 0x1F;
             switch (op)
@@ -2306,21 +2304,21 @@ namespace ee
             }
         }
 
-        string disasm_pabsw(uint32_t instruction)
+        std::string disasm_pabsw(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "pabsw " << EmotionEngine::REG(RD) << ", " << EmotionEngine::REG(RT);
             return output.str();
         }
 
-        string disasm_pabsh(uint32_t instruction)
+        std::string disasm_pabsh(uint32_t instruction)
         {
-            stringstream output;
+            std::stringstream output;
             output << "pabsh " << EmotionEngine::REG(RD) << ", " << EmotionEngine::REG(RT);
             return output.str();
         }
 
-        string disasm_mmi2(uint32_t instruction)
+        std::string disasm_mmi2(uint32_t instruction)
         {
             int op = (instruction >> 6) & 0x1F;
             switch (op)
@@ -2374,67 +2372,67 @@ namespace ee
             }
         }
 
-        string disasm_pmfhi(uint32_t instruction)
+        std::string disasm_pmfhi(uint32_t instruction)
         {
             return disasm_movereg("pmfhi", instruction);
         }
 
-        string disasm_pmflo(uint32_t instruction)
+        std::string disasm_pmflo(uint32_t instruction)
         {
             return disasm_movereg("pmflo", instruction);
         }
 
-        string disasm_pcpyld(uint32_t instruction)
+        std::string disasm_pcpyld(uint32_t instruction)
         {
             return disasm_special_simplemath("pcpyld", instruction);
         }
 
-        string disasm_pand(uint32_t instruction)
+        std::string disasm_pand(uint32_t instruction)
         {
             return disasm_special_simplemath("pand", instruction);
         }
 
-        string disasm_pxor(uint32_t instruction)
+        std::string disasm_pxor(uint32_t instruction)
         {
             return disasm_special_simplemath("pxor", instruction);
         }
 
-        string disasm_mfhi1(uint32_t instruction)
+        std::string disasm_mfhi1(uint32_t instruction)
         {
             return disasm_movereg("mfhi1", instruction);
         }
 
-        string disasm_mthi1(uint32_t instruction)
+        std::string disasm_mthi1(uint32_t instruction)
         {
             return disasm_moveto("mthi1", instruction);
         }
 
-        string disasm_mflo1(uint32_t instruction)
+        std::string disasm_mflo1(uint32_t instruction)
         {
             return disasm_movereg("mflo1", instruction);
         }
 
-        string disasm_mtlo1(uint32_t instruction)
+        std::string disasm_mtlo1(uint32_t instruction)
         {
             return disasm_moveto("mtlo1", instruction);
         }
 
-        string disasm_mult1(uint32_t instruction)
+        std::string disasm_mult1(uint32_t instruction)
         {
             return disasm_special_simplemath("mult1", instruction);
         }
 
-        string disasm_div1(uint32_t instruction)
+        std::string disasm_div1(uint32_t instruction)
         {
             return disasm_division("div1", instruction);
         }
 
-        string disasm_divu1(uint32_t instruction)
+        std::string disasm_divu1(uint32_t instruction)
         {
             return disasm_division("divu1", instruction);
         }
 
-        string disasm_mmi3(uint32_t instruction)
+        std::string disasm_mmi3(uint32_t instruction)
         {
             switch (SA)
             {
@@ -2469,7 +2467,7 @@ namespace ee
             }
         }
 
-        string disasm_pmfhlfmt(uint32_t instruction)
+        std::string disasm_pmfhlfmt(uint32_t instruction)
         {
             switch (SA)
             {
@@ -2493,36 +2491,36 @@ namespace ee
             }
         }
 
-        string disasm_pmthi(uint32_t instruction)
+        std::string disasm_pmthi(uint32_t instruction)
         {
             return disasm_moveto("pmthi", instruction);
         }
 
-        string disasm_pmtlo(uint32_t instruction)
+        std::string disasm_pmtlo(uint32_t instruction)
         {
             return disasm_moveto("pmtlo", instruction);
         }
 
-        string disasm_pcpyud(uint32_t instruction)
+        std::string disasm_pcpyud(uint32_t instruction)
         {
             return disasm_special_simplemath("pcpyud", instruction);
         }
 
-        string disasm_por(uint32_t instruction)
+        std::string disasm_por(uint32_t instruction)
         {
             return disasm_special_simplemath("por", instruction);
         }
 
-        string disasm_pnor(uint32_t instruction)
+        std::string disasm_pnor(uint32_t instruction)
         {
             return disasm_special_simplemath("pnor", instruction);
         }
 
-        string unknown_op(const string optype, uint32_t op, int width)
+        std::string unknown_op(const std::string optype, uint32_t op, int width)
         {
-            stringstream output;
+            std::stringstream output;
             output << "Unrecognized " << optype << " op "
-                   << "$" << setfill('0') << setw(width) << hex << op;
+                   << "$" << std::setfill('0') << std::setw(width) << std::hex << op;
             return output.str();
         }
     }
