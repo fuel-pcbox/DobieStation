@@ -1,11 +1,12 @@
 #pragma once
 #include <cstdint>
 
-class EmotionEngine;
-
-namespace EE_JIT
+namespace ee
 {
-    uint16_t run(EmotionEngine* ee);
-    void reset(bool clear_cache);
-};
-
+    class EmotionEngine;
+    namespace jit
+    {
+        uint16_t run(EmotionEngine* ee);
+        void reset(bool clear_cache);
+    }
+}

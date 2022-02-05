@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <queue>
-
 #include <util/int128.hpp>
 #include "chromtable.hpp"
 #include "codedblockpattern.hpp"
@@ -14,164 +13,169 @@
 #include "mac_b_pic.hpp"
 #include "motioncode.hpp"
 
-constexpr int RAW_BLOCK_SIZE = 0x180;
-constexpr int RGB_BLOCK_SIZE = 0x100;
-
-struct IPU_CTRL
+namespace ee
 {
-    uint8_t coded_block_pattern;
-    bool error_code;
-    bool start_code;
-    uint8_t intra_DC_precision;
-    bool alternate_scan;
-    bool intra_VLC_table;
-    bool nonlinear_Q_step;
-    bool MPEG1;
-    uint8_t picture_type;
-    bool busy;
-};
+    class INTC;
+    class DMAC;
+}
 
-enum class VDEC_STATE
+namespace ipu
 {
-    ADVANCE,
-    DECODE,
-    DONE
-};
+    constexpr int RAW_BLOCK_SIZE = 0x180;
+    constexpr int RGB_BLOCK_SIZE = 0x100;
 
-enum class BDEC_STATE
-{
-    ADVANCE,
-    GET_CBP,
-    RESET_DC,
-    BEGIN_DECODING,
-    READ_COEFFS,
-    LOAD_NEXT_BLOCK,
-    DONE,
-    CHECK_START_CODE
-};
-
-enum class IDEC_STATE
-{
-    DELAY,
-    ADVANCE,
-    MACRO_I_TYPE,
-    DCT_TYPE,
-    QSC,
-    INIT_BDEC,
-    READ_BLOCK,
-    INIT_CSC,
-    EXEC_CSC,
-    CHECK_START_CODE,
-    VALID_START_CODE,
-    MACRO_INC,
-    DONE
-};
-
-enum class SETIQ_STATE
-{
-    ADVANCE,
-    POPULATE_TABLE
-};
-
-struct IDEC_Command
-{
-    IDEC_STATE state;
-    uint32_t macro_type;
-
-    bool decodes_dct;
-    uint32_t qsc;
-
-    IPU_FIFO temp_fifo;
-
-    int blocks_decoded;
-};
-
-struct BDEC_Command
-{
-    BDEC_STATE state;
-    IPU_FIFO* out_fifo;
-    bool intra;
-    bool reset_dc;
-    bool check_start_code;
-    int quantizer_step;
-
-    int block_index;
-    int subblock_index;
-
-    //Four Y blocks, a Cb block, and a Cr block
-    int16_t blocks[6][64];
-    int16_t* cur_block;
-    int cur_channel; //0 = Y, 1 = Cb, 2 = Cr
-
-    enum class READ_COEFF
+    struct IPU_CTRL
     {
-        INIT,
-        READ_DC_DIFF,
-        CHECK_END,
-        COEFF,
-        SKIP_END
+        uint8_t coded_block_pattern;
+        bool error_code;
+        bool start_code;
+        uint8_t intra_DC_precision;
+        bool alternate_scan;
+        bool intra_VLC_table;
+        bool nonlinear_Q_step;
+        bool MPEG1;
+        uint8_t picture_type;
+        bool busy;
     };
 
-    enum class READ_DIFF
+    enum class VDEC_STATE
     {
-        SIZE,
-        DIFF,
+        ADVANCE,
+        DECODE,
+        DONE
     };
 
-    uint32_t dc_size;
-    int16_t dc_diff;
-    int16_t dc_predictor[3];
+    enum class BDEC_STATE
+    {
+        ADVANCE,
+        GET_CBP,
+        RESET_DC,
+        BEGIN_DECODING,
+        READ_COEFFS,
+        LOAD_NEXT_BLOCK,
+        DONE,
+        CHECK_START_CODE
+    };
 
-    READ_COEFF read_coeff_state;
-    READ_DIFF read_diff_state;
-};
+    enum class IDEC_STATE
+    {
+        DELAY,
+        ADVANCE,
+        MACRO_I_TYPE,
+        DCT_TYPE,
+        QSC,
+        INIT_BDEC,
+        READ_BLOCK,
+        INIT_CSC,
+        EXEC_CSC,
+        CHECK_START_CODE,
+        VALID_START_CODE,
+        MACRO_INC,
+        DONE
+    };
 
-enum class CSC_STATE
-{
-    BEGIN,
-    READ,
-    CONVERT,
-    DONE
-};
+    enum class SETIQ_STATE
+    {
+        ADVANCE,
+        POPULATE_TABLE
+    };
 
-struct CSC_Command
-{
-    CSC_STATE state;
-    int macroblocks;
-    bool use_RGB16;
-    bool use_dithering;
+    struct IDEC_Command
+    {
+        IDEC_STATE state;
+        uint32_t macro_type;
 
-    uint8_t block[RAW_BLOCK_SIZE];
-    int block_index;
-};
+        bool decodes_dct;
+        uint32_t qsc;
 
-enum class PACK_STATE
-{
-    BEGIN,
-    READ,
-    CONVERT,
-    DONE
-};
+        IPU_FIFO temp_fifo;
 
-struct PACK_Command
-{
-    PACK_STATE state;
-    int macroblocks;
-    bool use_RGB16;
-    bool use_dithering;
+        int blocks_decoded;
+    };
 
-    uint8_t block[4 * RGB_BLOCK_SIZE];
-    int block_index;
-};
+    struct BDEC_Command
+    {
+        BDEC_STATE state;
+        IPU_FIFO* out_fifo;
+        bool intra;
+        bool reset_dc;
+        bool check_start_code;
+        int quantizer_step;
 
-class INTC;
-class DMAC;
+        int block_index;
+        int subblock_index;
 
-class ImageProcessingUnit
-{
+        //Four Y blocks, a Cb block, and a Cr block
+        int16_t blocks[6][64];
+        int16_t* cur_block;
+        int cur_channel; //0 = Y, 1 = Cb, 2 = Cr
+
+        enum class READ_COEFF
+        {
+            INIT,
+            READ_DC_DIFF,
+            CHECK_END,
+            COEFF,
+            SKIP_END
+        };
+
+        enum class READ_DIFF
+        {
+            SIZE,
+            DIFF,
+        };
+
+        uint32_t dc_size;
+        int16_t dc_diff;
+        int16_t dc_predictor[3];
+
+        READ_COEFF read_coeff_state;
+        READ_DIFF read_diff_state;
+    };
+
+    enum class CSC_STATE
+    {
+        BEGIN,
+        READ,
+        CONVERT,
+        DONE
+    };
+
+    struct CSC_Command
+    {
+        CSC_STATE state;
+        int macroblocks;
+        bool use_RGB16;
+        bool use_dithering;
+
+        uint8_t block[RAW_BLOCK_SIZE];
+        int block_index;
+    };
+
+    enum class PACK_STATE
+    {
+        BEGIN,
+        READ,
+        CONVERT,
+        DONE
+    };
+
+    struct PACK_Command
+    {
+        PACK_STATE state;
+        int macroblocks;
+        bool use_RGB16;
+        bool use_dithering;
+
+        uint8_t block[4 * RGB_BLOCK_SIZE];
+        int block_index;
+    };
+
+    class ImageProcessingUnit
+    {
     private:
-        INTC* intc;
-        DMAC* dmac;
+        ee::INTC* intc;
+        ee::DMAC* dmac;
         DCT_Coeff_Table0 dct_coeff0;
         DCT_Coeff_Table1 dct_coeff1;
         DCT_Coeff* dct_coeff;
@@ -228,13 +232,13 @@ class ImageProcessingUnit
         bool BDEC_read_coeffs();
         bool BDEC_read_diff();
 
-        void convert_RGB32_to_RGB16(const uint8_t* rgb32, uint16_t *rgb16, bool dithering);
+        void convert_RGB32_to_RGB16(const uint8_t* rgb32, uint16_t* rgb16, bool dithering);
         void process_VDEC();
         void process_FDEC();
         bool process_CSC();
         bool process_PACK();
     public:
-        ImageProcessingUnit(INTC* intc, DMAC* dmac);
+        ImageProcessingUnit(ee::INTC* intc, ee::DMAC* dmac);
 
         void reset();
         void run();
@@ -251,4 +255,5 @@ class ImageProcessingUnit
         bool can_write_FIFO();
         uint128_t read_FIFO();
         void write_FIFO(uint128_t quad);
-};
+    };
+}

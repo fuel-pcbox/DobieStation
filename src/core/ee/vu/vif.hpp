@@ -4,63 +4,73 @@
 #include <fstream>
 #include <unordered_set>
 #include <ee/intc.hpp>
-#include <ee/vu/vu.hpp>
 #include <util/int128.hpp>
 
-class GraphicsInterface;
-class DMAC;
-
-enum VIF_STATUS
+namespace gs
 {
-    VIF_IDLE = 0,
-    VIF_WAIT = 1,
-    VIF_DECODE = 2,
-    VIF_TRANSFER = 3
-};
+    class GraphicsInterface;
+}
 
-enum VIF_STALL
+namespace ee
 {
-    STALL_IBIT = 1,
-    STALL_MSKPATH3 = 2,
-    STALL_STOP = 4,
-    STALL_DIRECT = 8,
-    STALL_FORCEBREAK = 16
-};
+    class DMAC;
+}
 
-struct MPG_Command
+namespace vu
 {
-    uint32_t addr;
-};
+    class VectorUnit;
 
-struct UNPACK_Command
-{
-    uint32_t addr;
-    bool sign_extend;
-    bool masked;
-    int offset;
-    int num;
-    int cmd;
-    int blocks_written;
-    int words_per_op; //e.g. - V4-32 has four words per op
-};
+    enum VIF_STATUS
+    {
+        VIF_IDLE = 0,
+        VIF_WAIT = 1,
+        VIF_DECODE = 2,
+        VIF_TRANSFER = 3
+    };
 
-struct CYCLE_REG
-{
-    uint8_t CL, WL;
-};
+    enum VIF_STALL
+    {
+        STALL_IBIT = 1,
+        STALL_MSKPATH3 = 2,
+        STALL_STOP = 4,
+        STALL_DIRECT = 8,
+        STALL_FORCEBREAK = 16
+    };
 
-struct VIF_ERR_REG
-{
-    bool mask_interrupt, mask_dmatag_error, mask_vifcode_error;
-};
+    struct MPG_Command
+    {
+        uint32_t addr;
+    };
 
-class VectorInterface
-{
+    struct UNPACK_Command
+    {
+        uint32_t addr;
+        bool sign_extend;
+        bool masked;
+        int offset;
+        int num;
+        int cmd;
+        int blocks_written;
+        int words_per_op; //e.g. - V4-32 has four words per op
+    };
+
+    struct CYCLE_REG
+    {
+        uint8_t CL, WL;
+    };
+
+    struct VIF_ERR_REG
+    {
+        bool mask_interrupt, mask_dmatag_error, mask_vifcode_error;
+    };
+
+    class VectorInterface
+    {
     private:
-        GraphicsInterface* gif;
-        VectorUnit* vu;
-        INTC* intc;
-        DMAC* dmac;
+        gs::GraphicsInterface* gif;
+        vu::VectorUnit* vu;
+        ee::INTC* intc;
+        ee::DMAC* dmac;
         std::queue<uint32_t> FIFO;
         std::queue<uint32_t> internal_FIFO;
         int id;
@@ -76,7 +86,7 @@ class VectorInterface
         bool vif_interrupt;
         bool vif_stop, vif_forcebreak;
         bool fifo_reverse;
-        
+
         bool wait_for_VU;
         bool direct_wait;
         bool wait_for_PATH3;
@@ -118,7 +128,7 @@ class VectorInterface
 
         bool process_data_word(uint32_t value);
     public:
-        VectorInterface(GraphicsInterface* gif, VectorUnit* vu, INTC* intc, DMAC* dmac, int id);
+        VectorInterface(gs::GraphicsInterface* gif, vu::VectorUnit* vu, ee::INTC* intc, ee::DMAC* dmac, int id);
         int get_id();
 
         void reset();
@@ -143,9 +153,10 @@ class VectorInterface
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
 
-inline int VectorInterface::get_id()
-{
-    return id;
+    inline int VectorInterface::get_id()
+    {
+        return id;
+    }
 }

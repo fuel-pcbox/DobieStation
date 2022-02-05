@@ -2,33 +2,39 @@
 #include <cstdint>
 #include <fstream>
 
-class EmotionEngine;
-class Scheduler;
-
-enum class Interrupt
+namespace core
 {
-    GS,
-    SBUS,
-    VBLANK_START,
-    VBLANK_END,
-    VIF0,
-    VIF1,
-    VU0,
-    VU1,
-    IPU,
-    TIMER0,
-    TIMER1,
-    TIMER2,
-    TIMER3,
-    SFIFO,
-    VU0_WATCHDOG //bark
-};
+    class Scheduler;
+}
 
-class INTC
+namespace ee
 {
+    class EmotionEngine;
+
+    enum class Interrupt
+    {
+        GS,
+        SBUS,
+        VBLANK_START,
+        VBLANK_END,
+        VIF0,
+        VIF1,
+        VU0,
+        VU1,
+        IPU,
+        TIMER0,
+        TIMER1,
+        TIMER2,
+        TIMER3,
+        SFIFO,
+        VU0_WATCHDOG //bark
+    };
+
+    class INTC
+    {
     private:
         EmotionEngine* cpu;
-        Scheduler* scheduler;
+        core::Scheduler* scheduler;
         uint32_t INTC_MASK, INTC_STAT;
 
         int read_stat_count;
@@ -36,7 +42,7 @@ class INTC
 
         int int_check_event_id;
     public:
-        INTC(EmotionEngine* cpu, Scheduler* scheduler);
+        INTC(EmotionEngine* cpu, core::Scheduler* scheduler);
 
         void reset();
         void int0_check();
@@ -51,4 +57,5 @@ class INTC
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
+}

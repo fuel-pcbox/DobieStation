@@ -6,24 +6,25 @@
 #include <jitcommon/emitter64.hpp>
 #include <util/errors.hpp>
 
-namespace VU_JIT
+namespace vu
 {
+    namespace jit
+    {
+        VU_JIT64 jit64[2];
 
-VU_JIT64 jit64[2];
+        uint16_t run(VectorUnit* vu)
+        {
+            return jit64[vu->get_id()].run(*vu);
+        }
 
-uint16_t run(VectorUnit *vu)
-{
-    return jit64[vu->get_id()].run(*vu);
-}
+        void reset(VectorUnit* vu)
+        {
+            jit64[vu->get_id()].reset();
+        }
 
-void reset(VectorUnit *vu)
-{
-    jit64[vu->get_id()].reset();
-}
-
-void set_current_program(uint32_t crc, VectorUnit *vu)
-{
-    jit64[vu->get_id()].set_current_program(crc);
-}
-
+        void set_current_program(uint32_t crc, VectorUnit* vu)
+        {
+            jit64[vu->get_id()].set_current_program(crc);
+        }
+    }
 };

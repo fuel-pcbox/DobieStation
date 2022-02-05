@@ -6,24 +6,26 @@
 #include <jitcommon/emitter64.hpp>
 #include <util/errors.hpp>
 
-namespace EE_JIT
+namespace ee
 {
-
-    EE_JIT64 jit64;
-
-    uint16_t run(EmotionEngine *ee)
+    namespace jit
     {
-        return jit64.run(*ee);
-    }
+        EE_JIT64 jit64;
 
-    void reset(bool clear_cache)
-    {
-        jit64.reset(clear_cache);
+        uint16_t run(EmotionEngine* ee)
+        {
+            return jit64.run(*ee);
+        }
+
+        void reset(bool clear_cache)
+        {
+            jit64.reset(clear_cache);
+        }
+        /*
+        void set_current_program(uint32_t crc)
+        {
+            jit64.set_current_program(crc);
+        }
+        */
     }
-    /*
-    void set_current_program(uint32_t crc)
-    {
-        jit64.set_current_program(crc);
-    }
-    */
-};
+}

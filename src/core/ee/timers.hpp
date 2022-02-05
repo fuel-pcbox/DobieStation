@@ -2,43 +2,49 @@
 #include <cstdint>
 #include <fstream>
 
-struct TimerControl
+namespace core
 {
-    uint8_t mode;
-    bool gate_enable;
-    bool gate_VBLANK;
-    uint8_t gate_mode;
-    bool clear_on_reference;
-    bool enabled;
-    bool compare_int_enable;
-    bool overflow_int_enable;
-    bool compare_int;
-    bool overflow_int;
-};
+    class Scheduler;
+}
 
-struct Timer
+namespace ee
 {
-    uint32_t counter;
-    TimerControl control;
-    uint32_t compare;
+    struct TimerControl
+    {
+        uint8_t mode;
+        bool gate_enable;
+        bool gate_VBLANK;
+        uint8_t gate_mode;
+        bool clear_on_reference;
+        bool enabled;
+        bool compare_int_enable;
+        bool overflow_int_enable;
+        bool compare_int;
+        bool overflow_int;
+    };
 
-    //Internal variable for holding number of EE clocks
-    int clocks;
+    struct Timer
+    {
+        uint32_t counter;
+        TimerControl control;
+        uint32_t compare;
 
-    //Indicates if the timer is paused by a gate
-    bool gated;
+        //Internal variable for holding number of EE clocks
+        int clocks;
 
-    uint32_t clock_scale;
-};
+        //Indicates if the timer is paused by a gate
+        bool gated;
 
-class INTC;
-class Scheduler;
+        uint32_t clock_scale;
+    };
 
-class EmotionTiming
-{
+    class INTC;
+
+    class EmotionTiming
+    {
     private:
         INTC* intc;
-        Scheduler* scheduler;
+        core::Scheduler* scheduler;
         Timer timers[4];
 
         int timer_interrupt_event_id;
@@ -50,7 +56,7 @@ class EmotionTiming
         bool is_timer_enabled(int index);
         void timer_interrupt(int index, bool overflow);
     public:
-        EmotionTiming(INTC* intc, Scheduler* scheduler);
+        EmotionTiming(INTC* intc, core::Scheduler* scheduler);
 
         void reset();
         void run(int cycles);
@@ -62,4 +68,5 @@ class EmotionTiming
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
+}

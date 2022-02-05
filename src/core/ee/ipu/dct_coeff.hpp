@@ -1,13 +1,15 @@
 #pragma once
 #include "vlc_table.hpp"
 
-struct RunLevelPair
+namespace ipu
 {
-    int run, level;
-};
+    struct RunLevelPair
+    {
+        int run, level;
+    };
 
-class DCT_Coeff : public VLC_Table
-{
+    class DCT_Coeff : public VLC_Table
+    {
     protected:
         constexpr static int RUN_ESCAPE = 102;
     public:
@@ -19,4 +21,5 @@ class DCT_Coeff : public VLC_Table
         virtual bool get_runlevel_pair_dc(IPU_FIFO& FIFO, RunLevelPair& pair, bool MPEG1) = 0;
 
         bool peek_value(IPU_FIFO& FIFO, int bits, int& bit_count, uint32_t& result);
-};
+    };
+}

@@ -6,99 +6,119 @@
 #include <ee/emotion.hpp>
 #include <util/int128.hpp>
 
-union alignas(16) VU_R
+namespace ee
 {
-    float f;
-    uint32_t u;
-    char padding[16];
-};
+    class INTC;
+}
 
-//The GPRs need to be aligned on a 16-byte boundary so that SSE instructions can work on them.
-union alignas(16) VU_GPR
+namespace vu
 {
-    float f[4];
-    uint32_t u[4];
-    int32_t s[4];
-};
+    class VectorUnit;
+    namespace jit
+    {
+        class VU_JIT64;
+        class VU_JitTranslator;
+    }
+}
 
-union alignas(8) VU_I
+extern "C" uint8_t * exec_block_ee(ee::jit::EE_JIT64& jit, ee::EmotionEngine& ee);
+extern "C" uint8_t * exec_block_vu(vu::jit::VU_JIT64& jit, vu::VectorUnit& vu);
+
+namespace core
 {
-    uint16_t u;
-    int16_t s;
-};
+    class Emulator;
+}
 
-struct alignas(16) VU_Mem
+namespace gs
 {
-    uint8_t m[1024 * 16];
-};
+    class GraphicsInterface;
+}
 
-struct VPU_STAT
+namespace vu
 {
-    bool vu1_running;
-};
+    union alignas(16) VU_R
+    {
+        float f;
+        uint32_t u;
+        char padding[16];
+    };
 
-struct DecodedRegs
-{
-    //0 = upper, 1 = lower
-    uint8_t vf_write[2];
-    uint8_t vf_write_field[2];
+    //The GPRs need to be aligned on a 16-byte boundary so that SSE instructions can work on them.
+    union alignas(16) VU_GPR
+    {
+        float f[4];
+        uint32_t u[4];
+        int32_t s[4];
+    };
 
-    uint8_t vf_read0[2], vf_read1[2];
-    uint8_t vf_read0_field[2], vf_read1_field[2];
+    union alignas(8) VU_I
+    {
+        uint16_t u;
+        int16_t s;
+    };
 
-    uint8_t vi_read0, vi_read1, vi_write;
-    uint8_t vi_write_from_load; // register which written from a load-from-memory instruction
+    struct alignas(16) VU_Mem
+    {
+        uint8_t m[1024 * 16];
+    };
 
-    void reset();
-};
+    struct VPU_STAT
+    {
+        bool vu1_running;
+    };
 
-struct VuIntBranchPipelineEntry
-{
-    uint8_t write_reg;   // reg that was overwritten
-    VU_I    old_value;   // value that was overwritten
-    bool    read_and_write;
+    struct DecodedRegs
+    {
+        //0 = upper, 1 = lower
+        uint8_t vf_write[2];
+        uint8_t vf_write_field[2];
 
-    void clear();
-};
+        uint8_t vf_read0[2], vf_read1[2];
+        uint8_t vf_read0_field[2], vf_read1_field[2];
 
-struct VuIntBranchPipeline
-{
-    static constexpr int length = 5;           // how far back to go behind the branch
-    VuIntBranchPipelineEntry pipeline[length]; // the previous integer operations (0 is most recent)
-    VuIntBranchPipelineEntry next;             // the currently executing integer op
+        uint8_t vi_read0, vi_read1, vi_write;
+        uint8_t vi_write_from_load; // register which written from a load-from-memory instruction
 
-    void reset();
-    void write_reg(uint8_t reg, VU_I old_value, bool also_read);
-    void update();
-    void flush();
-    VU_I get_branch_condition_reg(uint8_t reg, VU_I current_value, uint8_t vu_id, uint16_t PC);
-};
+        void reset();
+    };
 
-class GraphicsInterface;
-class Emulator;
-class VU_JIT64;
-class VectorUnit;
-class INTC;
-class EmotionEngine;
+    struct VuIntBranchPipelineEntry
+    {
+        uint8_t write_reg;   // reg that was overwritten
+        VU_I    old_value;   // value that was overwritten
+        bool    read_and_write;
 
-extern "C" uint8_t* exec_block_vu(VU_JIT64& jit, VectorUnit& vu);
-extern "C" uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
+        void clear();
+    };
 
-class VectorUnit
-{
-    private:
-        GraphicsInterface* gif;
+    struct VuIntBranchPipeline
+    {
+        static constexpr int length = 5;           // how far back to go behind the branch
+        VuIntBranchPipelineEntry pipeline[length]; // the previous integer operations (0 is most recent)
+        VuIntBranchPipelineEntry next;             // the currently executing integer op
+
+        void reset();
+        void write_reg(uint8_t reg, VU_I old_value, bool also_read);
+        void update();
+        void flush();
+        VU_I get_branch_condition_reg(uint8_t reg, VU_I current_value, uint8_t vu_id, uint16_t PC);
+    };
+
+    class VectorUnit
+    {
+    public:
+        gs::GraphicsInterface* gif;
         int id;
         uint16_t mem_mask; //0xFFF for VU0, 0x3FFF for VU1
-        Emulator* e;
-        INTC* intc;
-        EmotionEngine* eecpu;
+        core::Emulator* e;
+        ee::INTC* intc;
+        ee::EmotionEngine* eecpu;
         VectorUnit* other_vu; //Pointer to VU1 for VU0, vice versa for VU1
 
         uint64_t cycle_count; //Increments when "running" is true
         uint64_t run_event; //If less than cycle_count, the VU is allowed to run
 
-        uint16_t *VIF_TOP, *VIF_ITOP;
+        uint16_t* VIF_TOP, * VIF_ITOP;
 
         VU_Mem instr_mem, data_mem;
 
@@ -172,12 +192,12 @@ class VectorUnit
         VU_I read_int_for_branch_condition(uint8_t reg);
         void disasm_micromem();
         uint32_t crc_microprogram();
-        
+
         void update_status();
         void advance_r();
         void print_vectors(uint8_t a, uint8_t b);
     public:
-        VectorUnit(int id, Emulator* e, INTC* intc, EmotionEngine* eecpu, VectorUnit* other_vu);
+        VectorUnit(int id, core::Emulator* e, ee::INTC* intc, ee::EmotionEngine* eecpu, VectorUnit* other_vu);
 
         DecodedRegs decoder;
 
@@ -186,7 +206,7 @@ class VectorUnit
         bool is_interlocked();
 
         void set_TOP_regs(uint16_t* TOP, uint16_t* ITOP);
-        void set_GIF(GraphicsInterface* gif);
+        void set_GIF(gs::GraphicsInterface* gif);
 
         void update_mac_pipeline();
         void update_DIV_EFU_pipes();
@@ -388,159 +408,158 @@ class VectorUnit
         void save_state(std::ofstream& state);
 
         //Friends needed for JIT convenience
-        friend class VU_JIT64;
-        friend class VU_JitTranslator;
-        friend class EE_JIT64;
-        friend class EE_JitTranslator;
+        friend class jit::VU_JIT64;
+        friend class jit::VU_JitTranslator;
+        friend class ee::jit::EE_JIT64;
+        friend class ee::jit::EE_JitTranslator;
 
-        friend void vu_update_xgkick(VectorUnit& vu, int cycles);
-        friend void vu_update_pipelines(VectorUnit& vu, int cycles);
-        friend uint8_t* exec_block_vu(VU_JIT64& jit, VectorUnit& vu);
-        friend uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
-};
+        friend uint8_t* exec_block_vu(jit::VU_JIT64& jit, VectorUnit& vu);
+        friend uint8_t* ee::exec_block_ee(ee::jit::EE_JIT64& jit, ee::EmotionEngine& ee);
+    };
 
-template <typename T>
-inline T VectorUnit::read_instr(uint32_t addr)
-{
-    return *(T*)&instr_mem.m[addr & mem_mask];
-}
+    template <typename T>
+    inline T VectorUnit::read_instr(uint32_t addr)
+    {
+        return *(T*)&instr_mem.m[addr & mem_mask];
+    }
 
-template <typename T>
-inline T VectorUnit::read_data(uint32_t addr)
-{
-    if (id == 1)
-        return *(T*)&data_mem.m[addr & 0x3FFF];
-    if (addr & 0x4000)
-        return other_vu->read_reg(addr);
-    return *(T*)&data_mem.m[addr & 0xFFF];
-}
+    template <typename T>
+    inline T VectorUnit::read_data(uint32_t addr)
+    {
+        if (id == 1)
+            return *(T*)&data_mem.m[addr & 0x3FFF];
+        if (addr & 0x4000)
+            return other_vu->read_reg(addr);
+        return *(T*)&data_mem.m[addr & 0xFFF];
+    }
 
-template <typename T>
-inline T VectorUnit::read_mem(uint32_t addr)
-{
-    return *(T*)&data_mem.m[addr & mem_mask];
-}
+    template <typename T>
+    inline T VectorUnit::read_mem(uint32_t addr)
+    {
+        return *(T*)&data_mem.m[addr & mem_mask];
+    }
 
-template <typename T>
-inline void VectorUnit::write_instr(uint32_t addr, T data)
-{
-    *(T*)&instr_mem.m[addr & mem_mask] = data;
-    vumem_is_dirty = true;
-}
+    template <typename T>
+    inline void VectorUnit::write_instr(uint32_t addr, T data)
+    {
+        *(T*)&instr_mem.m[addr & mem_mask] = data;
+        vumem_is_dirty = true;
+    }
 
-template <typename T>
-inline void VectorUnit::write_data(uint32_t addr, T data)
-{
-    if (id == 1)
-        *(T*)&data_mem.m[addr & 0x3FFF] = data;
-    else if (addr & 0x4000)
-        other_vu->write_reg(addr, data);
-    else
-        *(T*)&data_mem.m[addr & 0xFFF] = data;
-}
+    template <typename T>
+    inline void VectorUnit::write_data(uint32_t addr, T data)
+    {
+        if (id == 1)
+            *(T*)&data_mem.m[addr & 0x3FFF] = data;
+        else if (addr & 0x4000)
+            other_vu->write_reg(addr, data);
+        else
+            *(T*)&data_mem.m[addr & 0xFFF] = data;
+    }
 
-template <typename T>
-inline void VectorUnit::write_mem(uint32_t addr, T data)
-{
-    *(T*)&data_mem.m[addr & mem_mask] = data;
-}
+    template <typename T>
+    inline void VectorUnit::write_mem(uint32_t addr, T data)
+    {
+        *(T*)&data_mem.m[addr & mem_mask] = data;
+    }
 
-inline bool VectorUnit::is_running()
-{
-    return running || (eecpu->get_cycle_count() < cycle_count);
-}
+    inline bool VectorUnit::is_running()
+    {
+        return running || (eecpu->get_cycle_count() < cycle_count);
+    }
 
-inline bool VectorUnit::stopped_by_tbit()
-{
-    return tbit_stop;
-}
+    inline bool VectorUnit::stopped_by_tbit()
+    {
+        return tbit_stop;
+    }
 
-inline bool VectorUnit::is_dirty()
-{
-    return vumem_is_dirty;
-}
- 
-inline void VectorUnit::clear_dirty()
-{
-    vumem_is_dirty = false;
-}
+    inline bool VectorUnit::is_dirty()
+    {
+        return vumem_is_dirty;
+    }
 
-inline int VectorUnit::get_id()
-{
-    return id;
-}
+    inline void VectorUnit::clear_dirty()
+    {
+        vumem_is_dirty = false;
+    }
 
-inline uint16_t VectorUnit::get_PC()
-{
-    return PC;
-}
+    inline int VectorUnit::get_id()
+    {
+        return id;
+    }
 
-inline void VectorUnit::set_PC(uint32_t newPC)
-{
-    PC = newPC;
-}
+    inline uint16_t VectorUnit::get_PC()
+    {
+        return PC;
+    }
 
-inline uint32_t VectorUnit::get_gpr_u(int index, int field)
-{
-    return gpr[index].u[field];
-}
+    inline void VectorUnit::set_PC(uint32_t newPC)
+    {
+        PC = newPC;
+    }
 
-inline uint16_t VectorUnit::get_int(int index)
-{
-    return int_gpr[index].u;
-}
+    inline uint32_t VectorUnit::get_gpr_u(int index, int field)
+    {
+        return gpr[index].u[field];
+    }
 
-inline void VectorUnit::set_gpr_f(int index, int field, float value)
-{
-    if (index)
-        gpr[index].f[field] = value;
-}
+    inline uint16_t VectorUnit::get_int(int index)
+    {
+        return int_gpr[index].u;
+    }
 
-inline void VectorUnit::set_gpr_u(int index, int field, uint32_t value)
-{
-    if (index)
-        gpr[index].u[field] = value;
-}
+    inline void VectorUnit::set_gpr_f(int index, int field, float value)
+    {
+        if (index)
+            gpr[index].f[field] = value;
+    }
 
-inline void VectorUnit::set_gpr_s(int index, int field, int32_t value)
-{
-    if (index)
-        gpr[index].s[field] = value;
-}
+    inline void VectorUnit::set_gpr_u(int index, int field, uint32_t value)
+    {
+        if (index)
+            gpr[index].u[field] = value;
+    }
 
-inline void VectorUnit::set_int(int index, uint16_t value)
-{
-    if (index)
-        int_gpr[index].u = value;
-}
+    inline void VectorUnit::set_gpr_s(int index, int field, int32_t value)
+    {
+        if (index)
+            gpr[index].s[field] = value;
+    }
 
-inline void VectorUnit::set_status(uint32_t value)
-{
-    status = value;
-}
+    inline void VectorUnit::set_int(int index, uint16_t value)
+    {
+        if (index)
+            int_gpr[index].u = value;
+    }
 
-inline void VectorUnit::set_R(uint32_t value)
-{
-    R.u = value;
-}
+    inline void VectorUnit::set_status(uint32_t value)
+    {
+        status = value;
+    }
 
-inline void VectorUnit::set_I(uint32_t value)
-{
-    I.u = value;
-}
+    inline void VectorUnit::set_R(uint32_t value)
+    {
+        R.u = value;
+    }
 
-inline void VectorUnit::set_Q(uint32_t value)
-{
-    new_Q_instance.u = value;
-    Q.u = new_Q_instance.u;
-}
+    inline void VectorUnit::set_I(uint32_t value)
+    {
+        I.u = value;
+    }
 
-inline uint8_t* VectorUnit::get_instr_mem()
-{
-    return (uint8_t*)instr_mem.m;
-}
+    inline void VectorUnit::set_Q(uint32_t value)
+    {
+        new_Q_instance.u = value;
+        Q.u = new_Q_instance.u;
+    }
 
-inline uint64_t VectorUnit::get_cycle_count()
-{
-    return cycle_count;
+    inline uint8_t* VectorUnit::get_instr_mem()
+    {
+        return (uint8_t*)instr_mem.m;
+    }
+
+    inline uint64_t VectorUnit::get_cycle_count()
+    {
+        return cycle_count;
+    }
 }

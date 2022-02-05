@@ -1,8 +1,10 @@
 #pragma once
 #include "vlc_table.hpp"
 
-class Macroblock_IPic : public VLC_Table
+namespace ipu
 {
+    class Macroblock_IPic : public VLC_Table
+    {
     private:
         static VLC_Entry table[];
         static unsigned int index_table[];
@@ -10,4 +12,5 @@ class Macroblock_IPic : public VLC_Table
         constexpr static int SIZE = 2;
     public:
         Macroblock_IPic();
-};
+    };
+}

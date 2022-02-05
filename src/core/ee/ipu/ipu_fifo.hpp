@@ -1,18 +1,20 @@
 #pragma once
 #include <cstdint>
 #include <queue>
-
 #include <util/int128.hpp>
 
-struct IPU_FIFO
+namespace ipu
 {
-    std::deque<uint128_t> f;
-    int bit_pointer;
-    uint64_t cached_bits;
-    bool bit_cache_dirty;
-    bool get_bits(uint32_t& data, int bits);
-    bool advance_stream(uint8_t amount);
+    struct IPU_FIFO
+    {
+        std::deque<uint128_t> f;
+        int bit_pointer;
+        uint64_t cached_bits;
+        bool bit_cache_dirty;
+        bool get_bits(uint32_t& data, int bits);
+        bool advance_stream(uint8_t amount);
 
-    void reset();
-    void byte_align();
-};
+        void reset();
+        void byte_align();
+    };
+}

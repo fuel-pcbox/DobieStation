@@ -2,95 +2,112 @@
 #include <cstdint>
 #include <fstream>
 #include <list>
-
 #include <util/int128.hpp>
 
-enum DMAC_CHANNELS
+namespace core
 {
-    VIF0,
-    VIF1,
-    GIF,
-    IPU_FROM,
-    IPU_TO,
-    EE_SIF0,
-    EE_SIF1,
-    EE_SIF2,
-    SPR_FROM,
-    SPR_TO,
-    DMA_STALL = 13,
-    MFIFO_EMPTY = 14
-};
+    class SubsystemInterface;
+    class Emulator;
+}
 
-class DMAC;
-
-struct DMA_Channel
+namespace vu
 {
-    uint32_t control;
-    uint32_t address;
-    uint32_t quadword_count;
-    uint32_t tag_address;
-    uint32_t tag_save0, tag_save1;
-    uint32_t scratchpad_address;
+    class VectorInterface;
+    class VectorUnit;
+}
 
-    bool tag_end;
-    bool paused;
-    uint8_t interleaved_qwc;
-    uint8_t tag_id;
-
-    typedef int(DMAC::*dma_copy_func)();
-    dma_copy_func func;
-
-    bool started;
-    bool can_stall_drain;
-    bool has_dma_stalled;
-    bool dma_req;
-    bool is_spr;
-
-    int index;
-};
-
-//Regs
-struct D_CTRL
+namespace gs
 {
-    bool master_enable;
-    bool cycle_stealing;
-    uint8_t mem_drain_channel;
-    uint8_t stall_source_channel;
-    uint8_t stall_dest_channel;
-    uint8_t release_cycle;
-};
+    class GraphicsInterface;
+}
 
-struct D_STAT
+namespace ipu
 {
-    bool channel_stat[15];
-    bool channel_mask[15];
-};
+    class ImageProcessingUnit;
+}
 
-struct D_SQWC
+namespace ee
 {
-    uint8_t skip_qwc;
-    uint8_t transfer_qwc;
-};
+    enum DMAC_CHANNELS
+    {
+        VIF0,
+        VIF1,
+        GIF,
+        IPU_FROM,
+        IPU_TO,
+        EE_SIF0,
+        EE_SIF1,
+        EE_SIF2,
+        SPR_FROM,
+        SPR_TO,
+        DMA_STALL = 13,
+        MFIFO_EMPTY = 14
+    };
 
-class EmotionEngine;
-class Emulator;
-class GraphicsInterface;
-class ImageProcessingUnit;
-class SubsystemInterface;
-class VectorInterface;
-class VectorUnit;
+    class DMAC;
 
-class DMAC
-{
+    struct DMA_Channel
+    {
+        uint32_t control;
+        uint32_t address;
+        uint32_t quadword_count;
+        uint32_t tag_address;
+        uint32_t tag_save0, tag_save1;
+        uint32_t scratchpad_address;
+
+        bool tag_end;
+        bool paused;
+        uint8_t interleaved_qwc;
+        uint8_t tag_id;
+
+        typedef int(DMAC::* dma_copy_func)();
+        dma_copy_func func;
+
+        bool started;
+        bool can_stall_drain;
+        bool has_dma_stalled;
+        bool dma_req;
+        bool is_spr;
+
+        int index;
+    };
+
+    //Regs
+    struct D_CTRL
+    {
+        bool master_enable;
+        bool cycle_stealing;
+        uint8_t mem_drain_channel;
+        uint8_t stall_source_channel;
+        uint8_t stall_dest_channel;
+        uint8_t release_cycle;
+    };
+
+    struct D_STAT
+    {
+        bool channel_stat[15];
+        bool channel_mask[15];
+    };
+
+    struct D_SQWC
+    {
+        uint8_t skip_qwc;
+        uint8_t transfer_qwc;
+    };
+
+    class EmotionEngine;
+
+    class DMAC
+    {
     private:
-        uint8_t* RDRAM, *scratchpad;
+        uint8_t* RDRAM, * scratchpad;
         EmotionEngine* cpu;
-        Emulator* e;
-        GraphicsInterface* gif;
-        ImageProcessingUnit* ipu;
-        SubsystemInterface* sif;
-        VectorInterface* vif0, *vif1;
-        VectorUnit* vu0, *vu1;
+        core::Emulator* e;
+        gs::GraphicsInterface* gif;
+        ipu::ImageProcessingUnit* ipu;
+        core::SubsystemInterface* sif;
+        vu::VectorInterface* vif0, * vif1;
+        vu::VectorUnit* vu0, * vu1;
         DMA_Channel channels[15];
 
         DMA_Channel* active_channel;
@@ -137,8 +154,8 @@ class DMAC
         void find_new_active_channel();
     public:
         static const char* CHAN(int index);
-        DMAC(EmotionEngine* cpu, Emulator* e, GraphicsInterface* gif, ImageProcessingUnit* ipu, SubsystemInterface* sif,
-             VectorInterface* vif0, VectorInterface* vif1, VectorUnit* vu0, VectorUnit* vu1);
+        DMAC(EmotionEngine* cpu, core::Emulator* e, gs::GraphicsInterface* gif, ipu::ImageProcessingUnit* ipu, core::SubsystemInterface* sif,
+            vu::VectorInterface* vif0, vu::VectorInterface* vif1, vu::VectorUnit* vu0, vu::VectorUnit* vu1);
         void reset(uint8_t* RDRAM, uint8_t* scratchpad);
         void run(int cycles);
         void start_DMA(int index);
@@ -158,4 +175,5 @@ class DMAC
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
+}

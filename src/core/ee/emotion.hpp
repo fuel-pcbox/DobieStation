@@ -3,59 +3,75 @@
 #include <fstream>
 #include <functional>
 #include <list>
-#include "cop0.hpp"
-#include "cop1.hpp"
-
+#include <ee/cop0.hpp>
+#include <ee/cop1.hpp>
 #include <util/int128.hpp>
 
-class Emulator;
-class VectorUnit;
-class EE_JIT64;
-class EmotionEngine;
-class SubsystemInterface;
-
-//Handler used for Deci2Call (syscall 0x7C)
-struct Deci2Handler
+namespace core
 {
-    bool active;
-    uint32_t device;
-    uint32_t addr;
-};
+    class Emulator;
+    class SubsystemInterface;
+}
 
-struct EE_ICacheLine
+namespace vu
 {
-    bool lfu[2];
-    uint32_t tag[2];
-};
+    class VectorUnit;
+}
 
-//Taken from PS2SDK
-struct EE_OsdConfigParam
+namespace ee
 {
-    /** 0=enabled, 1=disabled */
-    /*00*/uint32_t spdifMode:1;
+    class EmotionEngine;
+    namespace jit
+    {
+        class EE_JIT64;
+    }
+}
+
+extern "C" uint8_t * exec_block_ee(ee::jit::EE_JIT64& jit, ee::EmotionEngine& ee);
+
+namespace ee
+{
+    //Handler used for Deci2Call (syscall 0x7C)
+    struct Deci2Handler
+    {
+        bool active;
+        uint32_t device;
+        uint32_t addr;
+    };
+
+    struct EE_ICacheLine
+    {
+        bool lfu[2];
+        uint32_t tag[2];
+    };
+
+    //Taken from PS2SDK
+    struct EE_OsdConfigParam
+    {
+        /** 0=enabled, 1=disabled */
+        /*00*/uint32_t spdifMode : 1;
         /** 0=4:3, 1=fullscreen, 2=16:9 */
-    /*01*/uint32_t screenType:2;
+        /*01*/uint32_t screenType : 2;
         /** 0=rgb(scart), 1=component */
-    /*03*/uint32_t videoOutput:1;
+        /*03*/uint32_t videoOutput : 1;
         /** 0=japanese, 1=english(non-japanese) */
-    /*04*/uint32_t japLanguage:1;
+        /*04*/uint32_t japLanguage : 1;
         /** Playstation driver settings. */
-    /*05*/uint32_t ps1drvConfig:8;
+        /*05*/uint32_t ps1drvConfig : 8;
         /** 0 = early Japanese OSD, 1 = OSD2, 2 = OSD2 with extended languages.
          * Early kernels cannot retain the value set in this field (Hence always 0). */
-    /*13*/uint32_t version:3;
+        /*13*/uint32_t version : 3;
         /** LANGUAGE_??? value */
-    /*16*/uint32_t language:5;
+        /*16*/uint32_t language : 5;
         /** timezone minutes offset from gmt */
-    /*21*/uint32_t timezoneOffset:11;
-};
+        /*21*/uint32_t timezoneOffset : 11;
+    };
 
-extern "C" uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
-
-class EmotionEngine
-{
-    private:
-        Emulator* e;
+    class EmotionEngine
+    {
+    public:
+        core::Emulator* e;
+        core::SubsystemInterface* sif;
 
         uint64_t cycle_count;
         int32_t cycles_to_run;
@@ -63,9 +79,8 @@ class EmotionEngine
 
         Cop0* cp0;
         Cop1* fpu;
-        SubsystemInterface* sif;
-        VectorUnit* vu0;
-        VectorUnit* vu1;
+        vu::VectorUnit* vu0;
+        vu::VectorUnit* vu1;
 
         uint8_t** tlb_map;
 
@@ -104,7 +119,7 @@ class EmotionEngine
 
         void log_sifrpc(uint32_t dma_struct_ptr, int len);
     public:
-        EmotionEngine(Cop0* cp0, Cop1* fpu, Emulator* e, SubsystemInterface* sif, VectorUnit* vu0, VectorUnit* vu1);
+        EmotionEngine(Cop0* cp0, Cop1* fpu, core::Emulator* e, core::SubsystemInterface* sif, vu::VectorUnit* vu0, vu::VectorUnit* vu1);
         static const char* REG(int id);
         static const char* SYSCALL(int id);
         void reset();
@@ -133,7 +148,7 @@ class EmotionEngine
         uint64_t get_HI1();
         uint64_t get_SA();
         Cop1& get_FPU();
-        VectorUnit& get_VU0();
+        vu::VectorUnit& get_VU0();
         bool check_interlock();
         void clear_interlock();
         bool vu0_wait();
@@ -217,52 +232,53 @@ class EmotionEngine
         void save_state(std::ofstream& state);
 
         //Friends needed for JIT convenience
-        friend class EE_JIT64;
-        friend class EE_JitTranslator;
+        friend class jit::EE_JIT64;
+        friend class jit::EE_JitTranslator;
 
         friend void emit_dispatcher();
-        friend uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
-};
+        friend uint8_t* exec_block_ee(jit::EE_JIT64& jit, EmotionEngine& ee);
+    };
 
-template <typename T>
-inline T EmotionEngine::get_gpr(int id, int offset)
-{
-    return *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))];
-}
+    template <typename T>
+    inline T EmotionEngine::get_gpr(int id, int offset)
+    {
+        return *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))];
+    }
 
-template <typename T>
-inline void EmotionEngine::set_gpr(int id, T value, int offset)
-{
-    if (id)
-        *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))] = value;
-}
+    template <typename T>
+    inline void EmotionEngine::set_gpr(int id, T value, int offset)
+    {
+        if (id)
+            *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))] = value;
+    }
 
-// Returns the current cycle count at a given moment
-inline uint64_t EmotionEngine::get_cycle_count()
-{
-    return cycle_count;
-}
+    // Returns the current cycle count at a given moment
+    inline uint64_t EmotionEngine::get_cycle_count()
+    {
+        return cycle_count;
+    }
 
-// Return how many cycles the EE should be running until
-inline uint64_t EmotionEngine::get_cycle_count_goal()
-{
-    return cycle_count + cycles_to_run;
-}
+    // Return how many cycles the EE should be running until
+    inline uint64_t EmotionEngine::get_cycle_count_goal()
+    {
+        return cycle_count + cycles_to_run;
+    }
 
-inline void EmotionEngine::set_cycle_count(uint64_t value)
-{
-    cycle_count = value;
-}
+    inline void EmotionEngine::set_cycle_count(uint64_t value)
+    {
+        cycle_count = value;
+    }
 
-inline void EmotionEngine::halt()
-{
-    wait_for_IRQ = true;
-    cycles_to_run = 0;
-}
-
-inline void EmotionEngine::unhalt()
-{
-    wait_for_IRQ = false;
-    if (cycles_to_run < 0)
+    inline void EmotionEngine::halt()
+    {
+        wait_for_IRQ = true;
         cycles_to_run = 0;
+    }
+
+    inline void EmotionEngine::unhalt()
+    {
+        wait_for_IRQ = false;
+        if (cycles_to_run < 0)
+            cycles_to_run = 0;
+    }
 }

@@ -1,8 +1,10 @@
 #pragma once
 #include "vlc_table.hpp"
 
-class CodedBlockPattern : public VLC_Table
+namespace ipu
 {
+    class CodedBlockPattern : public VLC_Table
+    {
     private:
         static VLC_Entry table[];
         static unsigned int index_table[];
@@ -10,4 +12,5 @@ class CodedBlockPattern : public VLC_Table
         constexpr static int SIZE = 64;
     public:
         CodedBlockPattern();
-};
+    };
+}

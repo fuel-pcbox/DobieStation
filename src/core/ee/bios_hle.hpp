@@ -2,47 +2,52 @@
 #include <vector>
 #include <ee/emotion.hpp>
 
-enum CALL_PARAMS
+namespace gs
 {
-    RETURN = 2,
-    PARAM0 = 4,
-    PARAM1 = 5,
-    PARAM2 = 6,
-    PARAM3 = 7,
-    PARAM4 = 8,
-    PARAM5 = 9
-};
+    class GraphicsSynthesizer;
+}
 
-struct thread_hle
+namespace ee
 {
-    uint32_t stack_base;
-    uint32_t heap_base;
-    uint8_t priority;
-};
+    enum CALL_PARAMS
+    {
+        RETURN = 2,
+        PARAM0 = 4,
+        PARAM1 = 5,
+        PARAM2 = 6,
+        PARAM3 = 7,
+        PARAM4 = 8,
+        PARAM5 = 9
+    };
 
-struct INTC_handler
-{
-    uint32_t cause;
-    uint32_t addr;
-    uint32_t next;
-    uint32_t arg;
-};
+    struct thread_hle
+    {
+        uint32_t stack_base;
+        uint32_t heap_base;
+        uint8_t priority;
+    };
 
-class GraphicsSynthesizer;
+    struct INTC_handler
+    {
+        uint32_t cause;
+        uint32_t addr;
+        uint32_t next;
+        uint32_t arg;
+    };
 
-class BIOS_HLE
-{
+    class BIOS_HLE
+    {
     private:
-        Emulator* e;
-        GraphicsSynthesizer* gs;
+        core::Emulator* e;
+        gs::GraphicsSynthesizer* gs;
         std::vector<thread_hle> threads;
         std::vector<INTC_handler> intc_handlers;
 
-        void sw(uint32_t& address, uint32_t value);
+        void store(uint32_t& address, uint32_t value);
         void store_INTC_handler(INTC_handler& h);
         void assemble_interrupt_handler();
     public:
-        BIOS_HLE(Emulator* e, GraphicsSynthesizer* gs);
+        BIOS_HLE(core::Emulator* e, gs::GraphicsSynthesizer* gs);
 
         void reset();
 
@@ -58,4 +63,5 @@ class BIOS_HLE
         void get_heap_end(EmotionEngine& cpu);
         void set_GS_IMR(EmotionEngine& cpu);
         void get_memory_size(EmotionEngine& cpu);
-};
+    };
+}
