@@ -1,5 +1,4 @@
-#ifndef MAC_ADDR_INC_H
-#define MAC_ADDR_INC_H
+#pragma once
 #include "vlc_table.hpp"
 
 class MacroblockAddrInc : public VLC_Table
@@ -12,5 +11,3 @@ class MacroblockAddrInc : public VLC_Table
     public:
         MacroblockAddrInc();
 };
-
-#endif // MAC_ADDR_INC_H

@@ -1,5 +1,4 @@
-#ifndef MEMCARD_HPP
-#define MEMCARD_HPP
+#pragma once
 #include <cstdint>
 #include <string>
 
@@ -59,5 +58,3 @@ class Memcard
         void start_transfer();
         uint8_t write_serial(uint8_t data);
 };
-
-#endif // MEMCARD_HPP

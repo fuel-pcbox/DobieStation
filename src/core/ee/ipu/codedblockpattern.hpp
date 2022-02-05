@@ -1,5 +1,4 @@
-#ifndef CODEDBLOCKPATTERN_HPP
-#define CODEDBLOCKPATTERN_HPP
+#pragma once
 #include "vlc_table.hpp"
 
 class CodedBlockPattern : public VLC_Table
@@ -12,5 +11,3 @@ class CodedBlockPattern : public VLC_Table
     public:
         CodedBlockPattern();
 };
-
-#endif // CODEDBLOCKPATTERN_HPP

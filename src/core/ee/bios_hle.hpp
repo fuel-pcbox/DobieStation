@@ -1,5 +1,4 @@
-#ifndef BIOS_HLE_HPP
-#define BIOS_HLE_HPP
+#pragma once
 #include <vector>
 #include "emotion.hpp"
 
@@ -60,5 +59,3 @@ class BIOS_HLE
         void set_GS_IMR(EmotionEngine& cpu);
         void get_memory_size(EmotionEngine& cpu);
 };
-
-#endif // BIOS_HLE_HPP

@@ -1,5 +1,4 @@
-#ifndef EMOTIONINTERPRETER_HPP
-#define EMOTIONINTERPRETER_HPP
+#pragma once
 #include "emotion.hpp"
 #include <vector>
 
@@ -578,5 +577,3 @@ namespace EmotionInterpreter
 
     [[ noreturn ]] void unknown_op(const char* type, uint32_t instruction, uint16_t op);
 };
-
-#endif // EMOTIONINTERPRETER_HPP

@@ -1,5 +1,4 @@
-#ifndef IR_BLOCK_HPP
-#define IR_BLOCK_HPP
+#pragma once
 #include <list>
 #include "ir_instr.hpp"
 
@@ -24,5 +23,3 @@ class Block
 };
 
 };
-
-#endif // IR_BLOCK_HPP

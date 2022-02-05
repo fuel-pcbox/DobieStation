@@ -1,5 +1,4 @@
-#ifndef INTC_HPP
-#define INTC_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -53,5 +52,3 @@ class INTC
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // INTC_HPP

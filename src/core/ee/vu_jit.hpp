@@ -1,5 +1,4 @@
-#ifndef VU_JIT_HPP
-#define VU_JIT_HPP
+#pragma once
 #include <cstdint>
 
 class VectorUnit;
@@ -12,5 +11,3 @@ void reset(VectorUnit *vu);
 void set_current_program(uint32_t crc, VectorUnit *vu);
 
 };
-
-#endif // VU_JIT_HPP

@@ -1,5 +1,4 @@
-#ifndef IPU_HPP
-#define IPU_HPP
+#pragma once
 #include <cstdint>
 #include <queue>
 
@@ -253,5 +252,3 @@ class ImageProcessingUnit
         uint128_t read_FIFO();
         void write_FIFO(uint128_t quad);
 };
-
-#endif // IPU_HPP

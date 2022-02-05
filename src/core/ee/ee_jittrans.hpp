@@ -1,5 +1,4 @@
-#ifndef EE_JITTRANS_HPP
-#define EE_JITTRANS_HPP
+#pragma once
 #include <cstdint>
 #include <vector>
 #include "../jitcommon/ir_block.hpp"
@@ -113,5 +112,3 @@ private:
 public:
     IR::Block translate(EmotionEngine& ee);
 };
-
-#endif // EE_JITTRANS_HPP

@@ -1,5 +1,4 @@
-#ifndef VU_INTERPRETER_HPP
-#define VU_INTERPRETER_HPP
+#pragma once
 #include "vu.hpp"
 
 namespace VU_Interpreter
@@ -149,5 +148,3 @@ namespace VU_Interpreter
 
     void unknown_op(const char* type, uint32_t instruction, uint16_t op);
 };
-
-#endif // VU_INTERPRETER_HPP

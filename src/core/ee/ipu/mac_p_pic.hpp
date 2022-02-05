@@ -1,5 +1,4 @@
-#ifndef MAC_P_PIC_HPP
-#define MAC_P_PIC_HPP
+#pragma once
 #include "vlc_table.hpp"
 
 class Macroblock_PPic : public VLC_Table
@@ -12,5 +11,3 @@ class Macroblock_PPic : public VLC_Table
     public:
         Macroblock_PPic();
 };
-
-#endif // MAC_P_PIC_HPP

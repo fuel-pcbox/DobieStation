@@ -1,5 +1,4 @@
-#ifndef IOP_DMA_HPP
-#define IOP_DMA_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include <list>
@@ -136,5 +135,3 @@ class IOP_DMA
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // IOP_DMA_HPP

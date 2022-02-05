@@ -1,5 +1,4 @@
-#ifndef DMAC_HPP
-#define DMAC_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include <list>
@@ -160,5 +159,3 @@ class DMAC
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // DMAC_HPP

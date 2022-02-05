@@ -1,5 +1,4 @@
-#ifndef VU_JIT64_HPP
-#define VU_JIT64_HPP
+#pragma once
 #include "../jitcommon/emitter64.hpp"
 #include "../jitcommon/ir_block.hpp"
 #include "vu_jittrans.hpp"
@@ -209,5 +208,3 @@ class VU_JIT64
 
         friend uint8_t* exec_block_vu(VU_JIT64& jit, VectorUnit& vu);
 };
-
-#endif // VU_JIT64_HPP

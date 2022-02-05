@@ -1,5 +1,4 @@
-#ifndef EMOTIONDISASM_HPP
-#define EMOTIONDISASM_HPP
+#pragma once
 #include <cstdint>
 #include <string>
 
@@ -284,5 +283,3 @@ namespace EmotionDisasm
     std::string unknown_op(const std::string optype, uint32_t op, int width);
 
 };
-
-#endif // EMOTIONDISASM_HPP

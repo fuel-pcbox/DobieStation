@@ -1,5 +1,4 @@
-#ifndef COP1_HPP
-#define COP1_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -86,5 +85,3 @@ class Cop1
 
         friend uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
 };
-
-#endif // COP1_HPP

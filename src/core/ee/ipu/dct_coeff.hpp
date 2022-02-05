@@ -1,5 +1,4 @@
-#ifndef DCT_COEFF_HPP
-#define DCT_COEFF_HPP
+#pragma once
 #include "vlc_table.hpp"
 
 struct RunLevelPair
@@ -21,5 +20,3 @@ class DCT_Coeff : public VLC_Table
 
         bool peek_value(IPU_FIFO& FIFO, int bits, int& bit_count, uint32_t& result);
 };
-
-#endif // DCT_COEFF_HPP

@@ -1,5 +1,4 @@
-#ifndef EMOTION_HPP
-#define EMOTION_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include <functional>
@@ -267,5 +266,3 @@ inline void EmotionEngine::unhalt()
     if (cycles_to_run < 0)
         cycles_to_run = 0;
 }
-
-#endif // EMOTION_HPP

@@ -1,5 +1,4 @@
-#ifndef GSTHREAD_HPP
-#define GSTHREAD_HPP
+#pragma once
 #include <cstdint>
 #include <thread>
 #include <mutex>
@@ -544,4 +543,3 @@ class GraphicsSynthesizerThread
         void reset();
         void exit();
 };
-#endif // GSTHREAD_HPP

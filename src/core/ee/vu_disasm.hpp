@@ -1,5 +1,4 @@
-#ifndef VU_DISASM_HPP
-#define VU_DISASM_HPP
+#pragma once
 #include <string>
 
 namespace VU_Disasm
@@ -91,5 +90,3 @@ namespace VU_Disasm
     std::string jr(uint32_t instr);
     std::string jalr(uint32_t instr);
 };
-
-#endif // VU_DISASM_HPP

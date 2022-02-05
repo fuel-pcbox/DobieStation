@@ -1,5 +1,4 @@
-#ifndef SIO2_HPP
-#define SIO2_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include <queue>
@@ -62,5 +61,3 @@ class SIO2
         void write_dma(uint8_t value);
         void dma_reset();
 };
-
-#endif // SIO2_HPP

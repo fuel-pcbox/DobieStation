@@ -1,5 +1,4 @@
-#ifndef IOP_TIMERS_HPP
-#define IOP_TIMERS_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -58,5 +57,3 @@ class IOPTiming
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // IOP_TIMERS_HPP

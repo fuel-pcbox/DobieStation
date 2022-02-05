@@ -1,5 +1,4 @@
-#ifndef INT128_HPP
-#define INT128_HPP
+#pragma once
 #include <cstdint>
 
 /**
@@ -91,5 +90,3 @@ struct int128_t
         return (lo != right.lo) || (hi != right.hi);
     }
 };
-
-#endif // INT128_HPP

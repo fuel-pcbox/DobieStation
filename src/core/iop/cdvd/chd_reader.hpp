@@ -1,6 +1,4 @@
-#ifndef __CHD_H_
-#define __CHD_H_
-
+#pragma once
 #include <memory>
 #include <libchdr/chd.h>
 #include "cdvd_container.hpp"
@@ -28,7 +26,3 @@ class CHD_Reader : public CDVD_Container
 
         void find_offset();
 };
-
-
-
-#endif // __CHD_H_

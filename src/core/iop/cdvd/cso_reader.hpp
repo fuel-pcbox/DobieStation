@@ -1,6 +1,4 @@
-#ifndef CSO_READER_H
-#define CSO_READER_H
-
+#pragma once
 #include <fstream>
 #include <cstdint>
 #include "cdvd_container.hpp"
@@ -40,5 +38,3 @@ class CSO_Reader : public CDVD_Container
         uint32_t get_numblocks();
         uint64_t tell();
 };
-
-#endif//CSO_READER_H

@@ -1,5 +1,4 @@
-#ifndef EMULATOR_HPP
-#define EMULATOR_HPP
+#pragma once
 #include <fstream>
 #include <functional>
 
@@ -178,5 +177,3 @@ class Emulator
 
         void set_wav_output(bool state);
 };
-
-#endif // EMULATOR_HPP

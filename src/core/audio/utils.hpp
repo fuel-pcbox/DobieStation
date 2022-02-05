@@ -1,10 +1,8 @@
-#ifndef __UTILS_H_
-#define __UTILS_H_
+#pragma once
 #include "../iop/spu/spu_utils.hpp"
 #include <fstream>
 #include <vector>
 #include <string>
-
 
 class WAVWriter
 {
@@ -32,8 +30,4 @@ class WAVWriter
         const uint32_t header_size = 36;
         const uint32_t format_size = 16;
         const uint16_t format = 1;
-
 };
-
-
-#endif // __UTILS_H_

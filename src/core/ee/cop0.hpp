@@ -1,5 +1,4 @@
-#ifndef COP0_HPP
-#define COP0_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -153,5 +152,3 @@ inline bool Cop0::get_tlb_modified(size_t page) const
 {
     return vtlb_info[page].modified;
 }
-
-#endif // COP0_HPP

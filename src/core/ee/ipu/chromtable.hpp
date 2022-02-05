@@ -1,5 +1,4 @@
-#ifndef CHROMTABLE_HPP
-#define CHROMTABLE_HPP
+#pragma once
 #include "vlc_table.hpp"
 
 class ChromTable : public VLC_Table
@@ -12,5 +11,3 @@ class ChromTable : public VLC_Table
     public:
         ChromTable();
 };
-
-#endif // CHROMTABLE_HPP

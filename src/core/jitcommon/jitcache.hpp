@@ -1,6 +1,4 @@
-#ifndef JITCACHE_HPP
-#define JITCACHE_HPP
-
+#pragma once
 #include <unordered_map>
 #include <cstring>
 #include <cstdlib>
@@ -372,7 +370,3 @@ public:
     void invalidate_ee_page(uint32_t page);
     EEJitBlockRecord *find_block(uint32_t PC);
 };
-
-
-#endif // JITCACHE_HPP
-

@@ -1,5 +1,4 @@
-#ifndef GIF_HPP
-#define GIF_HPP
+#pragma once
 #include <cstdint>
 #include <queue>
 #include <fstream>
@@ -126,5 +125,3 @@ inline void GraphicsInterface::resume_path3()
         request_PATH(3, false);
     }
 }
-
-#endif // GIF_HPP

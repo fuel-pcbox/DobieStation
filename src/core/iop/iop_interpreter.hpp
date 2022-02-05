@@ -1,5 +1,4 @@
-#ifndef IOP_INTERPRETER_HPP
-#define IOP_INTERPRETER_HPP
+#pragma once
 #include "iop.hpp"
 
 namespace IOP_Interpreter
@@ -75,5 +74,3 @@ namespace IOP_Interpreter
 
     void unknown_op(const char* type, uint16_t op, uint32_t instruction);
 };
-
-#endif // IOP_INTERPRETER_HPP

@@ -1,5 +1,4 @@
-#ifndef EMOTIONASM_HPP
-#define EMOTIONASM_HPP
+#pragma once
 #include <cstdint>
 #include <string>
 
@@ -35,5 +34,3 @@ namespace EmotionAssembler
     uint32_t lw(uint8_t dest, uint8_t base, int16_t offset);
     uint32_t sw(uint8_t source, uint8_t base, int16_t offset);
 };
-
-#endif // EMOTIONASM_HPP

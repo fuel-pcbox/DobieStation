@@ -1,6 +1,4 @@
-#ifndef ERRORS_HPP
-#define ERRORS_HPP
-
+#pragma once
 #include <stdexcept>
 
 #define ERROR_STRING_MAX_LENGTH 255
@@ -22,5 +20,3 @@ class non_fatal_error : public std::runtime_error
 {
     using std::runtime_error::runtime_error;
 };
-
-#endif

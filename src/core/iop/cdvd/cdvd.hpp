@@ -1,6 +1,4 @@
-#ifndef CDVD_HPP
-#define CDVD_HPP
-
+#pragma once
 #include <fstream>
 #include <memory>
 #include <algorithm>
@@ -173,5 +171,3 @@ class CDVD_Drive
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // CDVD_HPP

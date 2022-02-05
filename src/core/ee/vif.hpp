@@ -1,5 +1,4 @@
-#ifndef VIF_HPP
-#define VIF_HPP
+#pragma once
 #include <cstdint>
 #include <queue>
 #include <fstream>
@@ -152,4 +151,3 @@ inline int VectorInterface::get_id()
 {
     return id;
 }
-#endif // VIF_HPP

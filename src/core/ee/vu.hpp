@@ -1,5 +1,4 @@
-#ifndef VU_HPP
-#define VU_HPP
+#pragma once
 #include <cstdint>
 #include <cstdio>
 #include <fstream>
@@ -545,5 +544,3 @@ inline uint64_t VectorUnit::get_cycle_count()
 {
     return cycle_count;
 }
-
-#endif // VU_HPP

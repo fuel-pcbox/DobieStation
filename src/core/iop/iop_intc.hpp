@@ -1,5 +1,4 @@
-#ifndef IOP_INTC_HPP
-#define IOP_INTC_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -30,5 +29,3 @@ class IOP_INTC
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // IOP_INTC_HPP

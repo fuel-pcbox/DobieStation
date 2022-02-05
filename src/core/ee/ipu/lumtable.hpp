@@ -1,5 +1,4 @@
-#ifndef LUMTABLE_HPP
-#define LUMTABLE_HPP
+#pragma once
 #include "vlc_table.hpp"
 
 class LumTable : public VLC_Table
@@ -12,5 +11,3 @@ class LumTable : public VLC_Table
     public:
         LumTable();
 };
-
-#endif // LUMTABLE_HPP

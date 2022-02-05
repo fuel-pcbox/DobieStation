@@ -1,5 +1,4 @@
-#ifndef GSCONTEXT_HPP
-#define GSCONTEXT_HPP
+#pragma once
 #include <cstdint>
 
 struct TEX0
@@ -135,5 +134,3 @@ struct GSContext
     void set_frame(uint64_t value);
     void set_zbuf(uint64_t value);
 };
-
-#endif // GSCONTEXT_HPP

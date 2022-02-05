@@ -1,5 +1,4 @@
-#ifndef IPU_FIFO_HPP
-#define IPU_FIFO_HPP
+#pragma once
 #include <cstdint>
 #include <queue>
 
@@ -17,5 +16,3 @@ struct IPU_FIFO
     void reset();
     void byte_align();
 };
-
-#endif // IPU_FIFO_HPP

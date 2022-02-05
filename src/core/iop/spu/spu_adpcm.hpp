@@ -1,5 +1,4 @@
-#ifndef __PS_ADPCM_H
-#define __PS_ADPCM_H
+#pragma once
 #include <array>
 #include <cstdint>
 #include "spu_utils.hpp"
@@ -14,6 +13,3 @@ class ADPCM_Decoder
         uint8_t shift_factor, coef_index;
         int32_t hist1, hist2;
 };
-
-
-#endif // __PS_ADPCM_H_

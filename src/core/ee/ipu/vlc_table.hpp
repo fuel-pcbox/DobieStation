@@ -1,5 +1,4 @@
-#ifndef VLC_TABLE_HPP
-#define VLC_TABLE_HPP
+#pragma once
 #include <stdexcept>
 #include <cstdint>
 #include <queue>
@@ -29,5 +28,3 @@ class VLC_Table
         bool peek_symbol(IPU_FIFO& FIFO, VLC_Entry& entry);
         bool get_symbol(IPU_FIFO& FIFO, uint32_t& result);
 };
-
-#endif // VLC_TABLE_HPP

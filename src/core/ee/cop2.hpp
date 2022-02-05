@@ -1,5 +1,4 @@
-#ifndef COP2_HPP
-#define COP2_HPP
+#pragma once
 #include "vu.hpp"
 
 //This is essentially a wrapper around VU0 with access to VU1
@@ -13,5 +12,3 @@ class Cop2
         uint32_t cfc2(int index);
         void ctc2(int index, uint32_t value);
 };
-
-#endif // COP2_HPP

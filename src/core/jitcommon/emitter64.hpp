@@ -1,5 +1,4 @@
-#ifndef EMITTER64_HPP
-#define EMITTER64_HPP
+#pragma once
 #include <cstdint>
 #include "jitcache.hpp"
 
@@ -359,6 +358,3 @@ class Emitter64
         void VMINPS(REG_64 xmm_source, REG_64 xmm_source2, REG_64 xmm_dest);
         void VMAXPS(REG_64 xmm_source, REG_64 xmm_source2, REG_64 xmm_dest);
 };
-
-#endif // EMITTER64_HPP
-

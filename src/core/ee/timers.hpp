@@ -1,5 +1,4 @@
-#ifndef TIMERS_HPP
-#define TIMERS_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -64,5 +63,3 @@ class EmotionTiming
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // TIMERS_HPP

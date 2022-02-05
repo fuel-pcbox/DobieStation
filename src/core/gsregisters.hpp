@@ -1,8 +1,7 @@
 /** These are the GS registers that are (often indirectly) accessible from the EE/GIF
 As such they are evaluated on both the GS thread and the GS manager.
 **/
-#ifndef GSREGISTERS_HPP
-#define GSREGISTERS_HPP
+#pragma once
 #include <cstdint>
 
 struct PMODE_REG
@@ -190,4 +189,3 @@ struct GS_REGISTERS
     bool assert_VSYNC();
 
 };
-#endif // GSREGISTERS_HPP

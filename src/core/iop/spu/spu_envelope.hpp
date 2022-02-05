@@ -1,7 +1,5 @@
-#ifndef __SPU_ENVELOPE_H_
-#define __SPU_ENVELOPE_H_
+#pragma once
 #include <cstdint>
-
 
 struct Envelope
 {
@@ -45,7 +43,3 @@ struct Volume
     void advance();
     void set(uint16_t value);
 };
-
-
-
-#endif // __SPU_ENVELOPE_H_

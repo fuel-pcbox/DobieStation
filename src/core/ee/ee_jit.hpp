@@ -1,5 +1,4 @@
-#ifndef EE_JIT_HPP
-#define EE_JIT_HPP
+#pragma once
 #include <cstdint>
 
 class EmotionEngine;
@@ -10,4 +9,3 @@ namespace EE_JIT
     void reset(bool clear_cache);
 };
 
-#endif // EE_JIT_HPP

@@ -1,5 +1,4 @@
-#ifndef IR_INSTR_HPP
-#define IR_INSTR_HPP
+#pragma once
 #include <cstdint>
 #include <vector>
 #include "../ee/emotion.hpp"
@@ -70,5 +69,3 @@ class Instruction
 };
 
 };
-
-#endif // IR_INSTR_HPP

@@ -1,5 +1,4 @@
-#ifndef ISO_READER_HPP
-#define ISO_READER_HPP
+#pragma once
 #include "cdvd_container.hpp"
 
 class ISO_Reader : public CDVD_Container
@@ -17,5 +16,3 @@ class ISO_Reader : public CDVD_Container
         bool is_open();
         size_t get_size();
 };
-
-#endif // ISO_READER_HPP

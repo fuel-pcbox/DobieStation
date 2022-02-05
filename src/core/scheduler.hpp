@@ -1,5 +1,4 @@
-#ifndef SCHEDULER_HPP
-#define SCHEDULER_HPP
+#pragma once
 #include <cstdint>
 #include <functional>
 #include <list>
@@ -106,5 +105,3 @@ inline int64_t Scheduler::get_iop_cycles()
 {
     return iop_cycles.count;
 }
-
-#endif // SCHEDULER_HPP

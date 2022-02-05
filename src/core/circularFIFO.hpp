@@ -4,9 +4,7 @@ This is a single-producer single-consumer FIFO, so if more multithreading is add
 we'll need to change this. It's probably better to have multiple 1->1 queues than
 a single bigger queue if at all reasonable though
 **/
-#ifndef CIRCULARFIFO_AQUIRE_RELEASE_H_
-#define CIRCULARFIFO_AQUIRE_RELEASE_H_
-
+#pragma once
 #include <atomic>
 #include <cstddef>
 
@@ -92,5 +90,4 @@ template<typename Element, size_t Size>
 size_t CircularFifo<Element, Size>::increment(size_t idx) const
 {
     return (idx + 1) % Capacity;
-    }
-#endif /* CIRCULARFIFO_AQUIRE_RELEASE_H_ */
+}

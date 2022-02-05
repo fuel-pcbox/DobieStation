@@ -1,5 +1,4 @@
-#ifndef SIF_HPP
-#define SIF_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include <functional>
@@ -88,5 +87,3 @@ inline int SubsystemInterface::get_SIF1_size()
 {
     return SIF1_FIFO.size();
 }
-
-#endif // SIF_HPP

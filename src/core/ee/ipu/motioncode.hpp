@@ -1,5 +1,4 @@
-#ifndef MOTIONCODE_HPP
-#define MOTIONCODE_HPP
+#pragma once
 #include "vlc_table.hpp"
 
 class MotionCode : public VLC_Table
@@ -12,5 +11,3 @@ class MotionCode : public VLC_Table
     public:
         MotionCode();
 };
-
-#endif // MOTIONCODE_HPP

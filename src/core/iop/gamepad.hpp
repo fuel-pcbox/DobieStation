@@ -1,5 +1,4 @@
-#ifndef GAMEPAD_HPP
-#define GAMEPAD_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -86,5 +85,3 @@ class Gamepad
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 };
-
-#endif // GAMEPAD_HPP

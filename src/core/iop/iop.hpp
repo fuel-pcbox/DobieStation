@@ -1,5 +1,4 @@
-#ifndef IOP_HPP
-#define IOP_HPP
+#pragma once
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
@@ -150,5 +149,3 @@ inline void IOP::set_muldiv_delay(int delay)
         cycles_to_run -= muldiv_delay;
     muldiv_delay = delay;
 }
-
-#endif // IOP_HPP

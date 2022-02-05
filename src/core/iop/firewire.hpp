@@ -1,5 +1,4 @@
-#ifndef FIREWIRE_HPP
-#define FIREWIRE_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
@@ -33,5 +32,3 @@ class Firewire
         void save_state(std::ofstream& state);
         */
 };
-
-#endif // Firewire_HPP

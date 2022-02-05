@@ -1,5 +1,4 @@
-#ifndef __SPU_UTILS_H_
-#define __SPU_UTILS_H_
+#pragma once
 #include <cstdint>
 #include <algorithm>
 
@@ -26,7 +25,3 @@ struct stereo_sample
             right = clamp16(right + two.right);
     }
 };
-
-
-
-#endif // __SPU_UTILS_H_

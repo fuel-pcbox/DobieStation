@@ -1,5 +1,4 @@
-#ifndef VU_JITTRANS_HPP
-#define VU_JITTRANS_HPP
+#pragma once
 #include <cstdint>
 #include <vector>
 #include "../jitcommon/ir_block.hpp"
@@ -107,5 +106,3 @@ class VU_JitTranslator
         IR::Block translate(VectorUnit& vu, uint8_t *instr_mem, uint32_t prev_pc);
         void reset_instr_info();
 };
-
-#endif // VU_JITTRANS_HPP

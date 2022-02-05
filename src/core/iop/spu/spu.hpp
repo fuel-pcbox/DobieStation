@@ -1,5 +1,4 @@
-#ifndef SPU_HPP
-#define SPU_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include "spu_envelope.hpp"
@@ -301,5 +300,3 @@ inline bool SPU::running_ADMA()
 {
     return (autodma_ctrl & (1 << (id - 1)));
 }
-
-#endif // SPU_HPP

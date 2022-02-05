@@ -1,5 +1,4 @@
-#ifndef CDVD_CONTAINER_HPP
-#define CDVD_CONTAINER_HPP
+#pragma once
 #include <fstream>
 
 class CDVD_Container
@@ -13,5 +12,3 @@ class CDVD_Container
         virtual bool is_open() = 0;
         virtual size_t get_size() = 0;
 };
-
-#endif // CDVD_CONTAINER_HPP

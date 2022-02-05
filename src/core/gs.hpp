@@ -1,5 +1,4 @@
-#ifndef GS_HPP
-#define GS_HPP
+#pragma once
 #include <cstdint>
 #include <thread>
 #include <mutex>
@@ -73,4 +72,3 @@ class GraphicsSynthesizer
         void request_gs_download();
         std::tuple<uint128_t, bool>read_gs_download();
 };
-#endif // GS_HPP
