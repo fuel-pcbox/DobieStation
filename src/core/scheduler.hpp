@@ -4,33 +4,35 @@
 #include <list>
 #include <vector>
 
-struct CycleCount
+namespace core
 {
-    int64_t count;
-    uint64_t remainder;
-};
+    struct CycleCount
+    {
+        int64_t count;
+        uint64_t remainder;
+    };
 
-struct SchedulerEvent
-{
-    uint64_t event_id;
-    int64_t time_to_run;
-    uint64_t param;
-    int func_id;
-    bool pulse;
-};
+    struct SchedulerEvent
+    {
+        uint64_t event_id;
+        int64_t time_to_run;
+        uint64_t param;
+        int func_id;
+        bool pulse;
+    };
 
-struct SchedulerTimer
-{
-    uint64_t event_id, param;
-    int64_t counter, target, overflow_mask, clockrate, remainder_clocks;
-    int64_t last_update, pause_delta;
-    int callback_id;
-    bool paused;
-    bool can_overflow, can_target;
-};
+    struct SchedulerTimer
+    {
+        uint64_t event_id, param;
+        int64_t counter, target, overflow_mask, clockrate, remainder_clocks;
+        int64_t last_update, pause_delta;
+        int callback_id;
+        bool paused;
+        bool can_overflow, can_target;
+    };
 
-class Scheduler
-{
+    class Scheduler
+    {
     private:
         CycleCount ee_cycles;
         CycleCount bus_cycles;
@@ -94,14 +96,15 @@ class Scheduler
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
 
-inline int64_t Scheduler::get_ee_cycles()
-{
-    return ee_cycles.count;
-}
+    inline int64_t Scheduler::get_ee_cycles()
+    {
+        return ee_cycles.count;
+    }
 
-inline int64_t Scheduler::get_iop_cycles()
-{
-    return iop_cycles.count;
+    inline int64_t Scheduler::get_iop_cycles()
+    {
+        return iop_cycles.count;
+    }
 }

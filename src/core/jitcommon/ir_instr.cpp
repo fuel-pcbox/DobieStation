@@ -90,7 +90,7 @@ uint32_t Instruction::get_opcode() const
     return opcode;
 }
 
-void (*Instruction::get_interpreter_fallback(void) const)(EmotionEngine&, uint32_t)
+void (*Instruction::get_interpreter_fallback(void) const)(ee::EmotionEngine&, uint32_t)
 {
     return interpreter_fallback;
 };
@@ -165,7 +165,7 @@ void Instruction::set_opcode(uint32_t value)
     opcode = value;
 }
 
-void Instruction::set_interpreter_fallback(void(*value)(EmotionEngine&, uint32_t))
+void Instruction::set_interpreter_fallback(void(*value)(ee::EmotionEngine&, uint32_t))
 {
     interpreter_fallback = value;
 }

@@ -34,7 +34,7 @@ void WAVWriter::update_header()
     file.write((char*)&size, 4);
 }
 
-void WAVWriter::append_pcm_stereo(stereo_sample pcm)
+void WAVWriter::append_pcm_stereo(spu::stereo_sample pcm)
 {
     cache.push_back(pcm);
 

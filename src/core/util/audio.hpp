@@ -9,7 +9,7 @@ class WAVWriter
     public:
         WAVWriter(std::string filename);
         ~WAVWriter();
-        void append_pcm_stereo(stereo_sample pcm);
+        void append_pcm_stereo(spu::stereo_sample pcm);
     private:
         void update_header();
 
@@ -20,7 +20,7 @@ class WAVWriter
         int channels = 2;
         uint16_t sample_size = 16;
 
-        std::vector<stereo_sample> cache;
+        std::vector<spu::stereo_sample> cache;
 
         const char* data = "data";
         const char* fmt = "fmt ";

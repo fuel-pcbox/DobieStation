@@ -27,48 +27,50 @@
 #include <sif.hpp>
 #include "scheduler.hpp"
 
-enum SKIP_HACK
+namespace core
 {
-    NONE,
-    LOAD_ELF,
-    LOAD_DISC
-};
+    enum SKIP_HACK
+    {
+        NONE,
+        LOAD_ELF,
+        LOAD_DISC
+    };
 
-enum CPU_MODE
-{
-    DONT_CARE,
-    JIT,
-    INTERPRETER
-};
+    enum CPU_MODE
+    {
+        DONT_CARE,
+        JIT,
+        INTERPRETER
+    };
 
-class Emulator
-{
+    class Emulator
+    {
     private:
         std::atomic_bool save_requested, load_requested, gsdump_requested, gsdump_single_frame, gsdump_running;
         std::string save_state_path;
         int frames;
-        Cop0 cp0;
-        Cop1 fpu;
-        CDVD_Drive cdvd;
-        DMAC dmac;
-        EmotionEngine cpu;
-        EmotionTiming timers;
-        Firewire firewire;
-        Gamepad pad;
-        GraphicsSynthesizer gs;
-        GraphicsInterface gif;
-        IOP iop;
-        IOP_DMA iop_dma;
-        IOPTiming iop_timers;
-        INTC intc;
-        ImageProcessingUnit ipu;
-        Memcard memcard;
+        ee::Cop0 cp0;
+        ee::Cop1 fpu;
+        cdvd::CDVD_Drive cdvd;
+        ee::DMAC dmac;
+        ee::EmotionEngine cpu;
+        ee::EmotionTiming timers;
+        sio2::Firewire firewire;
+        sio2::Gamepad pad;
+        gs::GraphicsSynthesizer gs;
+        gs::GraphicsInterface gif;
+        iop::IOP iop;
+        iop::IOP_DMA iop_dma;
+        iop::IOPTiming iop_timers;
+        ee::INTC intc;
+        ipu::ImageProcessingUnit ipu;
+        sio2::Memcard memcard;
         Scheduler scheduler;
-        SIO2 sio2;
-        SPU spu, spu2;
+        sio2::SIO2 sio2;
+        spu::SPU spu, spu2;
         SubsystemInterface sif;
-        VectorInterface vif0, vif1;
-        VectorUnit vu0, vu1;
+        vu::VectorInterface vif0, vif1;
+        vu::VectorUnit vu0, vu1;
 
         int vblank_start_id, vblank_end_id, spu_event_id, hblank_event_id, gs_vblank_event_id;
 
@@ -93,7 +95,7 @@ class Emulator
 
         uint8_t IOP_POST;
 
-        IOP_INTC iop_intc;
+        iop::IOP_INTC iop_intc;
 
         SKIP_HACK skip_BIOS_hack;
 
@@ -110,9 +112,9 @@ class Emulator
         void run();
         void reset();
         void print_state();
-        void press_button(PAD_BUTTON button);
-        void release_button(PAD_BUTTON button);
-        void update_joystick(JOYSTICK joystick, JOYSTICK_AXIS axis, uint8_t val);
+        void press_button(sio2::PAD_BUTTON button);
+        void release_button(sio2::PAD_BUTTON button);
+        void update_joystick(sio2::JOYSTICK joystick, sio2::JOYSTICK_AXIS axis, uint8_t val);
         bool skip_BIOS();
         void fast_boot();
         void set_skip_BIOS_hack(SKIP_HACK type);
@@ -121,7 +123,7 @@ class Emulator
         void set_vu1_mode(CPU_MODE mode);
         void load_BIOS(const uint8_t* BIOS);
         void load_ELF(const uint8_t* ELF, uint32_t size);
-        bool load_CDVD(const char* name, CDVD_CONTAINER type);
+        bool load_CDVD(const char* name, cdvd::CDVD_CONTAINER type);
         void load_memcard(int port, const char* name);
         std::string get_serial();
         void execute_ELF();
@@ -173,7 +175,8 @@ class Emulator
         void iop_puts();
 
         void test_iop();
-        GraphicsSynthesizer& get_gs();//used for gs dumps
+        gs::GraphicsSynthesizer& get_gs();//used for gs dumps
 
         void set_wav_output(bool state);
-};
+    };
+}
