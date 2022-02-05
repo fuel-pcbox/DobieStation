@@ -9,347 +9,348 @@
 #include "gsregisters.hpp"
 #include <util/circularFIFO.hpp>
 #include <util/int128.hpp>
-
 #include "jitcommon/emitter64.hpp"
 
-template<int XS, int YS, int ZS>
-struct SwizzleTable
+namespace gs
 {
-    SwizzleTable()
+    template<int XS, int YS, int ZS>
+    struct SwizzleTable
     {
+        SwizzleTable()
+        {
 
-    }
+        }
 
-    uint32_t& get(int x, int y, int z)
+        uint32_t& get(int x, int y, int z)
+        {
+            return data[x * YS * ZS + y * ZS + z];
+        }
+
+        uint32_t data[XS * YS * ZS];
+    };
+
+    //Commands sent from the main thread to the GS thread.
+    enum GSCommand :uint8_t
     {
-        return data[x*YS*ZS + y * ZS + z];
-    }
+        write64_t, write64_privileged_t, write32_privileged_t,
+        set_rgba_t, set_st_t, set_uv_t, set_xyz_t, set_xyzf_t, set_crt_t,
+        render_crt_t, assert_finish_t, assert_hblank_t, assert_vsync_t, swap_field_t, memdump_t, die_t,
+        save_state_t, load_state_t, gsdump_t, request_local_host_tx,
+    };
 
-    uint32_t data[XS*YS*ZS];
-};
-
-//Commands sent from the main thread to the GS thread.
-enum GSCommand:uint8_t 
-{
-    write64_t, write64_privileged_t, write32_privileged_t,
-    set_rgba_t, set_st_t, set_uv_t, set_xyz_t, set_xyzf_t, set_crt_t,
-    render_crt_t, assert_finish_t, assert_hblank_t, assert_vsync_t, swap_field_t, memdump_t, die_t,
-    save_state_t, load_state_t, gsdump_t, request_local_host_tx,
-};
-
-union GSMessagePayload 
-{
-    struct 
+    union GSMessagePayload
     {
-        uint32_t addr;
-        uint64_t value;
-    } write64_payload;
-    struct 
-    {
-        uint32_t addr;
-        uint32_t value;
-    } write32_payload;
-    struct 
-    {
-        uint8_t r, g, b, a;
-        float q;
-    } rgba_payload;
-    struct 
-    {
-        uint32_t s, t;
-    } st_payload;
-    struct 
-    {
-        uint16_t u, v;
-    } uv_payload;
-    struct 
-    {
-        uint32_t x, y, z;
-        bool drawing_kick;
-    } xyz_payload;
-    struct
-    {
-        uint32_t x, y, z;
-        uint8_t fog;
-        bool drawing_kick;
-    } xyzf_payload;
-    struct 
-    {
-        bool interlaced;
-        int mode;
-        bool frame_mode;
-    } crt_payload;
-    struct 
-    {
-        bool vblank;
-    } vblank_payload;
-    struct 
-    {
-        uint32_t* target;
-        std::mutex* target_mutex;
-    } render_payload;
-    struct
-    {
-        uint128_t* target;
-        std::mutex* target_mutex;
-    } download_payload;
-    struct
-    {
-        std::ofstream* state;
-    } save_state_payload;
-    struct
-    {
-        std::ifstream* state;
-    } load_state_payload;
-    struct 
-    {
-        uint8_t BLANK; 
-    } no_payload;//C++ doesn't like the empty struct
-};
-
-struct GSMessage
-{
-    GSCommand type;
-    GSMessagePayload payload;
-};
-
-//Commands sent from the GS thread to the main thread.
-enum GSReturn :uint8_t
-{
-    render_complete_t,
-    death_error_t,
-    save_state_done_t,
-    load_state_done_t,
-    gsdump_render_partial_done_t,
-    local_host_transfer,
-};
-
-union GSReturnMessagePayload
-{
-    struct
-    {
-        const char* error_str;
-    } death_error_payload;
-    struct
-    {
-        uint16_t x, y;
-    } xy_payload;
-    struct
-    {
-        uint8_t BLANK;
-    } no_payload;//C++ doesn't like the empty struct
-    struct
-    {
-        uint32_t quad_count;
-    } download_payload;
-
-};
-
-struct GSReturnMessage
-{
-    GSReturn type;
-    GSReturnMessagePayload payload;
-};
-
-typedef CircularFifo<GSMessage, 1024 * 1024 * 16> gs_fifo;
-typedef CircularFifo<GSReturnMessage, 1024> gs_return_fifo;
-
-struct PRMODE_REG
-{
-    bool gourand_shading;
-    bool texture_mapping;
-    bool fog;
-    bool alpha_blend;
-    bool antialiasing;
-    bool use_UV;
-    bool use_context2;
-    bool fix_fragment_value;
-    void reset()
-    {
-        gourand_shading = false;
-        texture_mapping = false;
-        fog = false;
-        alpha_blend = false;
-        antialiasing = false;
-        use_UV = false;
-        use_context2 = false;
-        fix_fragment_value = false;
-    }
-};
-
-//NOTE: RGBAQ is used by the JIT. DO NOT TOUCH!
-struct RGBAQ_REG
-{
-    //We make them 16-bit to handle potential overflows
-    int16_t r, g, b, a;
-    float q;
-};
-
-struct BITBLTBUF_REG
-{
-    uint32_t source_base;
-    uint32_t source_width;
-    uint8_t source_format;
-    uint32_t dest_base;
-    uint32_t dest_width;
-    uint8_t dest_format;
-};
-
-struct TRXREG_REG
-{
-    uint16_t width;
-    uint16_t height;
-};
-
-struct TRXPOS_REG
-{
-    uint16_t source_x, source_y;
-    uint16_t dest_x, dest_y;
-    uint16_t int_source_x, int_dest_x;
-    uint16_t int_source_y, int_dest_y;
-    uint8_t trans_order;
-};
-
-struct TEXA_REG
-{
-    uint8_t alpha0, alpha1;
-    bool trans_black;
-};
-
-struct TEXCLUT_REG
-{
-    uint16_t width, x, y;
-};
-
-struct Vertex
-{
-    int32_t x, y;
-    uint32_t z;
-
-    RGBAQ_REG rgbaq;
-    UV_REG uv;
-    float s, t;
-    uint8_t fog;
-    void to_relative(XYOFFSET xyoffset)
-    {
-        x -= xyoffset.x;
-        y -= xyoffset.y;
-    }
-};
-
-//NOTE: TexLookupInfo is used by the JIT. DO NOT TOUCH!
-struct TexLookupInfo
-{
-    //int32_t u, v;
-    RGBAQ_REG vtx_color, tex_color, srctex_color;
-    float LOD;
-    int mipmap_level;
-
-    uint32_t tex_base;
-    uint32_t buffer_width;
-    uint16_t tex_width, tex_height;
-
-    uint8_t fog;
-    bool new_lookup;
-    int16_t lastu, lastv;
-};
-
-uint32_t addr_PSMCT32(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-uint32_t addr_PSMCT32Z(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-uint32_t addr_PSMCT16(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-uint32_t addr_PSMCT16S(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-uint32_t addr_PSMCT16Z(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-uint32_t addr_PSMCT16SZ(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-uint32_t addr_PSMCT8(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-uint32_t addr_PSMCT4(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
-
-struct VertexF
-{
-    union {
         struct
         {
-            float x,y,w,r,g,b,a,q,u,v,s,t,fog;
-        };
-        float data[13];
+            uint32_t addr;
+            uint64_t value;
+        } write64_payload;
+        struct
+        {
+            uint32_t addr;
+            uint32_t value;
+        } write32_payload;
+        struct
+        {
+            uint8_t r, g, b, a;
+            float q;
+        } rgba_payload;
+        struct
+        {
+            uint32_t s, t;
+        } st_payload;
+        struct
+        {
+            uint16_t u, v;
+        } uv_payload;
+        struct
+        {
+            uint32_t x, y, z;
+            bool drawing_kick;
+        } xyz_payload;
+        struct
+        {
+            uint32_t x, y, z;
+            uint8_t fog;
+            bool drawing_kick;
+        } xyzf_payload;
+        struct
+        {
+            bool interlaced;
+            int mode;
+            bool frame_mode;
+        } crt_payload;
+        struct
+        {
+            bool vblank;
+        } vblank_payload;
+        struct
+        {
+            uint32_t* target;
+            std::mutex* target_mutex;
+        } render_payload;
+        struct
+        {
+            uint128_t* target;
+            std::mutex* target_mutex;
+        } download_payload;
+        struct
+        {
+            std::ofstream* state;
+        } save_state_payload;
+        struct
+        {
+            std::ifstream* state;
+        } load_state_payload;
+        struct
+        {
+            uint8_t BLANK;
+        } no_payload;//C++ doesn't like the empty struct
     };
-    double z;
 
-    VertexF()
+    struct GSMessage
     {
+        GSCommand type;
+        GSMessagePayload payload;
+    };
 
-    }
-
-    VertexF(Vertex& vert)
+    //Commands sent from the GS thread to the main thread.
+    enum GSReturn :uint8_t
     {
-        x = (float)vert.x / 16.f;
-        y = (float)vert.y / 16.f;
-        z = vert.z;
-        r = vert.rgbaq.r;
-        g = vert.rgbaq.g;
-        b = vert.rgbaq.b;
-        a = vert.rgbaq.a;
-        q = vert.rgbaq.q;
-        u = vert.uv.u;
-        v = vert.uv.v;
-        s = vert.s;
-        t = vert.t;
-        fog = vert.fog;
-    }
+        render_complete_t,
+        death_error_t,
+        save_state_done_t,
+        load_state_done_t,
+        gsdump_render_partial_done_t,
+        local_host_transfer,
+    };
 
-    VertexF operator-(const VertexF& rhs)
+    union GSReturnMessagePayload
     {
-        VertexF result;
-        for(int i = 0; i < 13; i++)
+        struct
         {
-            result.data[i] = data[i] - rhs.data[i];
-        }
-        result.z = z - rhs.z;
-        return result;
-    }
-
-    VertexF operator+(const VertexF& rhs)
-    {
-        VertexF result;
-        for(int i = 0; i < 13; i++)
+            const char* error_str;
+        } death_error_payload;
+        struct
         {
-            result.data[i] = data[i] + rhs.data[i];
-        }
-        result.z = z + rhs.z;
-        return result;
-    }
-
-    VertexF& operator+=(const VertexF& rhs)
-    {
-        for(int i = 0; i < 13; i++)
+            uint16_t x, y;
+        } xy_payload;
+        struct
         {
-            data[i] = data[i] + rhs.data[i];
-        }
-        z += rhs.z;
-        return *this;
-    }
-
-    VertexF operator*(float mult)
-    {
-        VertexF result;
-        for(int i = 0; i < 13; i++)
+            uint8_t BLANK;
+        } no_payload;//C++ doesn't like the empty struct
+        struct
         {
-            result.data[i] = data[i] * mult;
+            uint32_t quad_count;
+        } download_payload;
+
+    };
+
+    struct GSReturnMessage
+    {
+        GSReturn type;
+        GSReturnMessagePayload payload;
+    };
+
+    typedef CircularFifo<GSMessage, 1024 * 1024 * 16> gs_fifo;
+    typedef CircularFifo<GSReturnMessage, 1024> gs_return_fifo;
+
+    struct PRMODE_REG
+    {
+        bool gourand_shading;
+        bool texture_mapping;
+        bool fog;
+        bool alpha_blend;
+        bool antialiasing;
+        bool use_UV;
+        bool use_context2;
+        bool fix_fragment_value;
+        void reset()
+        {
+            gourand_shading = false;
+            texture_mapping = false;
+            fog = false;
+            alpha_blend = false;
+            antialiasing = false;
+            use_UV = false;
+            use_context2 = false;
+            fix_fragment_value = false;
         }
-        result.z = z * mult;
-        return result;
-    }
-};
+    };
 
-typedef void (*GSDrawPixelPrologue)(int32_t x, int32_t y, uint32_t z, RGBAQ_REG& color);
-typedef void (*GSTexLookupPrologue)(int16_t u, int16_t v, TexLookupInfo* info);
+    //NOTE: RGBAQ is used by the JIT. DO NOT TOUCH!
+    struct RGBAQ_REG
+    {
+        //We make them 16-bit to handle potential overflows
+        int16_t r, g, b, a;
+        float q;
+    };
 
-class GraphicsSynthesizerThread
-{
+    struct BITBLTBUF_REG
+    {
+        uint32_t source_base;
+        uint32_t source_width;
+        uint8_t source_format;
+        uint32_t dest_base;
+        uint32_t dest_width;
+        uint8_t dest_format;
+    };
+
+    struct TRXREG_REG
+    {
+        uint16_t width;
+        uint16_t height;
+    };
+
+    struct TRXPOS_REG
+    {
+        uint16_t source_x, source_y;
+        uint16_t dest_x, dest_y;
+        uint16_t int_source_x, int_dest_x;
+        uint16_t int_source_y, int_dest_y;
+        uint8_t trans_order;
+    };
+
+    struct TEXA_REG
+    {
+        uint8_t alpha0, alpha1;
+        bool trans_black;
+    };
+
+    struct TEXCLUT_REG
+    {
+        uint16_t width, x, y;
+    };
+
+    struct Vertex
+    {
+        int32_t x, y;
+        uint32_t z;
+
+        RGBAQ_REG rgbaq;
+        UV_REG uv;
+        float s, t;
+        uint8_t fog;
+        void to_relative(XYOFFSET xyoffset)
+        {
+            x -= xyoffset.x;
+            y -= xyoffset.y;
+        }
+    };
+
+    //NOTE: TexLookupInfo is used by the JIT. DO NOT TOUCH!
+    struct TexLookupInfo
+    {
+        //int32_t u, v;
+        RGBAQ_REG vtx_color, tex_color, srctex_color;
+        float LOD;
+        int mipmap_level;
+
+        uint32_t tex_base;
+        uint32_t buffer_width;
+        uint16_t tex_width, tex_height;
+
+        uint8_t fog;
+        bool new_lookup;
+        int16_t lastu, lastv;
+    };
+
+    uint32_t addr_PSMCT32(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+    uint32_t addr_PSMCT32Z(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+    uint32_t addr_PSMCT16(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+    uint32_t addr_PSMCT16S(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+    uint32_t addr_PSMCT16Z(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+    uint32_t addr_PSMCT16SZ(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+    uint32_t addr_PSMCT8(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+    uint32_t addr_PSMCT4(uint32_t block, uint32_t width, uint32_t x, uint32_t y);
+
+    struct VertexF
+    {
+        union {
+            struct
+            {
+                float x, y, w, r, g, b, a, q, u, v, s, t, fog;
+            };
+            float data[13];
+        };
+        double z;
+
+        VertexF()
+        {
+
+        }
+
+        VertexF(Vertex& vert)
+        {
+            x = (float)vert.x / 16.f;
+            y = (float)vert.y / 16.f;
+            z = vert.z;
+            r = vert.rgbaq.r;
+            g = vert.rgbaq.g;
+            b = vert.rgbaq.b;
+            a = vert.rgbaq.a;
+            q = vert.rgbaq.q;
+            u = vert.uv.u;
+            v = vert.uv.v;
+            s = vert.s;
+            t = vert.t;
+            fog = vert.fog;
+        }
+
+        VertexF operator-(const VertexF& rhs)
+        {
+            VertexF result;
+            for (int i = 0; i < 13; i++)
+            {
+                result.data[i] = data[i] - rhs.data[i];
+            }
+            result.z = z - rhs.z;
+            return result;
+        }
+
+        VertexF operator+(const VertexF& rhs)
+        {
+            VertexF result;
+            for (int i = 0; i < 13; i++)
+            {
+                result.data[i] = data[i] + rhs.data[i];
+            }
+            result.z = z + rhs.z;
+            return result;
+        }
+
+        VertexF& operator+=(const VertexF& rhs)
+        {
+            for (int i = 0; i < 13; i++)
+            {
+                data[i] = data[i] + rhs.data[i];
+            }
+            z += rhs.z;
+            return *this;
+        }
+
+        VertexF operator*(float mult)
+        {
+            VertexF result;
+            for (int i = 0; i < 13; i++)
+            {
+                result.data[i] = data[i] * mult;
+            }
+            result.z = z * mult;
+            return result;
+        }
+    };
+
+    typedef void (*GSDrawPixelPrologue)(int32_t x, int32_t y, uint32_t z, RGBAQ_REG& color);
+    typedef void (*GSTexLookupPrologue)(int16_t u, int16_t v, TexLookupInfo* info);
+
+    class GraphicsSynthesizerThread
+    {
     private:
 #ifdef _MSC_VER
-        constexpr static REG_64 abi_args[] = {RCX, RDX, R8, R9};
+        constexpr static REG_64 abi_args[] = { RCX, RDX, R8, R9 };
 #else
-        constexpr static REG_64 abi_args[] = {RDI, RSI, RDX, RCX};
+        constexpr static REG_64 abi_args[] = { RDI, RSI, RDX, RCX };
 #endif
         //threading
         std::thread thread;
@@ -507,15 +508,15 @@ class GraphicsSynthesizerThread
         void render_triangle();
         void render_triangle2();
         void render_half_triangle(float x0, float x1, int y0, int y1, VertexF& x_step, VertexF& y_step, VertexF& init,
-                float step_x0, float step_x1, float scx1, float scx2, TexLookupInfo& tex_info);
+            float step_x0, float step_x1, float scx1, float scx2, TexLookupInfo& tex_info);
         void render_sprite();
         void write_HWREG(uint64_t data);
-        uint32_t local_to_host(uint128_t *target);
+        uint32_t local_to_host(uint128_t* target);
         void unpack_PSMCT24(uint64_t data, int offset, bool z_format);
         uint64_t pack_PSMCT24(bool z_format);
         void local_to_local();
 
-        int32_t orient2D(const Vertex &v1, const Vertex &v2, const Vertex &v3);
+        int32_t orient2D(const Vertex& v1, const Vertex& v2, const Vertex& v3);
         void memdump(uint32_t* target, uint16_t& width, uint16_t& height);
 
         bool is_in_display(DISPLAY& display, int32_t x_start, int32_t y_start, int32_t x, int32_t y);
@@ -535,11 +536,12 @@ class GraphicsSynthesizerThread
     public:
         GraphicsSynthesizerThread();
         ~GraphicsSynthesizerThread();
-        
+
         // safe to access from emu thread
         void send_message(GSMessage message);
         void wake_thread();
-        void wait_for_return(GSReturn type, GSReturnMessage &data);
+        void wait_for_return(GSReturn type, GSReturnMessage& data);
         void reset();
         void exit();
-};
+    };
+}

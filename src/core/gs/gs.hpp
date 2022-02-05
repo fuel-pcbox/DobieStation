@@ -5,12 +5,18 @@
 #include "gsthread.hpp"
 #include "gsregisters.hpp"
 
-class INTC;
-
-class GraphicsSynthesizer
+namespace ee
 {
+    class INTC;
+};
+
+namespace gs
+{
+
+    class GraphicsSynthesizer
+    {
     private:
-        INTC* intc;
+        ee::INTC* intc;
         bool frame_complete;
         int frame_count;
         uint32_t* output_buffer1;
@@ -26,7 +32,7 @@ class GraphicsSynthesizer
 
         GraphicsSynthesizerThread gs_thread;
     public:
-        GraphicsSynthesizer(INTC* intc);
+        GraphicsSynthesizer(ee::INTC* intc);
         ~GraphicsSynthesizer();
 
         void reset();
@@ -71,4 +77,5 @@ class GraphicsSynthesizer
 
         void request_gs_download();
         std::tuple<uint128_t, bool>read_gs_download();
-};
+    };
+}

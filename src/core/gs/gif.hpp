@@ -6,33 +6,38 @@
 #include "gs.hpp"
 #include <util/int128.hpp>
 
-class DMAC;
-
-struct GIFtag
+namespace ee
 {
-    uint16_t NLOOP;
-    bool end_of_packet;
-    bool output_PRIM;
-    uint16_t PRIM;
-    uint8_t format;
-    uint8_t reg_count;
-    uint64_t regs;
+    class DMAC;
+}
 
-    uint8_t regs_left;
-    uint32_t data_left;
-};
-
-struct GIFPath
+namespace gs
 {
-    GIFtag current_tag;
-};
+    struct GIFtag
+    {
+        uint16_t NLOOP;
+        bool end_of_packet;
+        bool output_PRIM;
+        uint16_t PRIM;
+        uint8_t format;
+        uint8_t reg_count;
+        uint64_t regs;
 
-class GraphicsInterface
-{
+        uint8_t regs_left;
+        uint32_t data_left;
+    };
+
+    struct GIFPath
+    {
+        GIFtag current_tag;
+    };
+
+    class GraphicsInterface
+    {
     private:
         GraphicsSynthesizer* gs;
-        DMAC* dmac;
-        
+        ee::DMAC* dmac;
+
         GIFPath path[4];
 
         std::queue<uint128_t> FIFO;
@@ -56,7 +61,7 @@ class GraphicsInterface
 
         void flush_path3_fifo();
     public:
-        GraphicsInterface(GraphicsSynthesizer* gs, DMAC* dmac);
+        GraphicsInterface(GraphicsSynthesizer* gs, ee::DMAC* dmac);
         void reset();
         void run(int cycles);
 
@@ -93,35 +98,36 @@ class GraphicsInterface
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
 
-inline int GraphicsInterface::get_active_path()
-{
-    return active_path;
-}
-
-inline int GraphicsInterface::get_path_queue()
-{
-    return path_queue;
-}
-
-inline bool GraphicsInterface::path_active(int index, bool canInterruptPath3)
-{
-    if (index != 3 && canInterruptPath3)
+    inline int GraphicsInterface::get_active_path()
     {
-        interrupt_path3(index);
+        return active_path;
     }
-    return (active_path == index) && !gs->stalled() && !gif_temporary_stop && !gs->get_busdir();
-}
 
-inline void GraphicsInterface::resume_path3()
-{
-    if (path3_vif_masked || path3_mode_masked)
-        return;
-    if (FIFO.size() && path_status[3] == 4)
+    inline int GraphicsInterface::get_path_queue()
     {
-        //printf("[GIF] Resuming PATH3\n");
-        path_status[3] = 0; //Force it to be busy so if VIF puts the mask back on quickly, it doesn't instantly mask it
-        request_PATH(3, false);
+        return path_queue;
+    }
+
+    inline bool GraphicsInterface::path_active(int index, bool canInterruptPath3)
+    {
+        if (index != 3 && canInterruptPath3)
+        {
+            interrupt_path3(index);
+        }
+        return (active_path == index) && !gs->stalled() && !gif_temporary_stop && !gs->get_busdir();
+    }
+
+    inline void GraphicsInterface::resume_path3()
+    {
+        if (path3_vif_masked || path3_mode_masked)
+            return;
+        if (FIFO.size() && path_status[3] == 4)
+        {
+            //printf("[GIF] Resuming PATH3\n");
+            path_status[3] = 0; //Force it to be busy so if VIF puts the mask back on quickly, it doesn't instantly mask it
+            request_PATH(3, false);
+        }
     }
 }
