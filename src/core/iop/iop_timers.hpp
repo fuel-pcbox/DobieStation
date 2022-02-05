@@ -2,38 +2,44 @@
 #include <cstdint>
 #include <fstream>
 
-struct IOP_Timer_Control
+namespace core
 {
-    bool use_gate;
-    uint8_t gate_mode;
-    bool zero_return;
-    bool compare_interrupt_enabled;
-    bool overflow_interrupt_enabled;
-    bool repeat_int;
-    bool toggle_int;
-    bool int_enable;
-    bool extern_signal;
-    uint8_t prescale;
-    bool compare_interrupt;
-    bool overflow_interrupt;
-    bool started;
-};
+    class Scheduler;
+}
 
-struct IOP_Timer
+namespace iop
 {
-    uint64_t counter;
-    IOP_Timer_Control control;
-    uint64_t target;
-};
+    struct IOP_Timer_Control
+    {
+        bool use_gate;
+        uint8_t gate_mode;
+        bool zero_return;
+        bool compare_interrupt_enabled;
+        bool overflow_interrupt_enabled;
+        bool repeat_int;
+        bool toggle_int;
+        bool int_enable;
+        bool extern_signal;
+        uint8_t prescale;
+        bool compare_interrupt;
+        bool overflow_interrupt;
+        bool started;
+    };
 
-class IOP_INTC;
-class Scheduler;
+    struct IOP_Timer
+    {
+        uint64_t counter;
+        IOP_Timer_Control control;
+        uint64_t target;
+    };
 
-class IOPTiming
-{
+    class IOP_INTC;
+
+    class IOPTiming
+    {
     private:
         IOP_INTC* intc;
-        Scheduler* scheduler;
+        core::Scheduler* scheduler;
 
         IOP_Timer timers[6];
 
@@ -43,7 +49,7 @@ class IOPTiming
         void timer_interrupt(int index);
         void IRQ_test(int index, bool overflow);
     public:
-        IOPTiming(IOP_INTC* intc, Scheduler* scheduler);
+        IOPTiming(IOP_INTC* intc, core::Scheduler* scheduler);
 
         void reset();
         uint32_t read_counter(int index);
@@ -56,4 +62,5 @@ class IOPTiming
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
+}

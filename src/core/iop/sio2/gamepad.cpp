@@ -6,108 +6,110 @@
 
 //Reply buffers taken from PCSX2's LilyPad
 
-uint8_t Gamepad::mask_mode[7] = {0x5A, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x5A};
-const uint8_t Gamepad::vref_param[7] = {0x5A, 0x00, 0x00, 0x02, 0x00, 0x00, 0x5A};
-const uint8_t Gamepad::config_exit[7] = {0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t Gamepad::set_mode[7] = {0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t Gamepad::query_model_DS2[7] = {0x5A, 0x03, 0x02, 0x00, 0x02, 0x01, 0x00};
-const uint8_t Gamepad::query_model_DS1[7] = {0x5A, 0x01, 0x02, 0x00, 0x02, 0x01, 0x00};
-const uint8_t Gamepad::query_act[2][7] =
+namespace sio2
 {
-    {0x5A, 0x00, 0x00, 0x01, 0x02, 0x00, 0x0A},
-    {0x5A, 0x00, 0x00, 0x01, 0x01, 0x01, 0x14}
-};
-const uint8_t Gamepad::query_comb[7] = {0x5A, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00};
-const uint8_t Gamepad::query_mode[7] = {0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-const uint8_t Gamepad::native_mode[7] = {0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5A};
-
-Gamepad::Gamepad()
-{
-
-}
-
-void Gamepad::reset()
-{
-    //The first reply is always high-z
-    command_buffer[0] = 0xFF;
-    config_mode = false;
-    buttons = 0xFFFF;
-    joysticks[0][0] = 0x80;
-    joysticks[0][1] = 0x80;
-    joysticks[1][0] = 0x80;
-    joysticks[1][1] = 0x80;
-    command_length = 0;
-    pad_mode = DIGITAL;
-    command = 0;
-    data_count = 0;
-    mask[0] = 0xFF;
-    mask[1] = 0xFF;
-    mode_lock = 0;
-    reset_vibrate();
-}
-
-void Gamepad::press_button(PAD_BUTTON button)
-{
-    buttons &= ~(1 << (int)button);
-    button_pressure[(int)button] = 0xFF;
-}
-
-void Gamepad::release_button(PAD_BUTTON button)
-{
-    buttons |= 1 << (int)button;
-    button_pressure[(int)button] = 0;
-}
-
-void Gamepad::update_joystick(JOYSTICK joystick, JOYSTICK_AXIS axis, uint8_t val)
-{
-    joysticks[(int)joystick][(int)axis] = val;
-}
-
-void Gamepad::set_result(const uint8_t *result)
-{
-    int len = sizeof(result);
-    memcpy(command_buffer + 2, result, len);
-    command_length = len + 2;
-}
-
-void Gamepad::reset_vibrate()
-{
-    rumble_values[0] = 0x5A;
-    for (int i = 1; i < 8; ++i)
-        rumble_values[i] = 0xFF;
-}
-
-uint8_t Gamepad::start_transfer(uint8_t value)
-{
-    data_count = 0;
-    command_length = 5;
-    return 0xFF;
-}
-
-uint8_t Gamepad::write_SIO(uint8_t value)
-{
-    if (data_count > command_length)
+    uint8_t Gamepad::mask_mode[7] = { 0x5A, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x5A };
+    const uint8_t Gamepad::vref_param[7] = { 0x5A, 0x00, 0x00, 0x02, 0x00, 0x00, 0x5A };
+    const uint8_t Gamepad::config_exit[7] = { 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    const uint8_t Gamepad::set_mode[7] = { 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    const uint8_t Gamepad::query_model_DS2[7] = { 0x5A, 0x03, 0x02, 0x00, 0x02, 0x01, 0x00 };
+    const uint8_t Gamepad::query_model_DS1[7] = { 0x5A, 0x01, 0x02, 0x00, 0x02, 0x01, 0x00 };
+    const uint8_t Gamepad::query_act[2][7] =
     {
-        printf("[PAD] Transfer (%d) exceeds command length (%d)!\n", data_count + 1, command_length);
-        return 0;
+        {0x5A, 0x00, 0x00, 0x01, 0x02, 0x00, 0x0A},
+        {0x5A, 0x00, 0x00, 0x01, 0x01, 0x01, 0x14}
+    };
+    const uint8_t Gamepad::query_comb[7] = { 0x5A, 0x00, 0x00, 0x02, 0x00, 0x01, 0x00 };
+    const uint8_t Gamepad::query_mode[7] = { 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    const uint8_t Gamepad::native_mode[7] = { 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5A };
+
+    Gamepad::Gamepad()
+    {
+
     }
-    if (data_count == 0)
+
+    void Gamepad::reset()
     {
-        if (!config_mode && (value != 'B' && value != 'C'))
+        //The first reply is always high-z
+        command_buffer[0] = 0xFF;
+        config_mode = false;
+        buttons = 0xFFFF;
+        joysticks[0][0] = 0x80;
+        joysticks[0][1] = 0x80;
+        joysticks[1][0] = 0x80;
+        joysticks[1][1] = 0x80;
+        command_length = 0;
+        pad_mode = DIGITAL;
+        command = 0;
+        data_count = 0;
+        mask[0] = 0xFF;
+        mask[1] = 0xFF;
+        mode_lock = 0;
+        reset_vibrate();
+    }
+
+    void Gamepad::press_button(PAD_BUTTON button)
+    {
+        buttons &= ~(1 << (int)button);
+        button_pressure[(int)button] = 0xFF;
+    }
+
+    void Gamepad::release_button(PAD_BUTTON button)
+    {
+        buttons |= 1 << (int)button;
+        button_pressure[(int)button] = 0;
+    }
+
+    void Gamepad::update_joystick(JOYSTICK joystick, JOYSTICK_AXIS axis, uint8_t val)
+    {
+        joysticks[(int)joystick][(int)axis] = val;
+    }
+
+    void Gamepad::set_result(const uint8_t* result)
+    {
+        int len = sizeof(result);
+        memcpy(command_buffer + 2, result, len);
+        command_length = len + 2;
+    }
+
+    void Gamepad::reset_vibrate()
+    {
+        rumble_values[0] = 0x5A;
+        for (int i = 1; i < 8; ++i)
+            rumble_values[i] = 0xFF;
+    }
+
+    uint8_t Gamepad::start_transfer(uint8_t value)
+    {
+        data_count = 0;
+        command_length = 5;
+        return 0xFF;
+    }
+
+    uint8_t Gamepad::write_SIO(uint8_t value)
+    {
+        if (data_count > command_length)
         {
-            printf("[PAD] Command %c ($%02X) called while not in config mode!\n", value, value);
-            command_length = 0;
-            data_count = 1;
-            return 0xF3;
+            printf("[PAD] Transfer (%d) exceeds command length (%d)!\n", data_count + 1, command_length);
+            return 0;
         }
-
-        printf("[PAD] New command!\n");
-
-        command = value;
-        data_count++;
-
-        switch (value)
+        if (data_count == 0)
         {
+            if (!config_mode && (value != 'B' && value != 'C'))
+            {
+                printf("[PAD] Command %c ($%02X) called while not in config mode!\n", value, value);
+                command_length = 0;
+                data_count = 1;
+                return 0xF3;
+            }
+
+            printf("[PAD] New command!\n");
+
+            command = value;
+            data_count++;
+
+            switch (value)
+            {
             case 'C': //0x43 - enter/exit config
                 if (config_mode)
                 {
@@ -197,13 +199,13 @@ uint8_t Gamepad::write_SIO(uint8_t value)
                 return 0xF3;
             default:
                 Errors::die("[PAD] Unrecognized command %c ($%02X)\n", value, value);
+            }
         }
-    }
 
-    data_count++;
+        data_count++;
 
-    switch (command)
-    {
+        switch (command)
+        {
         case 'C':
             if (data_count == 3)
             {
@@ -261,7 +263,8 @@ uint8_t Gamepad::write_SIO(uint8_t value)
                     pad_mode = DS2_NATIVE;
             }
             break;
-    }
+        }
 
-    return command_buffer[data_count];
+        return command_buffer[data_count];
+    }
 }

@@ -1,8 +1,11 @@
 #pragma once
 #include <fstream>
 
-class CDVD_Container
+namespace cdvd
 {
+
+    class CDVD_Container
+    {
     public:
         virtual bool open(std::string name) = 0;
         virtual void close() = 0;
@@ -11,4 +14,5 @@ class CDVD_Container
 
         virtual bool is_open() = 0;
         virtual size_t get_size() = 0;
-};
+    };
+}

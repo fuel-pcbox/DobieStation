@@ -3,22 +3,28 @@
 #include <fstream>
 #include <queue>
 
-enum class SIO_DEVICE
+namespace iop
 {
-    NONE,
-    PAD,
-    MEMCARD,
-    DUMMY
-};
+    class IOP_INTC;
+}
 
-class IOP_INTC;
-class Gamepad;
-class Memcard;
-
-class SIO2
+namespace sio2
 {
+    enum class SIO_DEVICE
+    {
+        NONE,
+        PAD,
+        MEMCARD,
+        DUMMY
+    };
+
+    class Gamepad;
+    class Memcard;
+
+    class SIO2
+    {
     private:
-        IOP_INTC* intc;
+        iop::IOP_INTC* intc;
         Gamepad* pad;
         Memcard* memcard;
 
@@ -42,7 +48,7 @@ class SIO2
 
         void write_device(uint8_t value);
     public:
-        SIO2(IOP_INTC* intc, Gamepad* pad, Memcard* memcard);
+        SIO2(iop::IOP_INTC* intc, Gamepad* pad, Memcard* memcard);
 
         void reset();
 
@@ -60,4 +66,5 @@ class SIO2
         void write_serial(uint8_t value);
         void write_dma(uint8_t value);
         void dma_reset();
-};
+    };
+}

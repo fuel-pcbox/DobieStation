@@ -2,15 +2,17 @@
 #include <cstdint>
 #include <string>
 
-struct MemcardSpecs
+namespace sio2
 {
-    uint16_t page_size;
-    uint16_t erase_block_pages;
-    uint32_t page_count;
-};
+    struct MemcardSpecs
+    {
+        uint16_t page_size;
+        uint16_t erase_block_pages;
+        uint32_t page_count;
+    };
 
-class Memcard
-{
+    class Memcard
+    {
     private:
         MemcardSpecs specs;
         uint8_t* mem;
@@ -57,4 +59,5 @@ class Memcard
 
         void start_transfer();
         uint8_t write_serial(uint8_t data);
-};
+    };
+}

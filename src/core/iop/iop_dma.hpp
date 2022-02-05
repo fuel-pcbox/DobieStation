@@ -3,83 +3,101 @@
 #include <fstream>
 #include <list>
 
-class IOP_DMA;
-
-struct IOP_DMA_Chan_Control
+namespace core
 {
-    bool direction_from;
-    bool unk8;
-    uint8_t sync_mode;
-    bool busy;
-    bool unk30;
-};
+    class SubsystemInterface;
+}
 
-struct IOP_DMA_Channel
+namespace sio2
 {
-    uint32_t addr;
-    uint32_t word_count;
-    uint32_t size;
-    uint16_t block_size;
-    IOP_DMA_Chan_Control control;
-    uint32_t tag_addr;
+    class SIO2;
+}
 
-    bool tag_end;
-
-    typedef void(IOP_DMA::*dma_copy_func)();
-    dma_copy_func func;
-
-    bool dma_req;
-
-    int delay;
-    int index;
-};
-
-struct DMA_DPCR
+namespace spu
 {
-    uint8_t priorities[16]; //Is this correct?
-    bool enable[16];
-};
+    class SPU;
+}
 
-struct DMA_DICR
+namespace cdvd
 {
-    bool force_IRQ[2];
-    uint8_t STAT[2];
-    uint8_t MASK[2];
-    bool master_int_enable[2];
-};
+    class CDVD_Drive;
+}
 
-class CDVD_Drive;
-class IOP_INTC;
-class SubsystemInterface;
-class SIO2;
-class SPU;
-
-enum IOP_DMA_CHANNELS
+namespace iop
 {
-    IOP_MDECin,
-    IOP_MDECout,
-    IOP_GPU,
-    IOP_CDVD,
-    IOP_SPU,
-    IOP_PIO,
-    IOP_OTC,
-    IOP_SPU2 = 8,
-    IOP_unk,
-    IOP_SIF0,
-    IOP_SIF1,
-    IOP_SIO2in,
-    IOP_SIO2out
-};
+    class IOP_DMA;
 
-class IOP_DMA
-{
+    struct IOP_DMA_Chan_Control
+    {
+        bool direction_from;
+        bool unk8;
+        uint8_t sync_mode;
+        bool busy;
+        bool unk30;
+    };
+
+    struct IOP_DMA_Channel
+    {
+        uint32_t addr;
+        uint32_t word_count;
+        uint32_t size;
+        uint16_t block_size;
+        IOP_DMA_Chan_Control control;
+        uint32_t tag_addr;
+
+        bool tag_end;
+
+        typedef void(IOP_DMA::* dma_copy_func)();
+        dma_copy_func func;
+
+        bool dma_req;
+
+        int delay;
+        int index;
+    };
+
+    struct DMA_DPCR
+    {
+        uint8_t priorities[16]; //Is this correct?
+        bool enable[16];
+    };
+
+    struct DMA_DICR
+    {
+        bool force_IRQ[2];
+        uint8_t STAT[2];
+        uint8_t MASK[2];
+        bool master_int_enable[2];
+    };
+
+    class IOP_INTC;
+
+    enum IOP_DMA_CHANNELS
+    {
+        IOP_MDECin,
+        IOP_MDECout,
+        IOP_GPU,
+        IOP_CDVD,
+        IOP_SPU,
+        IOP_PIO,
+        IOP_OTC,
+        IOP_SPU2 = 8,
+        IOP_unk,
+        IOP_SIF0,
+        IOP_SIF1,
+        IOP_SIO2in,
+        IOP_SIO2out
+    };
+
+    class IOP_DMA
+    {
     private:
         uint8_t* RAM;
         IOP_INTC* intc;
-        CDVD_Drive* cdvd;
-        SubsystemInterface* sif;
-        SIO2* sio2;
-        SPU *spu, *spu2;
+        cdvd::CDVD_Drive* cdvd;
+        core::SubsystemInterface* sif;
+        sio2::SIO2* sio2;
+        spu::SPU* spu, * spu2;
         IOP_DMA_Channel channels[16];
         IOP_DMA_Channel* active_channel;
         std::list<IOP_DMA_Channel*> queued_channels;
@@ -103,7 +121,7 @@ class IOP_DMA
         void apply_dma_functions();
     public:
         static const char* CHAN(int index);
-        IOP_DMA(IOP_INTC* intc, CDVD_Drive* cdvd, SubsystemInterface* sif, SIO2* sio2, SPU* spu, SPU* spu2);
+        IOP_DMA(IOP_INTC* intc, cdvd::CDVD_Drive* cdvd, core::SubsystemInterface* sif, sio2::SIO2* sio2, spu::SPU* spu, spu::SPU* spu2);
 
         void reset(uint8_t* RAM);
         void run(int cycles);
@@ -134,4 +152,5 @@ class IOP_DMA
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
+}

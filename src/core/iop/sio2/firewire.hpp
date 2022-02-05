@@ -2,14 +2,19 @@
 #include <cstdint>
 #include <fstream>
 
-class IOP_INTC;
-class IOP_DMA; //Will be needed later for Firewire DMA's
-
-class Firewire
+namespace iop
 {
+    class IOP_INTC;
+    class IOP_DMA; //Will be needed later for Firewire DMA's
+}
+
+namespace sio2
+{
+    class Firewire
+    {
     private:
-        IOP_INTC* intc;
-        IOP_DMA* dma;
+        iop::IOP_INTC* intc;
+        iop::IOP_DMA* dma;
 
         uint32_t intr0, intr1, intr2;
         uint32_t intr0mask, intr1mask, intr2mask;
@@ -22,7 +27,7 @@ class Firewire
         void writePHY();
 
     public:
-        Firewire(IOP_INTC* intc, IOP_DMA* dma);
+        Firewire(iop::IOP_INTC* intc, iop::IOP_DMA* dma);
 
         void reset();
         void write32(uint32_t addr, uint32_t value);
@@ -31,4 +36,5 @@ class Firewire
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
         */
-};
+    };
+}

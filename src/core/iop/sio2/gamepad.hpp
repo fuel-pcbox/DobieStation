@@ -2,47 +2,49 @@
 #include <cstdint>
 #include <fstream>
 
-enum class PAD_BUTTON
+namespace sio2
 {
-    SELECT,
-    L3,
-    R3,
-    START,
-    UP,
-    RIGHT,
-    DOWN,
-    LEFT,
-    L2,
-    R2,
-    L1,
-    R1,
-    TRIANGLE,
-    CIRCLE,
-    CROSS,
-    SQUARE
-};
+    enum class PAD_BUTTON
+    {
+        SELECT,
+        L3,
+        R3,
+        START,
+        UP,
+        RIGHT,
+        DOWN,
+        LEFT,
+        L2,
+        R2,
+        L1,
+        R1,
+        TRIANGLE,
+        CIRCLE,
+        CROSS,
+        SQUARE
+    };
 
-enum class JOYSTICK
-{
-    RIGHT,
-    LEFT
-};
+    enum class JOYSTICK
+    {
+        RIGHT,
+        LEFT
+    };
 
-enum class JOYSTICK_AXIS
-{
-    X,
-    Y
-};
+    enum class JOYSTICK_AXIS
+    {
+        X,
+        Y
+    };
 
-enum PAD_MODE
-{
-    DIGITAL = 0x41,
-    ANALOG = 0x73,
-    DS2_NATIVE = 0x79
-};
+    enum PAD_MODE
+    {
+        DIGITAL = 0x41,
+        ANALOG = 0x73,
+        DS2_NATIVE = 0x79
+    };
 
-class Gamepad
-{
+    class Gamepad
+    {
     private:
         uint8_t command_buffer[25];
         uint8_t rumble_values[8];
@@ -84,4 +86,5 @@ class Gamepad
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
+}

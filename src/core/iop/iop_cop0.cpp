@@ -3,33 +3,35 @@
 #include "iop_cop0.hpp"
 #include <util/errors.hpp>
 
-IOP_Cop0::IOP_Cop0()
+namespace iop
 {
-
-}
-
-void IOP_Cop0::reset()
-{
-    status.IEc = false;
-    status.KUc = false;
-    status.IEp = false;
-    status.KUp = false;
-    status.IEo = false;
-    status.KUo = false;
-    status.Im = 0;
-    status.IsC = false;
-    status.bev = true;
-
-    cause.code = 0;
-    cause.bd = false;
-    cause.int_pending = 0;
-}
-
-uint32_t IOP_Cop0::mfc(int cop_reg)
-{
-    //printf("[IOP COP0] MFC: Read from %d\n", cop_reg);
-    switch (cop_reg)
+    IOP_Cop0::IOP_Cop0()
     {
+
+    }
+
+    void IOP_Cop0::reset()
+    {
+        status.IEc = false;
+        status.KUc = false;
+        status.IEp = false;
+        status.KUp = false;
+        status.IEo = false;
+        status.KUo = false;
+        status.Im = 0;
+        status.IsC = false;
+        status.bev = true;
+
+        cause.code = 0;
+        cause.bd = false;
+        cause.int_pending = 0;
+    }
+
+    uint32_t IOP_Cop0::mfc(int cop_reg)
+    {
+        //printf("[IOP COP0] MFC: Read from %d\n", cop_reg);
+        switch (cop_reg)
+        {
         case 12:
         {
             uint32_t reg = 0;
@@ -59,14 +61,14 @@ uint32_t IOP_Cop0::mfc(int cop_reg)
         default:
             Errors::print_warning("[IOP COP0] MFC: Unknown cop_reg %d\n", cop_reg);
             return 0;
+        }
     }
-}
 
-void IOP_Cop0::mtc(int cop_reg, uint32_t value)
-{
-    //printf("[IOP COP0] MTC: Write to %d of $%08X\n", cop_reg, value);
-    switch (cop_reg)
+    void IOP_Cop0::mtc(int cop_reg, uint32_t value)
     {
+        //printf("[IOP COP0] MTC: Write to %d of $%08X\n", cop_reg, value);
+        switch (cop_reg)
+        {
         case 12:
             status.IEc = value & 1;
             status.KUc = value & (1 << 1);
@@ -80,5 +82,6 @@ void IOP_Cop0::mtc(int cop_reg, uint32_t value)
             break;
         default:
             Errors::print_warning("[IOP COP0] MTC: Unknown cop_reg %d\n", cop_reg);
+        }
     }
 }

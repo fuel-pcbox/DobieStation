@@ -3,8 +3,11 @@
 #include <cstdint>
 #include "cdvd_container.hpp"
 
-class CSO_Reader : public CDVD_Container
+namespace cdvd
 {
+
+    class CSO_Reader : public CDVD_Container
+    {
     protected:
         std::ifstream m_file;
         size_t m_size;
@@ -37,4 +40,5 @@ class CSO_Reader : public CDVD_Container
         uint32_t get_blocksize();
         uint32_t get_numblocks();
         uint64_t tell();
-};
+    };
+}

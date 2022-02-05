@@ -5,18 +5,23 @@
 #include <fstream>
 #include "iop_cop0.hpp"
 
-class Emulator;
-
-struct IOP_ICacheLine
+namespace core
 {
-    bool valid;
-    uint32_t tag;
-};
+    class Emulator;
+}
 
-class IOP
+namespace iop
 {
+    struct IOP_ICacheLine
+    {
+        bool valid;
+        uint32_t tag;
+    };
+
+    class IOP
+    {
     private:
-        Emulator* e;
+        core::Emulator* e;
         IOP_Cop0 cop0;
         uint32_t gpr[32];
         uint32_t PC;
@@ -37,7 +42,7 @@ class IOP
 
         uint32_t translate_addr(uint32_t addr);
     public:
-        IOP(Emulator* e);
+        IOP(core::Emulator* e);
         static const char* REG(int id);
 
         void reset();
@@ -80,72 +85,73 @@ class IOP
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
 
-inline void IOP::halt()
-{
-    wait_for_IRQ = true;
-}
-
-inline void IOP::unhalt()
-{
-    wait_for_IRQ = false;
-}
-
-inline uint32_t IOP::get_PC()
-{
-    return PC;
-}
-
-inline uint32_t IOP::get_gpr(int index)
-{
-    return gpr[index];
-}
-
-inline uint32_t IOP::get_LO()
-{
-    if (muldiv_delay)
+    inline void IOP::halt()
     {
-        cycles_to_run -= muldiv_delay;
-        muldiv_delay = 0;
+        wait_for_IRQ = true;
     }
-    return LO;
-}
 
-inline uint32_t IOP::get_HI()
-{
-    if (muldiv_delay)
+    inline void IOP::unhalt()
     {
-        cycles_to_run -= muldiv_delay;
-        muldiv_delay = 0;
+        wait_for_IRQ = false;
     }
-    return HI;
-}
 
-inline void IOP::set_PC(uint32_t value)
-{
-    PC = value;
-}
+    inline uint32_t IOP::get_PC()
+    {
+        return PC;
+    }
 
-inline void IOP::set_gpr(int index, uint32_t value)
-{
-    if (index)
-        gpr[index] = value;
-}
+    inline uint32_t IOP::get_gpr(int index)
+    {
+        return gpr[index];
+    }
 
-inline void IOP::set_LO(uint32_t value)
-{
-    LO = value;
-}
+    inline uint32_t IOP::get_LO()
+    {
+        if (muldiv_delay)
+        {
+            cycles_to_run -= muldiv_delay;
+            muldiv_delay = 0;
+        }
+        return LO;
+    }
 
-inline void IOP::set_HI(uint32_t value)
-{
-    HI = value;
-}
+    inline uint32_t IOP::get_HI()
+    {
+        if (muldiv_delay)
+        {
+            cycles_to_run -= muldiv_delay;
+            muldiv_delay = 0;
+        }
+        return HI;
+    }
 
-inline void IOP::set_muldiv_delay(int delay)
-{
-    if (muldiv_delay)
-        cycles_to_run -= muldiv_delay;
-    muldiv_delay = delay;
+    inline void IOP::set_PC(uint32_t value)
+    {
+        PC = value;
+    }
+
+    inline void IOP::set_gpr(int index, uint32_t value)
+    {
+        if (index)
+            gpr[index] = value;
+    }
+
+    inline void IOP::set_LO(uint32_t value)
+    {
+        LO = value;
+    }
+
+    inline void IOP::set_HI(uint32_t value)
+    {
+        HI = value;
+    }
+
+    inline void IOP::set_muldiv_delay(int delay)
+    {
+        if (muldiv_delay)
+            cycles_to_run -= muldiv_delay;
+        muldiv_delay = delay;
+    }
 }

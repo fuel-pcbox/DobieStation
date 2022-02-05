@@ -2,10 +2,13 @@
 #include <cstdint>
 #include <fstream>
 
-class IOP;
-
-class IOP_INTC
+namespace iop
 {
+
+    class IOP;
+
+    class IOP_INTC
+    {
     private:
         IOP* iop;
 
@@ -28,4 +31,5 @@ class IOP_INTC
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
+}

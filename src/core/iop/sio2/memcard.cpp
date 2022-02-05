@@ -15,98 +15,100 @@
  * Once the card has been detected successfully, handling read/write/erase commands is quite simple.
  */
 
-Memcard::Memcard()
+namespace sio2
 {
-    mem = nullptr;
-    file_opened = false;
-}
-
-Memcard::~Memcard()
-{
-    delete[] mem;
-}
-
-void Memcard::reset()
-{
-    is_dirty = false;
-
-    start_transfer();
-
-    //Initial value is needed for newer MCMANs to work
-    terminator = 0x55;
-}
-
-bool Memcard::open(std::string file_name)
-{
-    std::ifstream file(file_name, std::ios::binary);
-
-    if (mem)
+    Memcard::Memcard()
     {
-        delete[] mem;
         mem = nullptr;
-    }
-
-    if (file.is_open())
-    {
-        //Specs are currently hardcoded for a standard 8 MB Sony memory card
-        specs.page_size = 0x200;
-        specs.erase_block_pages = 16;
-        specs.page_count = 0x4000;
-        file_opened = true;
-
-        //On standard memory cards, an additional 16 bytes is included in every page for ECC.
-        size_t memcard_size = (specs.page_size + 16) * specs.page_count;
-
-        mem = new uint8_t[memcard_size];
-        file.read((char*)mem, memcard_size);
-        file.close();
-
-        this->file_name = file_name;
-    }
-    else
-    {
-        this->file_name = "";
         file_opened = false;
     }
 
-    return file_opened;
-}
-
-bool Memcard::is_connected()
-{
-    return file_opened;
-}
-
-void Memcard::start_transfer()
-{
-    cmd_length = 0;
-    cmd_params = 0;
-    response_read_pos = 0;
-    response_write_pos = 0;
-    response_size = 0;
-    auth_f0_do_xor = false;
-
-    memset(response_buffer, 0, sizeof(response_buffer));
-}
-
-void Memcard::save_if_dirty()
-{
-    if (is_dirty && file_opened)
+    Memcard::~Memcard()
     {
-        std::ofstream file(file_name, std::ios::binary);
-        file.write((char*)mem, 0x840000);
-        file.close();
-        is_dirty = false;
+        delete[] mem;
     }
-}
 
-uint8_t Memcard::write_serial(uint8_t data)
-{
-    if (cmd_length == 0)
+    void Memcard::reset()
     {
-        cmd = data;
-        switch (data)
+        is_dirty = false;
+
+        start_transfer();
+
+        //Initial value is needed for newer MCMANs to work
+        terminator = 0x55;
+    }
+
+    bool Memcard::open(std::string file_name)
+    {
+        std::ifstream file(file_name, std::ios::binary);
+
+        if (mem)
         {
+            delete[] mem;
+            mem = nullptr;
+        }
+
+        if (file.is_open())
+        {
+            //Specs are currently hardcoded for a standard 8 MB Sony memory card
+            specs.page_size = 0x200;
+            specs.erase_block_pages = 16;
+            specs.page_count = 0x4000;
+            file_opened = true;
+
+            //On standard memory cards, an additional 16 bytes is included in every page for ECC.
+            size_t memcard_size = (specs.page_size + 16) * specs.page_count;
+
+            mem = new uint8_t[memcard_size];
+            file.read((char*)mem, memcard_size);
+            file.close();
+
+            this->file_name = file_name;
+        }
+        else
+        {
+            this->file_name = "";
+            file_opened = false;
+        }
+
+        return file_opened;
+    }
+
+    bool Memcard::is_connected()
+    {
+        return file_opened;
+    }
+
+    void Memcard::start_transfer()
+    {
+        cmd_length = 0;
+        cmd_params = 0;
+        response_read_pos = 0;
+        response_write_pos = 0;
+        response_size = 0;
+        auth_f0_do_xor = false;
+
+        memset(response_buffer, 0, sizeof(response_buffer));
+    }
+
+    void Memcard::save_if_dirty()
+    {
+        if (is_dirty && file_opened)
+        {
+            std::ofstream file(file_name, std::ios::binary);
+            file.write((char*)mem, 0x840000);
+            file.close();
+            is_dirty = false;
+        }
+    }
+
+    uint8_t Memcard::write_serial(uint8_t data)
+    {
+        if (cmd_length == 0)
+        {
+            cmd = data;
+            switch (data)
+            {
             case 0x11:
                 //First command sent when trying to detect the card. Probe command?
                 //*RECV3 = 0x8C;
@@ -159,7 +161,7 @@ uint8_t Memcard::write_serial(uint8_t data)
 
                 write_response(terminator);
             }
-                break;
+            break;
             case 0x27:
                 //Set terminator
                 cmd_length = 3;
@@ -216,13 +218,13 @@ uint8_t Memcard::write_serial(uint8_t data)
                 break;
             default:
                 Errors::die("[Memcard] Unrecognized command $%02X", data);
+            }
+            return 0xFF;
         }
-        return 0xFF;
-    }
-    else
-    {
-        switch (cmd)
+        else
         {
+            switch (cmd)
+            {
             case 0x21:
                 sector_op(data);
                 break;
@@ -254,42 +256,42 @@ uint8_t Memcard::write_serial(uint8_t data)
                 break;
             default:
                 break;
+            }
+            cmd_params++;
+            return read_response();
         }
-        cmd_params++;
-        return read_response();
     }
-}
 
-uint8_t Memcard::read_response()
-{
-    if (response_read_pos >= sizeof(response_buffer))
-        Errors::die("[Memcard] Reading more response data than is available!");
-    uint8_t value = response_buffer[response_read_pos];
-    response_read_pos++;
-    return value;
-}
-
-void Memcard::write_response(uint8_t value)
-{
-    response_buffer[response_write_pos] = value;
-    response_write_pos++;
-    response_size++;
-    if (response_write_pos >= sizeof(response_buffer))
-        Errors::die("[Memcard] Response size exceeds buffer length!");
-}
-
-void Memcard::response_end()
-{
-    response_buffer[cmd_length - 2] = 0x2B;
-    response_buffer[cmd_length - 1] = terminator;
-}
-
-void Memcard::do_auth_f0(uint8_t value)
-{
-    if (cmd_params == 0)
+    uint8_t Memcard::read_response()
     {
-        switch (value)
+        if (response_read_pos >= sizeof(response_buffer))
+            Errors::die("[Memcard] Reading more response data than is available!");
+        uint8_t value = response_buffer[response_read_pos];
+        response_read_pos++;
+        return value;
+    }
+
+    void Memcard::write_response(uint8_t value)
+    {
+        response_buffer[response_write_pos] = value;
+        response_write_pos++;
+        response_size++;
+        if (response_write_pos >= sizeof(response_buffer))
+            Errors::die("[Memcard] Response size exceeds buffer length!");
+    }
+
+    void Memcard::response_end()
+    {
+        response_buffer[cmd_length - 2] = 0x2B;
+        response_buffer[cmd_length - 1] = terminator;
+    }
+
+    void Memcard::do_auth_f0(uint8_t value)
+    {
+        if (cmd_params == 0)
         {
+            switch (value)
+            {
             case 0x06:
             case 0x07:
             case 0x0B:
@@ -310,12 +312,12 @@ void Memcard::do_auth_f0(uint8_t value)
             default:
                 auth_f0_do_xor = false;
                 response_end();
+            }
         }
-    }
-    else if (auth_f0_do_xor)
-    {
-        switch (cmd_params)
+        else if (auth_f0_do_xor)
         {
+            switch (cmd_params)
+            {
             case 1:
                 write_response(0x2B);
                 break;
@@ -326,14 +328,14 @@ void Memcard::do_auth_f0(uint8_t value)
             default:
                 auth_f0_checksum ^= value;
                 write_response(0x00);
+            }
         }
     }
-}
 
-void Memcard::sector_op(uint8_t value)
-{
-    switch (cmd_params)
+    void Memcard::sector_op(uint8_t value)
     {
+        switch (cmd_params)
+        {
         case 0:
             mem_addr = value;
             break;
@@ -354,39 +356,40 @@ void Memcard::sector_op(uint8_t value)
             else if (cmd == 0x23)
                 printf("[Memcard] Reading $%08X...\n", mem_addr);
             break;
+        }
     }
-}
 
-void Memcard::read_mem(uint32_t addr, uint8_t size)
-{
-    for (unsigned int i = 0; i < size; i++)
-        write_response(mem[addr + i]);
-
-    write_response(do_checksum(&mem[addr], size));
-    write_response(terminator);
-}
-
-void Memcard::write_mem(uint8_t data)
-{
-    if (cmd_params == 0)
+    void Memcard::read_mem(uint32_t addr, uint8_t size)
     {
-        mem_write_size = data;
-        response_buffer[data + 3] = terminator;
+        for (unsigned int i = 0; i < size; i++)
+            write_response(mem[addr + i]);
+
+        write_response(do_checksum(&mem[addr], size));
+        write_response(terminator);
     }
-    else if (cmd_params - 1 < mem_write_size)
+
+    void Memcard::write_mem(uint8_t data)
     {
-        is_dirty = true;
-        mem[mem_addr] = data;
-        mem_addr++;
+        if (cmd_params == 0)
+        {
+            mem_write_size = data;
+            response_buffer[data + 3] = terminator;
+        }
+        else if (cmd_params - 1 < mem_write_size)
+        {
+            is_dirty = true;
+            mem[mem_addr] = data;
+            mem_addr++;
+        }
     }
-}
 
-uint8_t Memcard::do_checksum(uint8_t *buff, unsigned int size)
-{
-    uint8_t checksum = 0;
+    uint8_t Memcard::do_checksum(uint8_t* buff, unsigned int size)
+    {
+        uint8_t checksum = 0;
 
-    for (unsigned int i = 0; i < size; i++)
-        checksum ^= buff[i];
+        for (unsigned int i = 0; i < size; i++)
+            checksum ^= buff[i];
 
-    return checksum;
+        return checksum;
+    }
 }
