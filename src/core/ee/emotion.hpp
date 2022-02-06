@@ -100,6 +100,9 @@ namespace ee
 
         EE_OsdConfigParam osd_config_param;
 
+        uint8_t* rdram = nullptr;
+        uint8_t scratchpad[16 * 1024] = {};
+
         //Each register is 128-bit
         alignas(16) uint8_t gpr[32 * sizeof(uint64_t) * 2];
         alignas(16) uint128_t LO, HI;
@@ -135,7 +138,8 @@ namespace ee
     
     public:
         EmotionEngine(core::Emulator* e);
-        
+        ~EmotionEngine();
+
         static const char* SYSCALL(int id);
         
         void reset();

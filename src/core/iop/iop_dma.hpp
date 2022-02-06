@@ -93,7 +93,6 @@ namespace iop
     class IOP_DMA
     {
     private:
-        uint8_t* RAM;
         IOP_INTC* intc;
         core::Emulator* e;
         IOP_DMA_Channel channels[16];
@@ -121,7 +120,7 @@ namespace iop
     public:
         IOP_DMA(core::Emulator* e);
 
-        void reset(uint8_t* RAM);
+        void reset();
         void run(int cycles);
 
         uint32_t get_DPCR();

@@ -16,15 +16,24 @@ namespace ee
         e(e)
     {
         /* Construct the EE coprocessors */
-        cp0 = std::make_unique<Cop0>(&e->dmac);
+        cp0 = std::make_unique<Cop0>(e);
         fpu = std::make_unique<Cop1>();
         
+        /* Cache frequently used components */
         sif = &e->sif;
         vu0 = &e->vu0;
         vu1 = &e->vu1;
 
+        /* Allocate EE memory caches */
+        rdram = new uint8_t[32 * 1024 * 1024];
+
         tlb_map = nullptr;
         set_run_func(&EmotionEngine::run_interpreter);
+    }
+
+    EmotionEngine::~EmotionEngine()
+    {
+        delete[] rdram;
     }
 
     const char* EmotionEngine::SYSCALL(int id)

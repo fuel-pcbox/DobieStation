@@ -12,6 +12,12 @@ namespace iop
     IOP::IOP(core::Emulator* e) : 
         e(e)
     {
+        ram = new uint8_t[2 * 1024 * 1024];
+    }
+
+    IOP::~IOP()
+    {
+        delete[] ram;
     }
 
     void IOP::reset()
@@ -26,6 +32,10 @@ namespace iop
         wait_for_IRQ = false;
         muldiv_delay = 0;
         cycles_to_run = 0;
+
+        /* HLE method to zero out IOP memory */
+        std::memset(ram, 0, 2 * 1024 * 1024);
+        scratchpad_start = 0x1F800000;
     }
 
     uint32_t IOP::translate_addr(uint32_t addr)

@@ -71,12 +71,12 @@ namespace core
         state.read((char*)&frames, sizeof(frames));
 
         //RAM
-        state.read((char*)RDRAM, 1024 * 1024 * 32);
-        state.read((char*)IOP_RAM, 1024 * 1024 * 2);
+        state.read((char*)cpu.rdram, 1024 * 1024 * 32);
+        state.read((char*)iop.ram, 1024 * 1024 * 2);
         state.read((char*)SPU_RAM, 1024 * 1024 * 2);
-        state.read((char*)scratchpad, 1024 * 16);
-        state.read((char*)iop_scratchpad, 1024);
-        state.read((char*)&iop_scratchpad_start, sizeof(iop_scratchpad_start));
+        state.read((char*)cpu.scratchpad, 1024 * 16);
+        state.read((char*)iop.scratchpad, 1024);
+        state.read((char*)&iop.scratchpad_start, sizeof(iop.scratchpad_start));
 
         //CPUs
         cpu.load_state(state);
@@ -146,12 +146,12 @@ namespace core
         state.write((char*)&frames, sizeof(frames));
 
         //RAM
-        state.write((char*)RDRAM, 1024 * 1024 * 32);
-        state.write((char*)IOP_RAM, 1024 * 1024 * 2);
+        state.write((char*)cpu.rdram, 1024 * 1024 * 32);
+        state.write((char*)iop.ram, 1024 * 1024 * 2);
         state.write((char*)SPU_RAM, 1024 * 1024 * 2);
-        state.write((char*)scratchpad, 1024 * 16);
-        state.write((char*)iop_scratchpad, 1024);
-        state.write((char*)&iop_scratchpad_start, sizeof(iop_scratchpad_start));
+        state.write((char*)cpu.scratchpad, 1024 * 16);
+        state.write((char*)iop.scratchpad, 1024);
+        state.write((char*)&iop.scratchpad_start, sizeof(iop.scratchpad_start));
 
         //CPUs
         cpu.save_state(state);

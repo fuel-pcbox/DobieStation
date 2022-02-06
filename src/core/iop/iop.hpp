@@ -32,12 +32,17 @@ namespace iop
 
     class IOP
     {
-    private:
+    public:
         core::Emulator* e;
         IOP_Cop0 cop0;
         uint32_t gpr[32];
         uint32_t PC;
         uint32_t LO, HI;
+
+        /* IOP memory caches */
+        uint8_t* ram = nullptr;
+        uint8_t scratchpad[1024] = {};
+        uint32_t scratchpad_start = 0x1F800000;
 
         //4 KB bytes / 16 bytes per line = 256 cache lines
         IOP_ICacheLine icache[256];
@@ -53,8 +58,10 @@ namespace iop
         int cycles_to_run;
 
         uint32_t translate_addr(uint32_t addr);
+    
     public:
         IOP(core::Emulator* e);
+        ~IOP();
 
         void reset();
         void run(int cycles);

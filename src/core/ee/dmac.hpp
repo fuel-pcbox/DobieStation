@@ -100,7 +100,6 @@ namespace ee
     class DMAC
     {
     private:
-        uint8_t* RDRAM, * scratchpad;
         core::Emulator* e;
         DMA_Channel channels[15];
 
@@ -146,10 +145,10 @@ namespace ee
         void deactivate_channel(int index);
         void arbitrate();
         void find_new_active_channel();
+    
     public:
-        static const char* CHAN(int index);
         DMAC(core::Emulator* e);
-        void reset(uint8_t* RDRAM, uint8_t* scratchpad);
+        void reset();
         void run(int cycles);
         void start_DMA(int index);
 

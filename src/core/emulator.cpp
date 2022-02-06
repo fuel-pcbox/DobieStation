@@ -55,8 +55,6 @@ namespace core
         sif(&cpu, &iop_dma, &dmac)
     {
         BIOS = nullptr;
-        RDRAM = nullptr;
-        IOP_RAM = nullptr;
         SPU_RAM = nullptr;
         ELF_file = nullptr;
         ELF_size = 0;
@@ -72,8 +70,6 @@ namespace core
     {
         if (ee_log.is_open())
             ee_log.close();
-        delete[] RDRAM;
-        delete[] IOP_RAM;
         delete[] BIOS;
         delete[] SPU_RAM;
         delete[] ELF_file;
@@ -150,10 +146,6 @@ namespace core
         ee_stdout = "";
         frames = 0;
         skip_BIOS_hack = NONE;
-        if (!RDRAM)
-            RDRAM = new uint8_t[1024 * 1024 * 32];
-        if (!IOP_RAM)
-            IOP_RAM = new uint8_t[1024 * 1024 * 2];
         if (!BIOS)
             BIOS = new uint8_t[1024 * 1024 * 4];
         if (!SPU_RAM)
@@ -166,14 +158,13 @@ namespace core
 
         cdvd.reset();
         cpu.reset();
-        cpu.cp0->init_mem_pointers(RDRAM, BIOS, (uint8_t*)&scratchpad);
         cpu.init_tlb();
-        dmac.reset(RDRAM, (uint8_t*)&scratchpad);
+        dmac.reset();
         firewire.reset();
         gs.reset();
         gif.reset();
         iop.reset();
-        iop_dma.reset(IOP_RAM);
+        iop_dma.reset();
         iop_intc.reset();
         iop_timers.reset();
         intc.reset();
@@ -188,6 +179,8 @@ namespace core
         vif1.reset();
         vu0.reset();
         vu1.reset();
+        
+        /* Reset JIT recompilers */
         vu::jit::reset(&vu0);
         vu::jit::reset(&vu1);
         ee::jit::reset(true);
@@ -197,11 +190,6 @@ namespace core
         rdram_sdevid = 0;
         IOP_POST = 0;
         clear_cop2_interlock();
-
-        // HLE method to zero out IOP memory
-        memset(IOP_RAM, 0, 0x00200000);
-
-        iop_scratchpad_start = 0x1F800000;
 
         vblank_start_id = scheduler.register_function([this] (uint64_t param) { vblank_start(); });
         vblank_end_id = scheduler.register_function([this] (uint64_t param) { vblank_end(); });
@@ -334,10 +322,10 @@ namespace core
 
             for (uint32_t str = EELOAD_START; str < EELOAD_START + EELOAD_SIZE; str += 8)
             {
-                if (!strcmp((char*)&RDRAM[str], "rom0:OSDSYS"))
+                if (!strcmp((char*)&cpu.rdram[str], "rom0:OSDSYS"))
                 {
                     fmt::print("[CORE] OSDSYS string found at {:#x}\n", str);
-                    strcpy((char*)&RDRAM[str], path.c_str());
+                    strcpy((char*)&cpu.rdram[str], path.c_str());
                 }
             }
 
@@ -476,7 +464,7 @@ namespace core
             for (unsigned int file_w = p_offset; file_w < (p_offset + p_filesz); file_w += 4)
             {
                 uint32_t word = *(uint32_t*)&ELF_file[file_w];
-                *(uint32_t*)&RDRAM[mem_w] = word;
+                *(uint32_t*)&cpu.rdram[mem_w] = word;
                 mem_w += 4;
             }
         }
@@ -519,7 +507,7 @@ namespace core
     uint8_t Emulator::read8(uint32_t address)
     {
         if (address >= 0x1C000000 && address < 0x1C200000)
-            return IOP_RAM[address & 0x1FFFFF];
+            return iop.ram[address & 0x1FFFFF];
         if (address >= 0x10000000 && address < 0x10002000)
             return (timers.read32(address & ~0xF) >> (8 * (address & 0x3)));
         if ((address & (0xFF000000)) == 0x12000000)
@@ -557,7 +545,7 @@ namespace core
         if ((address & (0xFF000000)) == 0x12000000)
             return (gs.read32_privileged(address & ~0x3) >> (8 * (address & 0x2)));
         if (address >= 0x1C000000 && address < 0x1C200000)
-            return *(uint16_t*)&IOP_RAM[address & 0x1FFFFF];
+            return *(uint16_t*)&iop.ram[address & 0x1FFFFF];
         if (address >= 0x11000000 && address < 0x11004000)
             return vu0.read_instr<uint16_t>(address);
         if (address >= 0x11004000 && address < 0x11008000)
@@ -587,7 +575,7 @@ namespace core
         if (address >= 0x10008000 && address < 0x1000F000)
             return dmac.read32(address);
         if (address >= 0x1C000000 && address < 0x1C200000)
-            return *(uint32_t*)&IOP_RAM[address & 0x1FFFFF];
+            return *(uint32_t*)&iop.ram[address & 0x1FFFFF];
         if (address >= 0x11000000 && address < 0x11004000)
             return vu0.read_instr<uint32_t>(address);
         if (address >= 0x11004000 && address < 0x11008000)
@@ -699,7 +687,7 @@ namespace core
         if ((address & (0xFF000000)) == 0x12000000)
             return gs.read64_privileged(address);
         if (address >= 0x1C000000 && address < 0x1C200000)
-            return *(uint64_t*)&IOP_RAM[address & 0x1FFFFF];
+            return *(uint64_t*)&iop.ram[address & 0x1FFFFF];
         if (address >= 0x11000000 && address < 0x11004000)
             return vu0.read_instr<uint64_t>(address);
         if (address >= 0x11004000 && address < 0x11008000)
@@ -750,7 +738,7 @@ namespace core
         }
         if (address >= 0x1C000000 && address < 0x1C200000)
         {
-            IOP_RAM[address & 0x1FFFFF] = value;
+            iop.ram[address & 0x1FFFFF] = value;
             return;
         }
         if (address >= 0x11000000 && address < 0x11004000)
@@ -793,7 +781,7 @@ namespace core
         }
         if (address >= 0x1C000000 && address < 0x1C200000)
         {
-            *(uint16_t*)&IOP_RAM[address & 0x1FFFFF] = value;
+            *(uint16_t*)&iop.ram[address & 0x1FFFFF] = value;
             return;
         }
         if (address >= 0x11000000 && address < 0x11004000)
@@ -829,7 +817,7 @@ namespace core
     {
         if (address >= 0x1C000000 && address < 0x1C200000)
         {
-            *(uint32_t*)&IOP_RAM[address & 0x1FFFFF] = value;
+            *(uint32_t*)&iop.ram[address & 0x1FFFFF] = value;
             return;
         }
         if (address >= 0x10000000 && address < 0x10002000)
@@ -962,7 +950,7 @@ namespace core
     {
         if (address >= 0x1C000000 && address < 0x1C200000)
         {
-            *(uint64_t*)&IOP_RAM[address & 0x1FFFFF] = value;
+            *(uint64_t*)&iop.ram[address & 0x1FFFFF] = value;
             return;
         }
         if (address >= 0x10000000 && address < 0x10002000)
@@ -1049,12 +1037,12 @@ namespace core
     {
         if (param > 1024 * 1024 * 32)
             return;
-        param = *(uint32_t*)&RDRAM[param];
+        param = *(uint32_t*)&cpu.rdram[param];
         fmt::print("[CORE] Param: $%08X\n", param);
         char c;
         do
         {
-            c = RDRAM[param & 0x1FFFFFF];
+            c = cpu.rdram[param & 0x1FFFFFF];
             ee_log << c;
             param++;
         } while (c);
@@ -1070,7 +1058,7 @@ namespace core
 
         while (len > 0)
         {
-            char c = RDRAM[addr & 0x1FFFFFF];
+            char c = cpu.rdram[addr & 0x1FFFFFF];
             ee_log << c;
             addr++;
             len--;
@@ -1083,7 +1071,7 @@ namespace core
         if (address < 0x00200000)
         {
             //printf("[IOP] Read8 from $%08X: $%02X\n", address, IOP_RAM[address]);
-            return IOP_RAM[address];
+            return iop.ram[address];
         }
         if (address >= 0x1FC00000 && address < 0x20000000)
             return BIOS[address & 0x3FFFFF];
@@ -1133,8 +1121,8 @@ namespace core
                 return IOP_POST;
         }
     
-        if (address >= iop_scratchpad_start && address < iop_scratchpad_start + 0x400)
-            return iop_scratchpad[address & 0x3FF];
+        if (address >= iop.scratchpad_start && address < iop.scratchpad_start + 0x400)
+            return iop.scratchpad[address & 0x3FF];
     
         fmt::print("[CORE] Unrecognized IOP read8 from physical address {:#x}\n", address);
     
@@ -1144,7 +1132,7 @@ namespace core
     uint16_t Emulator::iop_read16(uint32_t address)
     {
         if (address < 0x00200000)
-            return *(uint16_t*)&IOP_RAM[address];
+            return *(uint16_t*)&iop.ram[address];
         if (address >= 0x1FC00000 && address < 0x20000000)
             return *(uint16_t*)&BIOS[address & 0x3FFFFF];
         if (address >= 0x1F900000 && address < 0x1F900400)
@@ -1203,8 +1191,8 @@ namespace core
                 return iop_timers.read_target(5) >> 16;
         }
     
-        if (address >= iop_scratchpad_start && address < iop_scratchpad_start + 0x400)
-            return *(uint16_t*)&iop_scratchpad[address & 0x3FF];
+        if (address >= iop.scratchpad_start && address < iop.scratchpad_start + 0x400)
+            return *(uint16_t*)&iop.scratchpad[address & 0x3FF];
     
         fmt::print("[CORE] Unrecognized IOP read16 from physical address {:#x}\n", address);
         return 0;
@@ -1213,7 +1201,7 @@ namespace core
     uint32_t Emulator::iop_read32(uint32_t address)
     {
         if (address < 0x00200000)
-            return *(uint32_t*)&IOP_RAM[address];
+            return *(uint32_t*)&iop.ram[address];
         if (address >= 0x1FC00000 && address < 0x20000000)
             return *(uint32_t*)&BIOS[address & 0x3FFFFF];
         if (address >= 0x1F808400 && address < 0x1F808550)
@@ -1314,8 +1302,8 @@ namespace core
             case 0xFFFE0130: //Cache control?
                 return 0;
         }
-        if (address >= iop_scratchpad_start && address < iop_scratchpad_start + 0x400)
-            return *(uint32_t*)&iop_scratchpad[address & 0x3FF];
+        if (address >= iop.scratchpad_start && address < iop.scratchpad_start + 0x400)
+            return *(uint32_t*)&iop.scratchpad[address & 0x3FF];
         fmt::print("[CORE] Unrecognized IOP read32 from physical addr {:#x}\n", address);
         return 0;
     }
@@ -1325,7 +1313,7 @@ namespace core
         if (address < 0x00200000)
         {
             //printf("[IOP] Write to $%08X of $%02X\n", address, value);
-            IOP_RAM[address] = value;
+            iop.ram[address] = value;
             return;
         }
         switch (address)
@@ -1367,9 +1355,9 @@ namespace core
                 fmt::print("[IOP] POST: {:#x}\n", value);
                 return;
         }
-        if (address >= iop_scratchpad_start && address < iop_scratchpad_start + 0x400)
+        if (address >= iop.scratchpad_start && address < iop.scratchpad_start + 0x400)
         {
-            iop_scratchpad[address & 0x3FF] = value;
+            iop.scratchpad[address & 0x3FF] = value;
             return;
         }
         fmt::print("[CORE] Unrecognized IOP write8 to physical address {:#x} of {:#x}\n", address, value);
@@ -1380,7 +1368,7 @@ namespace core
         if (address < 0x00200000)
         {
             //printf("[IOP] Write16 to $%08X of $%08X\n", address, value);
-            *(uint16_t*)&IOP_RAM[address] = value;
+            *(uint16_t*)&iop.ram[address] = value;
             return;
         }
         if ((address >= 0x1F900000 && address < 0x1F900400) || (address >= 0x1F900760 && address < 0x1F900788))
@@ -1495,9 +1483,9 @@ namespace core
                 iop_dma.set_chan_count(11, value);
                 return;
         }
-        if (address >= iop_scratchpad_start && address < iop_scratchpad_start + 0x400)
+        if (address >= iop.scratchpad_start && address < iop.scratchpad_start + 0x400)
         {
-            *(uint16_t*)&iop_scratchpad[address & 0x3FF] = value;
+            *(uint16_t*)&iop.scratchpad[address & 0x3FF] = value;
             return;
         }
 
@@ -1509,7 +1497,7 @@ namespace core
         if (address < 0x00200000)
         {
             //printf("[IOP] Write to $%08X of $%08X\n", address, value);
-            *(uint32_t*)&IOP_RAM[address] = value;
+            *(uint32_t*)&iop.ram[address] = value;
             return;
         }
         //SIO2 send buffers
@@ -1726,12 +1714,12 @@ namespace core
         if (address == 0xFFFE0144)
         {
             fmt::print("[IOP] Scratchpad start: {:#x}\n", value);
-            iop_scratchpad_start = value;
+            iop.scratchpad_start = value;
             return;
         }
-        if (address >= iop_scratchpad_start && address < iop_scratchpad_start + 0x400)
+        if (address >= iop.scratchpad_start && address < iop.scratchpad_start + 0x400)
         {
-            *(uint32_t*)&iop_scratchpad[address & 0x3FF] = value;
+            *(uint32_t*)&iop.scratchpad[address & 0x3FF] = value;
             return;
         }
     
@@ -1744,37 +1732,37 @@ namespace core
         uint32_t arg_pointer = iop.get_gpr(7);
 
         uint32_t width;
-        fmt::print("[IOP][DEBUG] ksprintf: {}\n", (char*)&IOP_RAM[msg_pointer]);
-        while (IOP_RAM[msg_pointer])
+        fmt::print("[IOP][DEBUG] ksprintf: {}\n", (char*)&iop.ram[msg_pointer]);
+        while (iop.ram[msg_pointer])
         {
-            char c = IOP_RAM[msg_pointer];
+            char c = iop.ram[msg_pointer];
             width = 8;
             if (c == '%')
             {
                 msg_pointer++;
-                while (IOP_RAM[msg_pointer] >= '0' && IOP_RAM[msg_pointer] <= '9')
+                while (iop.ram[msg_pointer] >= '0' && iop.ram[msg_pointer] <= '9')
                 {
                     //Hacky, but it works as long as the width is a single digit
-                    width = IOP_RAM[msg_pointer] - '0';
+                    width = iop.ram[msg_pointer] - '0';
                     msg_pointer++;
                 }
 
-                switch (IOP_RAM[msg_pointer])
+                switch (iop.ram[msg_pointer])
                 {
                     case 's':
                     {
-                        uint32_t str_pointer = *(uint32_t*)&IOP_RAM[arg_pointer];
-                        ee_log << (char*)&IOP_RAM[str_pointer];
+                        uint32_t str_pointer = *(uint32_t*)&iop.ram[arg_pointer];
+                        ee_log << (char*)&iop.ram[str_pointer];
                     }
                         break;
                     case 'd':
-                        ee_log << *(int32_t*)&IOP_RAM[arg_pointer];
-                        fmt::print("[IOP][DEBUG] {:d}\n", *(uint32_t*)&IOP_RAM[arg_pointer]);
+                        ee_log << *(int32_t*)&iop.ram[arg_pointer];
+                        fmt::print("[IOP][DEBUG] {:d}\n", *(uint32_t*)&iop.ram[arg_pointer]);
                         break;
                     case 'x':
                     case 'X':
-                        ee_log << std::hex << *(uint32_t*)&IOP_RAM[arg_pointer];
-                        fmt::print("[IOP][DEBUG] {:#x}\n", *(uint32_t*)&IOP_RAM[arg_pointer]);
+                        ee_log << std::hex << *(uint32_t*)&iop.ram[arg_pointer];
+                        fmt::print("[IOP][DEBUG] {:#x}\n", *(uint32_t*)&iop.ram[arg_pointer]);
                         break;
                     default:
                         break;
@@ -1806,8 +1794,8 @@ namespace core
         }
         while (len)
         {
-            ee_log << IOP_RAM[pointer & 0x1FFFFF];
-            fmt::print("[CORE] puts: {}\n", IOP_RAM[pointer & 0x1FFFFF]);
+            ee_log << iop.ram[pointer & 0x1FFFFF];
+            fmt::print("[CORE] puts: {}\n", iop.ram[pointer & 0x1FFFFF]);
             pointer++;
             len--;
         }

@@ -1,16 +1,12 @@
-#include <cstdio>
-#include <cstring>
-#include "cop0.hpp"
-#include "dmac.hpp"
+#include <ee/cop0.hpp>
+#include <ee/dmac.hpp>
+#include <emulator.hpp>
 
 namespace ee
 {
-    Cop0::Cop0(DMAC* dmac) : 
-        dmac(dmac)
+    Cop0::Cop0(core::Emulator* e) : 
+        e(e)
     {
-        RDRAM = nullptr;
-        BIOS = nullptr;
-        spr = nullptr;
         kernel_vtlb = nullptr;
         sup_vtlb = nullptr;
         user_vtlb = nullptr;
@@ -79,13 +75,6 @@ namespace ee
 
         //Set processor revision id
         gpr[15] = 0x00002E20;
-    }
-
-    void Cop0::init_mem_pointers(uint8_t* RDRAM, uint8_t* BIOS, uint8_t* spr)
-    {
-        this->RDRAM = RDRAM;
-        this->BIOS = BIOS;
-        this->spr = spr;
     }
 
     void Cop0::init_tlb()
@@ -207,8 +196,9 @@ namespace ee
      */
     bool Cop0::get_condition()
     {
-        uint32_t STAT = dmac->read32(0x1000E010) & 0x3FF;
-        uint32_t PCR = dmac->read32(0x1000E020) & 0x3FF;
+        auto& dmac = e->dmac;
+        uint32_t STAT = dmac.read32(0x1000E010) & 0x3FF;
+        uint32_t PCR = dmac.read32(0x1000E020) & 0x3FF;
         return ((~PCR | STAT) & 0x3FF) == 0x3FF;
     }
 
@@ -436,6 +426,7 @@ namespace ee
         uint32_t odd_virt_addr = odd_virt_page * 4096;
         uint32_t odd_phy_addr = (entry->pfn[1] >> entry->page_shift) * entry->page_size;
 
+        uint8_t* spr = &e->cpu.scratchpad[0];
         if (entry->is_scratchpad)
         {
             if (entry->valid[0])
@@ -509,13 +500,13 @@ namespace ee
         if (paddr < 0x10000000)
         {
             paddr &= (1024 * 1024 * 32) - 1;
-            return RDRAM + paddr;
+            return e->cpu.rdram + paddr;
         }
 
         if (paddr >= 0x1FC00000 && paddr < 0x20000000)
         {
             paddr &= (1024 * 1024 * 4) - 1;
-            return BIOS + paddr;
+            return e->BIOS + paddr;
         }
 
         //Indicates that the region is MMIO and must be handled specially

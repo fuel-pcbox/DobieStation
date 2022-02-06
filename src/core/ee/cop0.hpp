@@ -2,6 +2,11 @@
 #include <cstdint>
 #include <fstream>
 
+namespace core
+{
+    class Emulator;
+}
+
 namespace ee
 {
     class EmotionEngine;
@@ -86,10 +91,7 @@ namespace ee
     class Cop0
     {
     private:
-        DMAC* dmac;
-        uint8_t* RDRAM;
-        uint8_t* BIOS;
-        uint8_t* spr;
+        core::Emulator* e;
 
         uint8_t** kernel_vtlb;
         uint8_t** sup_vtlb;
@@ -108,7 +110,7 @@ namespace ee
         COP0_CAUSE cause;
         uint32_t EPC, ErrorEPC;
         uint32_t PCCR, PCR0, PCR1;
-        Cop0(DMAC* dmac);
+        Cop0(core::Emulator* e);
         ~Cop0();
 
         uint8_t** get_vtlb_map();
@@ -116,7 +118,6 @@ namespace ee
         bool is_cached(uint32_t address);
 
         void reset();
-        void init_mem_pointers(uint8_t* RDRAM, uint8_t* BIOS, uint8_t* spr);
         void init_tlb();
 
         uint32_t mfc(int index);

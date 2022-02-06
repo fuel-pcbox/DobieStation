@@ -8,24 +8,22 @@
 
 namespace ee
 {
-    const char* DMAC::CHAN(int index)
-    {
-        const char* channels[] = {"VIF0", "VIF1", "GIF", "IPU_FROM", "IPU_TO",
-                                  "SIF0", "SIF1", "SIF2", "SPR_FROM", "SPR_TO"};
-        return channels[index];
-    }
+    constexpr const char* CHANNEL[] = 
+    { 
+        "VIF0", "VIF1", "GIF", "IPU_FROM", "IPU_TO",
+        "SIF0", "SIF1", "SIF2", "SPR_FROM", "SPR_TO" 
+    };
 
-    DMAC::DMAC(core::Emulator* e) :
-        RDRAM(nullptr), scratchpad(nullptr), e(e)
+    DMAC::DMAC(core::Emulator* e) : 
+        e(e)
     {
         apply_dma_funcs();
     }
 
-    void DMAC::reset(uint8_t* new_RDRAM, uint8_t* new_scratchpad)
+    void DMAC::reset()
     {
-        RDRAM = new_RDRAM;
-        scratchpad = new_scratchpad;
-        master_disable = 0x1201; //SCPH-39001 requires this value to be set, possibly other BIOSes too
+        /* SCPH-39001 requires this value to be set, possibly other BIOSes too */
+        master_disable = 0x1201;
         control.master_enable = false;
         mfifo_empty_triggered = false;
         PCR = 0;
@@ -61,7 +59,7 @@ namespace ee
         if ((addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000)
         {
             addr &= 0x3FF0;
-            return *(uint128_t*)&scratchpad[addr];
+            return *(uint128_t*)&e->cpu.scratchpad[addr];
         }
         else if (addr >= 0x11000000 && addr < 0x11010000)
         {
@@ -85,7 +83,7 @@ namespace ee
         else
         {
             addr &= 0x01FFFFF0;
-            return *(uint128_t*)&RDRAM[addr];
+            return *(uint128_t*)&e->cpu.rdram[addr];
         }
     }
 
@@ -94,7 +92,7 @@ namespace ee
         if ((addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000)
         {
             addr &= 0x3FF0;
-            *(uint128_t*)&scratchpad[addr] = data;
+            *(uint128_t*)&e->cpu.scratchpad[addr] = data;
         }
         else if (addr >= 0x11000000 && addr < 0x11010000)
         {
@@ -122,7 +120,7 @@ namespace ee
         else
         {
             addr &= 0x01FFFFF0;
-            *(uint128_t*)&RDRAM[addr] = data;
+            *(uint128_t*)&e->cpu.rdram[addr] = data;
         }
     }
 
@@ -194,7 +192,7 @@ namespace ee
 
     void DMAC::transfer_end(int index)
     {
-        printf("[DMAC] %s transfer ended\n", CHAN(index));
+        printf("[DMAC] %s transfer ended\n", CHANNEL[index]);
 
         channels[index].control &= ~0x100;
         channels[index].started = false;
@@ -1069,7 +1067,7 @@ namespace ee
 
     void DMAC::start_DMA(int index)
     {
-        printf("[DMAC] %s DMA started: $%08X\n", CHAN(index), channels[index].control);
+        printf("[DMAC] %s DMA started: $%08X\n", CHANNEL[index], channels[index].control);
         int mode = (channels[index].control >> 2) & 0x3;
         if (mode == 3)
         {
