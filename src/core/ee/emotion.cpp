@@ -1123,9 +1123,11 @@ namespace ee
             printf("[EE] Entering BIFCO loop\n");
             halt();
         }
+        
         //And this is for ELFs.
-        if (PC >= 0x00100000 && PC < 0x00100010)
+        if (PC >= 0x00100000 && PC < 0x80000000)
             e->skip_BIOS();
+        
         set_PC(get_PC() - 4);
         tlb_map = cp0->get_vtlb_map();
     }
