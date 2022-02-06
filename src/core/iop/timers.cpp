@@ -1,14 +1,14 @@
-#include <algorithm>
-#include <cstdio>
-#include "iop_timers.hpp"
-#include "iop_intc.hpp"
+#include <iop/timers.hpp>
+#include <iop/intc.hpp>
 #include <emulator.hpp>
 #include <util/errors.hpp>
 #include <scheduler.hpp>
+#include <algorithm>
+#include <cstdio>
 
 namespace iop
 {
-    IOPTiming::IOPTiming(IOP_INTC* intc, core::Scheduler* scheduler) : 
+    IOPTiming::IOPTiming(INTC* intc, core::Scheduler* scheduler) : 
         intc(intc), scheduler(scheduler)
     {
 

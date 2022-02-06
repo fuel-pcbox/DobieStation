@@ -5,7 +5,7 @@
 
 namespace iop
 {
-    class IOP_INTC;
+    class INTC;
 }
 
 namespace sio2
@@ -24,7 +24,7 @@ namespace sio2
     class SIO2
     {
     private:
-        iop::IOP_INTC* intc;
+        iop::INTC* intc;
         Gamepad* pad;
         Memcard* memcard;
 
@@ -49,7 +49,7 @@ namespace sio2
         void write_device(uint8_t value);
     
     public:
-        SIO2(iop::IOP_INTC* intc, Gamepad* pad, Memcard* memcard);
+        SIO2(iop::INTC* intc, Gamepad* pad, Memcard* memcard);
 
         void reset();
 

@@ -1,6 +1,6 @@
-#include <iop/iop_dma.hpp>
+#include <iop/dma.hpp>
 #include <iop/cdvd/cdvd.hpp>
-#include <iop/iop_intc.hpp>
+#include <iop/intc.hpp>
 #include <iop/sio2/sio2.hpp>
 #include <iop/spu/spu.hpp>
 #include <util/errors.hpp>
@@ -17,13 +17,13 @@ namespace iop
         "DEV9", "SIF0", "SIF1", "SIO2in", "SIO2out" 
     };
 
-    IOP_DMA::IOP_DMA(core::Emulator* e) :
+    DMA::DMA(core::Emulator* e) :
         e(e), intc(&e->iop_intc)
     {
         apply_dma_functions();
     }
 
-    void IOP_DMA::reset()
+    void DMA::reset()
     {
         active_channel = nullptr;
         queued_channels.clear();
@@ -52,7 +52,7 @@ namespace iop
         set_DMA_request(IOP_SIF0);
     }
 
-    void IOP_DMA::run(int cycles)
+    void DMA::run(int cycles)
     {
         while (cycles--)
         {
@@ -63,7 +63,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::process_CDVD()
+    void DMA::process_CDVD()
     {
         auto& cdvd = e->cdvd;
         uint32_t count = channels[IOP_CDVD].word_count * channels[IOP_CDVD].block_size * 4;
@@ -80,14 +80,14 @@ namespace iop
         channels[IOP_CDVD].word_count -= bytes_read / (channels[IOP_CDVD].block_size * 4);
     }
 
-    void IOP_DMA::process_SPU()
+    void DMA::process_SPU()
     {
         auto& spu = e->spu;
         bool write_to_spu = channels[IOP_SPU].control.direction_from;
         if (spu.running_ADMA())
         {
             if (!write_to_spu)
-                Errors::die("[IOP_DMA] SPU doing ADMA read!");
+                Errors::die("[DMA] SPU doing ADMA read!");
             spu.write_ADMA(e->iop.ram + channels[IOP_SPU].addr);
             channels[IOP_SPU].size--;
             channels[IOP_SPU].addr += 4;
@@ -124,14 +124,14 @@ namespace iop
         }
     }
 
-    void IOP_DMA::process_SPU2()
+    void DMA::process_SPU2()
     {
         auto& spu2 = e->spu2;
         bool write_to_spu = channels[IOP_SPU2].control.direction_from;
         if (spu2.running_ADMA())
         {
             if (!write_to_spu)
-                Errors::die("[IOP_DMA] SPU2 doing ADMA read!");
+                Errors::die("[DMA] SPU2 doing ADMA read!");
             /* Transfer 512 bytes of data(128 words) at once */
             spu2.write_ADMA(e->iop.ram + channels[IOP_SPU2].addr);
             channels[IOP_SPU2].size--;
@@ -169,7 +169,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::process_SIF0()
+    void DMA::process_SIF0()
     {
         auto& sif = e->sif;
         static int junk_words = 0;
@@ -223,7 +223,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::process_SIF1()
+    void DMA::process_SIF1()
     {
         auto& sif = e->sif;
         if (channels[IOP_SIF1].word_count)
@@ -256,7 +256,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::process_SIO2in()
+    void DMA::process_SIO2in()
     {
         auto& sio2 = e->sio2;
         sio2.dma_reset();
@@ -272,7 +272,7 @@ namespace iop
             transfer_end(IOP_SIO2in);
     }
 
-    void IOP_DMA::process_SIO2out()
+    void DMA::process_SIO2out()
     {
         auto& sio2 = e->sio2;
         int size = channels[IOP_SIO2out].word_count * channels[IOP_SIO2out].block_size * 4;
@@ -287,7 +287,7 @@ namespace iop
             transfer_end(IOP_SIO2out);
     }
 
-    void IOP_DMA::transfer_end(int index)
+    void DMA::transfer_end(int index)
     {
         fmt::print("[IOP][DMA] {} transfer ended\n", CHANNEL[index]);
         channels[index].control.busy = false;
@@ -307,7 +307,7 @@ namespace iop
         }
     }
 
-    uint32_t IOP_DMA::get_DPCR()
+    uint32_t DMA::get_DPCR()
     {
         uint32_t reg = 0;
         for (int i = 0; i < 8; i++)
@@ -318,7 +318,7 @@ namespace iop
         return reg;
     }
 
-    uint32_t IOP_DMA::get_DPCR2()
+    uint32_t DMA::get_DPCR2()
     {
         uint32_t reg = 0;
         for (int i = 8; i < 16; i++)
@@ -330,7 +330,7 @@ namespace iop
         return reg;
     }
 
-    uint32_t IOP_DMA::get_DICR()
+    uint32_t DMA::get_DICR()
     {
         uint32_t reg = 0;
         reg |= DICR.force_IRQ[0] << 15;
@@ -348,7 +348,7 @@ namespace iop
         return reg;
     }
 
-    uint32_t IOP_DMA::get_DICR2()
+    uint32_t DMA::get_DICR2()
     {
         uint32_t reg = 0;
         reg |= DICR.force_IRQ[1] << 15;
@@ -366,19 +366,19 @@ namespace iop
         return reg;
     }
 
-    uint32_t IOP_DMA::get_chan_addr(int index)
+    uint32_t DMA::get_chan_addr(int index)
     {
         //printf("[IOP DMA] Read %s addr: $%08X\n", CHAN(index), channels[index].addr);
         return channels[index].addr;
     }
 
-    uint32_t IOP_DMA::get_chan_block(int index)
+    uint32_t DMA::get_chan_block(int index)
     {
         //printf("[IOP DMA] Read %s block: $%08X\n", CHAN(index), channels[index].word_count | (channels[index].block_size << 16));
         return channels[index].word_count | (channels[index].block_size << 16);
     }
 
-    uint32_t IOP_DMA::get_chan_control(int index)
+    uint32_t DMA::get_chan_control(int index)
     {
         uint32_t reg = 0;
         reg |= channels[index].control.direction_from;
@@ -390,7 +390,7 @@ namespace iop
         return reg;
     }
 
-    void IOP_DMA::set_DPCR(uint32_t value)
+    void DMA::set_DPCR(uint32_t value)
     {
         fmt::print("[IOP][DMA] Set DPCR: {:#x}\n", value);
         for (int i = 0; i < 8; i++)
@@ -403,7 +403,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::set_DPCR2(uint32_t value)
+    void DMA::set_DPCR2(uint32_t value)
     {
         fmt::print("[IOP][DMA] Set DPCR2: {:#x}\n", value);
         for (int i = 8; i < 16; i++)
@@ -417,7 +417,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::set_DICR(uint32_t value)
+    void DMA::set_DICR(uint32_t value)
     {
         //printf("[IOP DMA] Set DICR: $%08X\n", value);
         DICR.force_IRQ[0] = value & (1 << 15);
@@ -428,7 +428,7 @@ namespace iop
             intc->assert_irq(3);
     }
 
-    void IOP_DMA::set_DICR2(uint32_t value)
+    void DMA::set_DICR2(uint32_t value)
     {
         //printf("[IOP DMA] Set DICR2: $%08X\n", value);
         DICR.force_IRQ[1] = value & (1 << 15);
@@ -439,9 +439,9 @@ namespace iop
             intc->assert_irq(3);
     }
 
-    void IOP_DMA::set_DMA_request(int index)
+    void DMA::set_DMA_request(int index)
     {
-        //printf("[IOP_DMA] DMA req: %s\n", CHAN(index));
+        //printf("[DMA] DMA req: %s\n", CHAN(index));
         bool old_req = channels[index].dma_req;
         channels[index].dma_req = true;
 
@@ -449,9 +449,9 @@ namespace iop
             active_dma_check(index);
     }
 
-    void IOP_DMA::clear_DMA_request(int index)
+    void DMA::clear_DMA_request(int index)
     {
-        //printf("[IOP_DMA] DMA clear: %s\n", CHAN(index));
+        //printf("[DMA] DMA clear: %s\n", CHAN(index));
         bool old_req = channels[index].dma_req;
         channels[index].dma_req = false;
 
@@ -459,13 +459,13 @@ namespace iop
             deactivate_dma(index);
     }
 
-    void IOP_DMA::set_chan_addr(int index, uint32_t value)
+    void DMA::set_chan_addr(int index, uint32_t value)
     {
         fmt::print("[IOP][DMA] {} address: {:#x}\n", CHANNEL[index], value);
         channels[index].addr = value;
     }
 
-    void IOP_DMA::set_chan_block(int index, uint32_t value)
+    void DMA::set_chan_block(int index, uint32_t value)
     {
         fmt::print("[IOP][DMA] {} block: {:#x}\n", CHANNEL[index], value);
         channels[index].block_size = value & 0xFFFF;
@@ -473,21 +473,21 @@ namespace iop
         channels[index].size = channels[index].block_size * channels[index].word_count;
     }
 
-    void IOP_DMA::set_chan_size(int index, uint16_t value)
+    void DMA::set_chan_size(int index, uint16_t value)
     {
         fmt::print("[IOP][DMA] {} size: {:#x}\n", CHANNEL[index], value);
         channels[index].block_size = value;
         channels[index].size = channels[index].block_size * channels[index].word_count;
     }
 
-    void IOP_DMA::set_chan_count(int index, uint16_t value)
+    void DMA::set_chan_count(int index, uint16_t value)
     {
         fmt::print("[IOP][DMA] {} count: {:#x}\n", CHANNEL[index], value);
         channels[index].word_count = value;
         channels[index].size = channels[index].block_size * channels[index].word_count;
     }
 
-    void IOP_DMA::set_chan_control(int index, uint32_t value)
+    void DMA::set_chan_control(int index, uint32_t value)
     {
         auto& spu = e->spu;
         auto& spu2 = e->spu2;
@@ -523,13 +523,13 @@ namespace iop
         channels[index].control.unk30 = value & (1 << 30);
     }
 
-    void IOP_DMA::set_chan_tag_addr(int index, uint32_t value)
+    void DMA::set_chan_tag_addr(int index, uint32_t value)
     {
         fmt::print("[IOP][DMA] {} tag address: {:#x}\n", CHANNEL[index], value);
         channels[index].tag_addr = value;
     }
 
-    void IOP_DMA::active_dma_check(int index)
+    void DMA::active_dma_check(int index)
     {
         if (channels[index].dma_req && channels[index].control.busy)
         {
@@ -545,7 +545,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::deactivate_dma(int index)
+    void DMA::deactivate_dma(int index)
     {
         if (active_channel == &channels[index])
             find_new_active_channel();
@@ -562,7 +562,7 @@ namespace iop
         }
     }
 
-    void IOP_DMA::find_new_active_channel()
+    void DMA::find_new_active_channel()
     {
         if (!queued_channels.size())
         {
@@ -575,7 +575,7 @@ namespace iop
 
         for (it = queued_channels.begin(); it != queued_channels.end(); it++)
         {
-            IOP_DMA_Channel* test = *it;
+            DMA_Channel* test = *it;
             if (test->index > index)
             {
                 channel_to_erase = it;
@@ -588,17 +588,17 @@ namespace iop
         fmt::print("[IOP][DMA] New active channel: {}\n", CHANNEL[active_channel->index]);
     }
 
-    void IOP_DMA::apply_dma_functions()
+    void DMA::apply_dma_functions()
     {
         for (int i = 0; i < 16; i++)
             channels[i].func = nullptr;
 
-        channels[IOP_CDVD].func = &IOP_DMA::process_CDVD;
-        channels[IOP_SIF0].func = &IOP_DMA::process_SIF0;
-        channels[IOP_SIF1].func = &IOP_DMA::process_SIF1;
-        channels[IOP_SPU].func = &IOP_DMA::process_SPU;
-        channels[IOP_SPU2].func = &IOP_DMA::process_SPU2;
-        channels[IOP_SIO2in].func = &IOP_DMA::process_SIO2in;
-        channels[IOP_SIO2out].func = &IOP_DMA::process_SIO2out;
+        channels[IOP_CDVD].func = &DMA::process_CDVD;
+        channels[IOP_SIF0].func = &DMA::process_SIF0;
+        channels[IOP_SIF1].func = &DMA::process_SIF1;
+        channels[IOP_SPU].func = &DMA::process_SPU;
+        channels[IOP_SPU2].func = &DMA::process_SPU2;
+        channels[IOP_SIO2in].func = &DMA::process_SIO2in;
+        channels[IOP_SIO2out].func = &DMA::process_SIO2out;
     }
 }

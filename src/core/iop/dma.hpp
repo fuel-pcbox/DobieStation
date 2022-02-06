@@ -26,9 +26,7 @@ namespace cdvd
 
 namespace iop
 {
-    class IOP_DMA;
-
-    struct IOP_DMA_Chan_Control
+    struct DMA_Chan_Control
     {
         bool direction_from;
         bool unk8;
@@ -37,18 +35,19 @@ namespace iop
         bool unk30;
     };
 
-    struct IOP_DMA_Channel
+    class DMA;
+    struct DMA_Channel
     {
         uint32_t addr;
         uint32_t word_count;
         uint32_t size;
         uint16_t block_size;
-        IOP_DMA_Chan_Control control;
+        DMA_Chan_Control control;
         uint32_t tag_addr;
 
         bool tag_end;
 
-        typedef void(IOP_DMA::* dma_copy_func)();
+        typedef void(DMA::* dma_copy_func)();
         dma_copy_func func;
 
         bool dma_req;
@@ -71,9 +70,9 @@ namespace iop
         bool master_int_enable[2];
     };
 
-    class IOP_INTC;
+    class INTC;
 
-    enum IOP_DMA_CHANNELS
+    enum DMA_CHANNELS
     {
         IOP_MDECin,
         IOP_MDECout,
@@ -90,14 +89,14 @@ namespace iop
         IOP_SIO2out
     };
 
-    class IOP_DMA
+    class DMA
     {
     private:
-        IOP_INTC* intc;
+        INTC* intc;
         core::Emulator* e;
-        IOP_DMA_Channel channels[16];
-        IOP_DMA_Channel* active_channel;
-        std::list<IOP_DMA_Channel*> queued_channels;
+        DMA_Channel channels[16];
+        DMA_Channel* active_channel;
+        std::list<DMA_Channel*> queued_channels;
 
         //Merge of DxCR, DxCR2, DxCR3 for easier processing
         DMA_DPCR DPCR;
@@ -118,7 +117,7 @@ namespace iop
         void apply_dma_functions();
     
     public:
-        IOP_DMA(core::Emulator* e);
+        DMA(core::Emulator* e);
 
         void reset();
         void run(int cycles);

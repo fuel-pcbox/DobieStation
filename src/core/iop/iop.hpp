@@ -1,9 +1,9 @@
 #pragma once
+#include <iop/cop0.hpp>
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
-#include "iop_cop0.hpp"
 
 namespace core
 {
@@ -34,7 +34,7 @@ namespace iop
     {
     public:
         core::Emulator* e;
-        IOP_Cop0 cop0;
+        iop::Cop0 cop0;
         uint32_t gpr[32];
         uint32_t PC;
         uint32_t LO, HI;

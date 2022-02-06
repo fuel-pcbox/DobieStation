@@ -14,7 +14,7 @@ namespace ee
 
 namespace iop
 {
-    class IOP_DMA;
+    class DMA;
 }
 
 namespace core
@@ -31,7 +31,7 @@ namespace core
     {
     private:
         ee::EmotionEngine* ee;
-        iop::IOP_DMA* iop_dma;
+        iop::DMA* iop_dma;
         ee::DMAC* dmac;
         uint32_t mscom;
         uint32_t smcom;
@@ -52,7 +52,7 @@ namespace core
                 uint32_t fno, uint32_t buff, uint32_t buff_size)>);
     public:
         constexpr static int MAX_FIFO_SIZE = 32;
-        SubsystemInterface(ee::EmotionEngine* ee, iop::IOP_DMA* iop_dma, ee::DMAC* dmac);
+        SubsystemInterface(ee::EmotionEngine* ee, iop::DMA* iop_dma, ee::DMAC* dmac);
 
         void reset();
         void register_system_servers();

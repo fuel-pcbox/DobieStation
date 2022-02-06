@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include "sif.hpp"
-#include "iop/iop_dma.hpp"
+#include "iop/dma.hpp"
 #include "ee/dmac.hpp"
 #include "ee/emotion.hpp"
 
@@ -13,7 +13,7 @@ namespace core
         printf("[SIFRPC] Unknown function $%08X called on %s ($%08X)\n", fno, server.name.c_str(), server.module_id);
     }
 
-    SubsystemInterface::SubsystemInterface(ee::EmotionEngine* ee, iop::IOP_DMA* iop_dma, ee::DMAC* dmac) :
+    SubsystemInterface::SubsystemInterface(ee::EmotionEngine* ee, iop::DMA* iop_dma, ee::DMAC* dmac) :
         ee(ee), iop_dma(iop_dma), dmac(dmac)
     {
 
@@ -142,7 +142,7 @@ namespace core
             oldest_SIF0_data[SIF0_FIFO.size()] = word;
         SIF0_FIFO.push(word);
         if (SIF0_FIFO.size() >= MAX_FIFO_SIZE)
-            iop_dma->clear_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SIF0);
+            iop_dma->clear_DMA_request(iop::DMA_CHANNELS::IOP_SIF0);
         if (SIF0_FIFO.size() >= 4)
             dmac->set_DMA_request(ee::DMAC_CHANNELS::EE_SIF0);
     }
@@ -163,7 +163,7 @@ namespace core
         //printf("[SIF] Write SIF1: $%08X_%08X_%08X_%08X\n", quad._u32[3], quad._u32[2], quad._u32[1], quad._u32[0]);
         for (int i = 0; i < 4; i++)
             SIF1_FIFO.push(quad._u32[i]);
-        iop_dma->set_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SIF1);
+        iop_dma->set_DMA_request(iop::DMA_CHANNELS::IOP_SIF1);
         if (SIF1_FIFO.size() >= MAX_FIFO_SIZE / 2)
             dmac->clear_DMA_request(ee::DMAC_CHANNELS::EE_SIF1);
     }
@@ -172,7 +172,7 @@ namespace core
     {
         uint32_t value = SIF0_FIFO.front();
         SIF0_FIFO.pop();
-        iop_dma->set_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SIF0);
+        iop_dma->set_DMA_request(iop::DMA_CHANNELS::IOP_SIF0);
 
         if (SIF0_FIFO.size() < 4)
             dmac->clear_DMA_request(ee::DMAC_CHANNELS::EE_SIF0);
@@ -184,7 +184,7 @@ namespace core
         uint32_t value = SIF1_FIFO.front();
         SIF1_FIFO.pop();
         if (!SIF1_FIFO.size())
-            iop_dma->clear_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SIF1);
+            iop_dma->clear_DMA_request(iop::DMA_CHANNELS::IOP_SIF1);
         if (SIF1_FIFO.size() < MAX_FIFO_SIZE / 2)
             dmac->set_DMA_request(ee::DMAC_CHANNELS::EE_SIF1);
         return value;

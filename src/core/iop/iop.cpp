@@ -1,5 +1,5 @@
 #include <iop/iop.hpp>
-#include <iop/iop_interpreter.hpp>
+#include <iop/interpreter/iop_interpreter.hpp>
 #include <ee/interpreter/emotiondisasm.hpp>
 #include <emulator.hpp>
 #include <util/errors.hpp>

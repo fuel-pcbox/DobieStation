@@ -13,9 +13,9 @@
 #include "iop/cdvd/cdvd.hpp"
 #include "iop/sio2/gamepad.hpp"
 #include "iop/iop.hpp"
-#include "iop/iop_dma.hpp"
-#include "iop/iop_intc.hpp"
-#include "iop/iop_timers.hpp"
+#include "iop/dma.hpp"
+#include "iop/intc.hpp"
+#include "iop/timers.hpp"
 #include "iop/sio2/memcard.hpp"
 #include "iop/sio2/sio2.hpp"
 #include "iop/spu/spu.hpp"
@@ -71,7 +71,7 @@ namespace core
         gs::GraphicsSynthesizer gs;
         gs::GraphicsInterface gif;
         iop::IOP iop;
-        iop::IOP_DMA iop_dma;
+        iop::DMA iop_dma;
         iop::IOPTiming iop_timers;
         ee::INTC intc;
         ipu::ImageProcessingUnit ipu;
@@ -99,7 +99,7 @@ namespace core
 
         uint8_t IOP_POST;
 
-        iop::IOP_INTC iop_intc;
+        iop::INTC iop_intc;
 
         SKIP_HACK skip_BIOS_hack;
 

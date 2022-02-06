@@ -5,8 +5,8 @@
 #include "cdvd.hpp"
 #include "cso_reader.hpp"
 #include "iso_reader.hpp"
-#include <iop/iop_dma.hpp>
-#include <iop/iop_intc.hpp>
+#include <iop/dma.hpp>
+#include <iop/intc.hpp>
 #include <util/errors.hpp>
 #include <scheduler.hpp>
 
@@ -27,7 +27,7 @@ namespace cdvd
         return (IOP_CLOCK * block_size) / (speed * (mode_DVD ? PSX_DVD_READSPEED : PSX_CD_READSPEED));
     }
 
-    CDVD_Drive::CDVD_Drive(iop::IOP_INTC* intc, iop::IOP_DMA* dma, core::Scheduler* scheduler) :
+    CDVD_Drive::CDVD_Drive(iop::INTC* intc, iop::DMA* dma, core::Scheduler* scheduler) :
         intc(intc),
         dma(dma),
         scheduler(scheduler),
@@ -170,7 +170,7 @@ namespace cdvd
     uint32_t CDVD_Drive::read_to_RAM(uint8_t *RAM, uint32_t bytes)
     {
         memcpy(RAM, read_buffer, block_size);
-        dma->clear_DMA_request(iop::IOP_DMA_CHANNELS::IOP_CDVD);
+        dma->clear_DMA_request(iop::DMA_CHANNELS::IOP_CDVD);
         read_bytes_left -= block_size;
         if (read_bytes_left <= 0)
         {
@@ -943,7 +943,7 @@ namespace cdvd
         }
         N_status = 0x40;
         drive_status = READING;
-        dma->set_DMA_request(iop::IOP_DMA_CHANNELS::IOP_CDVD);
+        dma->set_DMA_request(iop::DMA_CHANNELS::IOP_CDVD);
     }
 
     void CDVD_Drive::N_command_readkey(uint32_t arg)
@@ -1027,7 +1027,7 @@ namespace cdvd
         read_bytes_left = block_size;
         current_sector++;
         sectors_left--;
-        dma->set_DMA_request(iop::IOP_DMA_CHANNELS::IOP_CDVD);
+        dma->set_DMA_request(iop::DMA_CHANNELS::IOP_CDVD);
     }
 
     void CDVD_Drive::fill_CDROM_sector()
@@ -1098,7 +1098,7 @@ namespace cdvd
         current_sector++;
         sectors_left--;
 
-        dma->set_DMA_request(iop::IOP_DMA_CHANNELS::IOP_CDVD);
+        dma->set_DMA_request(iop::DMA_CHANNELS::IOP_CDVD);
     }
 
     void CDVD_Drive::get_dual_layer_info(bool &dual_layer, uint64_t &sector)

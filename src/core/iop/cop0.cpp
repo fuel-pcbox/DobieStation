@@ -1,16 +1,16 @@
+#include <iop/cop0.hpp>
+#include <util/errors.hpp>
 #include <cstdio>
 #include <cstdlib>
-#include "iop_cop0.hpp"
-#include <util/errors.hpp>
 
 namespace iop
 {
-    IOP_Cop0::IOP_Cop0()
+    Cop0::Cop0()
     {
 
     }
 
-    void IOP_Cop0::reset()
+    void Cop0::reset()
     {
         status.IEc = false;
         status.KUc = false;
@@ -27,7 +27,7 @@ namespace iop
         cause.int_pending = 0;
     }
 
-    uint32_t IOP_Cop0::mfc(int cop_reg)
+    uint32_t Cop0::mfc(int cop_reg)
     {
         //printf("[IOP COP0] MFC: Read from %d\n", cop_reg);
         switch (cop_reg)
@@ -64,7 +64,7 @@ namespace iop
         }
     }
 
-    void IOP_Cop0::mtc(int cop_reg, uint32_t value)
+    void Cop0::mtc(int cop_reg, uint32_t value)
     {
         //printf("[IOP COP0] MTC: Write to %d of $%08X\n", cop_reg, value);
         switch (cop_reg)

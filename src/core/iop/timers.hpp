@@ -9,7 +9,7 @@ namespace core
 
 namespace iop
 {
-    struct IOP_Timer_Control
+    struct Timer_Control
     {
         bool use_gate;
         uint8_t gate_mode;
@@ -26,30 +26,31 @@ namespace iop
         bool started;
     };
 
-    struct IOP_Timer
+    struct Timer
     {
         uint64_t counter;
-        IOP_Timer_Control control;
+        Timer_Control control;
         uint64_t target;
     };
 
-    class IOP_INTC;
+    class INTC;
 
     class IOPTiming
     {
     private:
-        IOP_INTC* intc;
+        iop::INTC* intc;
         core::Scheduler* scheduler;
 
-        IOP_Timer timers[6];
+        Timer timers[6];
 
         int timer_interrupt_event_id;
         int events[6];
 
         void timer_interrupt(int index);
         void IRQ_test(int index, bool overflow);
+    
     public:
-        IOPTiming(IOP_INTC* intc, core::Scheduler* scheduler);
+        IOPTiming(iop::INTC* intc, core::Scheduler* scheduler);
 
         void reset();
         uint32_t read_counter(int index);

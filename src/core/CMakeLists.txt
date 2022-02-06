@@ -69,11 +69,11 @@ add_library(${TARGET}
     iop/spu/spu_interpolate.cpp
     iop/spu/spu_reverb.cpp
     iop/iop.cpp
-    iop/iop_cop0.cpp
-    iop/iop_dma.cpp
-    iop/iop_intc.cpp
-    iop/iop_interpreter.cpp
-    iop/iop_timers.cpp
+    iop/cop0.cpp
+    iop/dma.cpp
+    iop/intc.cpp
+    iop/interpreter/iop_interpreter.cpp
+    iop/timers.cpp
     jitcommon/emitter64.cpp
     jitcommon/ir_block.cpp
     jitcommon/ir_instr.cpp

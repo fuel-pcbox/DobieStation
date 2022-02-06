@@ -4,8 +4,8 @@
 
 namespace iop
 {
-    class IOP_INTC;
-    class IOP_DMA; //Will be needed later for Firewire DMA's
+    class INTC;
+    class DMA; //Will be needed later for Firewire DMA's
 }
 
 namespace sio2
@@ -13,8 +13,8 @@ namespace sio2
     class Firewire
     {
     private:
-        iop::IOP_INTC* intc;
-        iop::IOP_DMA* dma;
+        iop::INTC* intc;
+        iop::DMA* dma;
 
         uint32_t intr0, intr1, intr2;
         uint32_t intr0mask, intr1mask, intr2mask;
@@ -27,7 +27,7 @@ namespace sio2
         void writePHY();
 
     public:
-        Firewire(iop::IOP_INTC* intc, iop::IOP_DMA* dma);
+        Firewire(iop::INTC* intc, iop::DMA* dma);
 
         void reset();
         void write32(uint32_t addr, uint32_t value);

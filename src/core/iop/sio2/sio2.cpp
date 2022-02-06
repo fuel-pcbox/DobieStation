@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "gamepad.hpp"
-#include <iop/iop_intc.hpp>
+#include <iop/intc.hpp>
 #include "memcard.hpp"
 #include "sio2.hpp"
 
@@ -8,7 +8,7 @@
 
 namespace sio2
 {
-    SIO2::SIO2(iop::IOP_INTC* intc, Gamepad* pad, Memcard* memcard) : 
+    SIO2::SIO2(iop::INTC* intc, Gamepad* pad, Memcard* memcard) : 
         intc(intc), pad(pad), memcard(memcard)
     {
 

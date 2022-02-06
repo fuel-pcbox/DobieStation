@@ -6,8 +6,8 @@
 #include <sstream>
 #include <cstring>
 #include "spu.hpp"
-#include <iop/iop_dma.hpp>
-#include <iop/iop_intc.hpp>
+#include <iop/dma.hpp>
+#include <iop/intc.hpp>
 #include "spu_adpcm.hpp"
 #include <util/audio.hpp>
 #include <util/errors.hpp>
@@ -26,7 +26,7 @@ namespace spu
     uint16_t SPU::core_att[2];
     uint32_t SPU::IRQA[2];
     
-    SPU::SPU(int id, iop::IOP_INTC* intc, iop::IOP_DMA* dma) : 
+    SPU::SPU(int id, iop::INTC* intc, iop::DMA* dma) : 
         id(id), intc(intc), dma(dma)
     { 
 
@@ -1122,17 +1122,17 @@ namespace spu
     void SPU::clear_dma_req()
     {
         if (id == 1)
-            dma->clear_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SPU);
+            dma->clear_DMA_request(iop::DMA_CHANNELS::IOP_SPU);
         else
-            dma->clear_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SPU2);
+            dma->clear_DMA_request(iop::DMA_CHANNELS::IOP_SPU2);
     }
 
     void SPU::set_dma_req()
     {
         if (id == 1)
-            dma->set_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SPU);
+            dma->set_DMA_request(iop::DMA_CHANNELS::IOP_SPU);
         else
-            dma->set_DMA_request(iop::IOP_DMA_CHANNELS::IOP_SPU2);
+            dma->set_DMA_request(iop::DMA_CHANNELS::IOP_SPU2);
     }
 
     uint32_t SPU::get_memin_addr()

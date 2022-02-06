@@ -8,8 +8,8 @@
 
 namespace iop
 {
-    class IOP_INTC;
-    class IOP_DMA;
+    class INTC;
+    class DMA;
 }
 
 namespace spu
@@ -182,8 +182,8 @@ namespace spu
     {
     private:
         unsigned int id;
-        iop::IOP_INTC* intc;
-        iop::IOP_DMA* dma;
+        iop::INTC* intc;
+        iop::DMA* dma;
 
         enum MEMOUT
         {
@@ -277,7 +277,7 @@ namespace spu
         void clear_dma_req();
         void set_dma_req();
     public:
-        SPU(int id, iop::IOP_INTC* intc, iop::IOP_DMA* dma);
+        SPU(int id, iop::INTC* intc, iop::DMA* dma);
 
         bool running_ADMA();
         bool wav_output = false;

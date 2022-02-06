@@ -1,11 +1,11 @@
 #include <cstdio>
 #include "firewire.hpp"
-#include <iop/iop_dma.hpp>
-#include <iop/iop_intc.hpp>
+#include <iop/dma.hpp>
+#include <iop/intc.hpp>
 
 namespace sio2
 {
-    Firewire::Firewire(iop::IOP_INTC* intc, iop::IOP_DMA* dma) : 
+    Firewire::Firewire(iop::INTC* intc, iop::DMA* dma) : 
         intc(intc), dma(dma)
     {
 

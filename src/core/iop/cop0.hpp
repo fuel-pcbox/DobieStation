@@ -3,7 +3,7 @@
 
 namespace iop
 {
-    struct IOP_Cop0_Status
+    struct Cop0_Status
     {
         bool IEc;
         bool KUc;
@@ -16,20 +16,20 @@ namespace iop
         bool bev;
     };
 
-    struct IOP_Cop0_Cause
+    struct Cop0_Cause
     {
         uint8_t code;
         uint8_t int_pending;
         bool bd;
     };
 
-    class IOP_Cop0
+    class Cop0
     {
     public:
-        IOP_Cop0_Status status;
-        IOP_Cop0_Cause cause;
+        Cop0_Status status;
+        Cop0_Cause cause;
         uint32_t EPC;
-        IOP_Cop0();
+        Cop0();
 
         void reset();
 

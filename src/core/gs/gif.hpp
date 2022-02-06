@@ -60,6 +60,7 @@ namespace gs
         void feed_GIF(uint128_t quad);
 
         void flush_path3_fifo();
+    
     public:
         GraphicsInterface(GraphicsSynthesizer* gs, ee::DMAC* dmac);
         void reset();

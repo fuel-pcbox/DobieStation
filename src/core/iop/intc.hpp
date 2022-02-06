@@ -5,8 +5,7 @@
 namespace iop
 {
     class IOP;
-
-    class IOP_INTC
+    class INTC
     {
     private:
         IOP* iop;
@@ -15,7 +14,7 @@ namespace iop
 
         void int_check();
     public:
-        IOP_INTC(IOP* iop);
+        INTC(IOP* iop);
 
         void reset();
         void assert_irq(int id);

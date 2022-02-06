@@ -7,8 +7,8 @@
 
 namespace iop
 {
-    class IOP_INTC;
-    class IOP_DMA;
+    class INTC;
+    class DMA;
 }
 
 namespace core
@@ -80,8 +80,8 @@ namespace cdvd
     private:
         uint64_t last_read;
         uint64_t cycle_count;
-        iop::IOP_INTC* intc;
-        iop::IOP_DMA* dma;
+        iop::INTC* intc;
+        iop::DMA* dma;
         CDVD_DISC_TYPE disc_type;
         std::unique_ptr<CDVD_Container> container;
         size_t file_size;
@@ -143,7 +143,7 @@ namespace cdvd
         void S_command_sub(uint8_t func);
         void add_event(uint64_t cycles);
     public:
-        CDVD_Drive(iop::IOP_INTC* intc, iop::IOP_DMA* dma, core::Scheduler* scheduler);
+        CDVD_Drive(iop::INTC* intc, iop::DMA* dma, core::Scheduler* scheduler);
         ~CDVD_Drive();
 
         std::string get_ps2_exec_path();

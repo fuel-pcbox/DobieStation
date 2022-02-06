@@ -548,14 +548,14 @@ namespace iop
         state.write((char*)&cop0.EPC, sizeof(cop0.EPC));
     }
 
-    void IOP_INTC::load_state(std::ifstream& state)
+    void INTC::load_state(std::ifstream& state)
     {
         state.read((char*)&I_CTRL, sizeof(I_CTRL));
         state.read((char*)&I_STAT, sizeof(I_STAT));
         state.read((char*)&I_MASK, sizeof(I_MASK));
     }
 
-    void IOP_INTC::save_state(std::ofstream& state)
+    void INTC::save_state(std::ofstream& state)
     {
         state.write((char*)&I_CTRL, sizeof(I_CTRL));
         state.write((char*)&I_STAT, sizeof(I_STAT));
@@ -572,7 +572,7 @@ namespace iop
         state.write((char*)&timers, sizeof(timers));
     }
 
-    void IOP_DMA::load_state(std::ifstream& state)
+    void DMA::load_state(std::ifstream& state)
     {
         state.read((char*)&channels, sizeof(channels));
 
@@ -600,7 +600,7 @@ namespace iop
         apply_dma_functions();
     }
 
-    void IOP_DMA::save_state(std::ofstream& state)
+    void DMA::save_state(std::ofstream& state)
     {
         state.write((char*)&channels, sizeof(channels));
 
@@ -613,7 +613,7 @@ namespace iop
         state.write((char*)&queued_size, sizeof(queued_size));
         for (auto it = queued_channels.begin(); it != queued_channels.end(); it++)
         {
-            IOP_DMA_Channel* chan = *it;
+            DMA_Channel* chan = *it;
             state.write((char*)&chan->index, sizeof(chan->index));
         }
 
