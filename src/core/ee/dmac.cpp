@@ -1,10 +1,14 @@
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include "dmac.hpp"
-
+#include <ee/dmac.hpp>
 #include <emulator.hpp>
 #include <util/errors.hpp>
+#include <ee/emotion.hpp>
+#include <ee/vu/vu.hpp>
+#include <ee/vu/vif.hpp>
+#include <gs/gif.hpp>
+#include <ee/ipu/ipu.hpp>
+#include <sif.hpp>
+#include <algorithm>
+#include <fmt/core.h>
 
 namespace ee
 {
@@ -59,31 +63,28 @@ namespace ee
         if ((addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000)
         {
             addr &= 0x3FF0;
-            return *(uint128_t*)&e->cpu.scratchpad[addr];
+            return *(uint128_t*)&e->cpu->scratchpad[addr];
         }
         else if (addr >= 0x11000000 && addr < 0x11010000)
         {
-            auto& vu0 = e->vu0;
-            auto& vu1 = e->vu1;
-
             if (addr < 0x11004000)
             {
-                return vu0.read_instr<uint128_t>(addr);
+                return e->vu0->read_instr<uint128_t>(addr);
             }
             if (addr < 0x11008000)
             {
-                return vu0.read_mem<uint128_t>(addr);
+                return e->vu0->read_mem<uint128_t>(addr);
             }
             if (addr < 0x1100C000)
             {
-                return vu1.read_instr<uint128_t>(addr);
+                return e->vu1->read_instr<uint128_t>(addr);
             }
-            return vu1.read_mem<uint128_t>(addr);
+            return e->vu1->read_mem<uint128_t>(addr);
         }
         else
         {
             addr &= 0x01FFFFF0;
-            return *(uint128_t*)&e->cpu.rdram[addr];
+            return *(uint128_t*)&e->cpu->rdram[addr];
         }
     }
 
@@ -92,35 +93,33 @@ namespace ee
         if ((addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000)
         {
             addr &= 0x3FF0;
-            *(uint128_t*)&e->cpu.scratchpad[addr] = data;
+            *(uint128_t*)&e->cpu->scratchpad[addr] = data;
         }
         else if (addr >= 0x11000000 && addr < 0x11010000)
         {
-            auto& vu0 = e->vu0;
-            auto& vu1 = e->vu1;
-
             if (addr < 0x11004000)
             {
-                vu0.write_instr<uint128_t>(addr, data);
+                e->vu0->write_instr<uint128_t>(addr, data);
                 return;
             }
             if (addr < 0x11008000)
             {
-                vu0.write_mem<uint128_t>(addr, data);
+                e->vu0->write_mem<uint128_t>(addr, data);
                 return;
             }
             if (addr < 0x1100C000)
             {
-                vu1.write_instr<uint128_t>(addr, data);
+                e->vu1->write_instr<uint128_t>(addr, data);
                 return;
             }
-            vu1.write_mem<uint128_t>(addr, data);
+            
+            e->vu1->write_mem<uint128_t>(addr, data);
             return;
         }
         else
         {
             addr &= 0x01FFFFF0;
-            *(uint128_t*)&e->cpu.rdram[addr] = data;
+            *(uint128_t*)&e->cpu->rdram[addr] = data;
         }
     }
 
@@ -213,7 +212,7 @@ namespace ee
             }
         }
 
-        e->cpu.set_int1_signal(int1_signal);
+        e->cpu->set_int1_signal(int1_signal);
     }
 
     void DMAC::apply_dma_funcs()
@@ -239,7 +238,7 @@ namespace ee
             int quads_to_transfer = std::min(channels[VIF0].quadword_count, max_qwc);
             while (count < quads_to_transfer)
             {
-                if (!vif0.feed_DMA(fetch128(channels[VIF0].address)))
+                if (!vif0->feed_DMA(fetch128(channels[VIF0].address)))
                     break;
                 advance_source_dma(VIF0);
                 count++;
@@ -257,7 +256,7 @@ namespace ee
                 uint128_t DMAtag = fetch128(channels[VIF0].tag_address);
                 if (channels[VIF0].control & (1 << 6))
                 {
-                    if (!vif0.transfer_DMAtag(DMAtag))
+                    if (!vif0->transfer_DMAtag(DMAtag))
                     {
                         arbitrate();
                         return count;
@@ -308,12 +307,12 @@ namespace ee
                 }
                 if (channels[VIF1].control & 0x1)
                 {
-                    if (!vif1.feed_DMA(fetch128(channels[VIF1].address)))
+                    if (!vif1->feed_DMA(fetch128(channels[VIF1].address)))
                         break;
                 }
                 else
                 {
-                    auto quad_data = vif1.readFIFO();
+                    auto quad_data = vif1->readFIFO();
                     if (std::get<1>(quad_data))
                         store128(channels[VIF1].address, std::get<0>(quad_data));
                     else
@@ -343,7 +342,7 @@ namespace ee
                 uint128_t DMAtag = fetch128(channels[VIF1].tag_address);
                 if (channels[VIF1].control & (1 << 6))
                 {
-                    if (!vif1.transfer_DMAtag(DMAtag))
+                    if (!vif1->transfer_DMAtag(DMAtag))
                     {
                         arbitrate();
                         return count;
@@ -408,7 +407,7 @@ namespace ee
         int count = 0;
 
         auto& gif = e->gif;
-        gif.dma_running(true);
+        gif->dma_running(true);
 
         if (channels[GIF].quadword_count)
         {
@@ -424,7 +423,7 @@ namespace ee
                         printf("[DMAC] GIF DMA Stall at %x STADR = %x\n", channels[GIF].address, STADR);
                         interrupt_stat.channel_stat[DMA_STALL] = true;
                         int1_check();
-                        gif.deactivate_PATH(3);
+                        gif->deactivate_PATH(3);
                         channels[GIF].has_dma_stalled = true;
                     }
 
@@ -439,14 +438,14 @@ namespace ee
                 if (!mfifo_handler(GIF))
                 {
                     arbitrate();
-                    gif.deactivate_PATH(3);
+                    gif->deactivate_PATH(3);
                     return count;
                 }
 
             
-                if (!gif.fifo_full() && !gif.fifo_draining())
+                if (!gif->fifo_full() && !gif->fifo_draining())
                 {
-                    gif.send_PATH3(fetch128(channels[GIF].address));
+                    gif->send_PATH3(fetch128(channels[GIF].address));
                     advance_source_dma(GIF);
                     count++;
                 }
@@ -461,7 +460,7 @@ namespace ee
         {
             if (channels[GIF].tag_end)
             {
-                gif.dma_running(false);
+                gif->dma_running(false);
                 transfer_end(GIF);
             }
             else
@@ -469,7 +468,7 @@ namespace ee
                 if (!mfifo_handler(GIF))
                 {
                     arbitrate();
-                    gif.deactivate_PATH(3);
+                    gif->deactivate_PATH(3);
                     return count;
                 }
                 handle_source_chain(GIF);
@@ -541,9 +540,9 @@ namespace ee
             int quads_to_transfer = std::min(channels[IPU_FROM].quadword_count, max_qwc);
             while (count < quads_to_transfer)
             {
-                if (!ipu.can_read_FIFO())
+                if (!ipu->can_read_FIFO())
                     break;
-                uint128_t data = ipu.read_FIFO();
+                uint128_t data = ipu->read_FIFO();
                 store128(channels[IPU_FROM].address, data);
 
                 advance_dest_dma(IPU_FROM);
@@ -577,9 +576,9 @@ namespace ee
             int quads_to_transfer = std::min(channels[IPU_TO].quadword_count, max_qwc);
             while (count < quads_to_transfer)
             {
-                if (!ipu.can_write_FIFO())
+                if (!ipu->can_write_FIFO())
                     break;
-                ipu.write_FIFO(fetch128(channels[IPU_TO].address));
+                ipu->write_FIFO(fetch128(channels[IPU_TO].address));
                 advance_source_dma(IPU_TO);
                 count++;
             }
@@ -601,13 +600,13 @@ namespace ee
     {
         uint32_t max_qwc = 8 - ((channels[EE_SIF0].address >> 4) & 0x7);
         auto& sif = e->sif;
-        int quads_to_transfer = std::min({channels[EE_SIF0].quadword_count, max_qwc, sif.get_SIF0_size() / 4U});
+        int quads_to_transfer = std::min({channels[EE_SIF0].quadword_count, max_qwc, sif->get_SIF0_size() / 4U});
         int count = 0;
         while (count < quads_to_transfer)
         {
             uint128_t quad;
             for (int i = 0; i < 4; i++)
-                quad._u32[i] = sif.read_SIF0();
+                quad._u32[i] = sif->read_SIF0();
             store128(channels[EE_SIF0].address, quad);
             advance_dest_dma(EE_SIF0);
             count++;
@@ -620,10 +619,10 @@ namespace ee
                 transfer_end(EE_SIF0);
                 return count;
             }
-            else if (sif.get_SIF0_size() >= 2)
+            else if (sif->get_SIF0_size() >= 2)
             {
-                uint64_t DMAtag = sif.read_SIF0();
-                DMAtag |= (uint64_t)sif.read_SIF0() << 32;
+                uint64_t DMAtag = sif->read_SIF0();
+                DMAtag |= (uint64_t)sif->read_SIF0() << 32;
                 printf("[DMAC] SIF0 tag: $%08lX_%08lX\n", DMAtag >> 32, DMAtag & 0xFFFFFFFF);
 
                 channels[EE_SIF0].quadword_count = DMAtag & 0xFFFF;
@@ -723,7 +722,7 @@ namespace ee
 
             while (count < quads_to_transfer)
             {
-                sif.write_SIF1(fetch128(channels[EE_SIF1].address));
+                sif->write_SIF1(fetch128(channels[EE_SIF1].address));
                 advance_source_dma(EE_SIF1);
                 count++;
             }
@@ -1453,7 +1452,7 @@ namespace ee
                     }
                     else
                     {
-                        e->gif.dma_running(false);
+                        e->gif->dma_running(false);
                         channels[GIF].started = false;
                     }
                 }
@@ -1463,7 +1462,7 @@ namespace ee
                     channels[GIF].started = (channels[GIF].control & 0x100);
                     if (!channels[GIF].started)
                     {
-                        e->gif.dma_running(false);
+                        e->gif->dma_running(false);
                         deactivate_channel(GIF);
                     }
                 }

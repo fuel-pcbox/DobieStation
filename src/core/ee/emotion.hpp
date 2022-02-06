@@ -85,7 +85,6 @@ namespace ee
     {
     public:
         core::Emulator* e;
-        core::SubsystemInterface* sif;
 
         uint64_t cycle_count;
         int32_t cycles_to_run;
@@ -93,8 +92,6 @@ namespace ee
 
         std::unique_ptr<Cop0> cp0;
         std::unique_ptr<Cop1> fpu;
-        vu::VectorUnit* vu0;
-        vu::VectorUnit* vu1;
 
         uint8_t** tlb_map;
 

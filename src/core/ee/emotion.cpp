@@ -18,11 +18,6 @@ namespace ee
         /* Construct the EE coprocessors */
         cp0 = std::make_unique<Cop0>(e);
         fpu = std::make_unique<Cop1>();
-        
-        /* Cache frequently used components */
-        sif = &e->sif;
-        vu0 = &e->vu0;
-        vu1 = &e->vu1;
 
         /* Allocate EE memory caches */
         rdram = new uint8_t[32 * 1024 * 1024];
@@ -238,7 +233,7 @@ namespace ee
 
         if (wait_for_VU0)
         {
-            if (vu0->is_running())
+            if (e->vu0->is_running())
             {
                 cycle_count += cycles_to_run;
                 cycles_to_run = 0;
@@ -292,7 +287,7 @@ namespace ee
         }
         for (int i = 0; i < 32; i++)
         {
-            printf("vf%02d:$%08X_%08X_%08X_%08X", i, vu0->get_gpr_u(i, 3), vu0->get_gpr_u(i, 2), vu0->get_gpr_u(i, 1), vu0->get_gpr_u(i, 0));
+            printf("vf%02d:$%08X_%08X_%08X_%08X", i, e->vu0->get_gpr_u(i, 3), e->vu0->get_gpr_u(i, 2), e->vu0->get_gpr_u(i, 1), e->vu0->get_gpr_u(i, 0));
             if ((i & 1) == 1)
                 printf("\n");
             else
@@ -313,12 +308,12 @@ namespace ee
 
     bool EmotionEngine::vu0_wait()
     {
-        return vu0->is_running();
+        return e->vu0->is_running();
     }
 
     bool EmotionEngine::check_interlock()
     {
-        if (!vu0->is_running())
+        if (!e->vu0->is_running())
             return false;
 
         return e->interlock_cop2_check(true);
@@ -366,7 +361,7 @@ namespace ee
 
     vu::VectorUnit& EmotionEngine::get_VU0()
     {
-        return *vu0;
+        return *e->vu0.get();
     }
 
     uint32_t EmotionEngine::read_instr(uint32_t address)
@@ -687,13 +682,13 @@ namespace ee
                 }
                 if (cop_reg == 29)
                 {
-                    bark = vu0->is_running();
-                    bark |= vu1->is_running() << 8;
-                    bark |= vu0->stopped_by_tbit() << 2;
-                    bark |= vu1->stopped_by_tbit() << 10;
+                    bark = e->vu0->is_running();
+                    bark |= e->vu1->is_running() << 8;
+                    bark |= e->vu0->stopped_by_tbit() << 2;
+                    bark |= e->vu1->stopped_by_tbit() << 10;
                 }
                 else
-                    bark = (int32_t)vu0->cfc(cop_reg);
+                    bark = (int32_t)e->vu0->cfc(cop_reg);
                 break;
         }
         set_gpr<int64_t>(reg, bark);
@@ -719,9 +714,9 @@ namespace ee
                     clear_interlock();
                 }
                 if (cop_reg == 31)
-                    vu1->start_program(bark << 3, 0);
+                    e->vu1->start_program(bark << 3, 0);
                 else
-                    vu0->ctc(cop_reg, bark);
+                    e->vu0->ctc(cop_reg, bark);
                 break;
         }
     }
@@ -824,7 +819,7 @@ namespace ee
         {
             uint32_t bark = read32(addr + (i << 2));
             //printf("$%08X ", bark);
-            vu0->set_gpr_u(index, i, bark);
+            e->vu0->set_gpr_u(index, i, bark);
         }
         //printf("\n");
     }
@@ -840,7 +835,7 @@ namespace ee
         //printf("SQC2 $%08X: ", addr);
         for (int i = 0; i < 4; i++)
         {
-            uint32_t bark = vu0->get_gpr_u(index, i);
+            uint32_t bark = e->vu0->get_gpr_u(index, i);
             //printf("$%08X ", bark);
             write32(addr + (i << 2), bark);
         }
@@ -949,7 +944,7 @@ namespace ee
                 break;
             }
             case 0x77: // sceSifSetDma
-                sif->ee_log_sifrpc(get_gpr<uint32_t>(4), get_gpr<int>(5));
+                e->sif->ee_log_sifrpc(get_gpr<uint32_t>(4), get_gpr<int>(5));
                 break;
             case 0x7C: // Deci2Call
                 deci2call(get_gpr<uint32_t>(4), get_gpr<uint32_t>(5));
@@ -1208,9 +1203,9 @@ namespace ee
     {
         bool passed = false;
         if (test_true)
-            passed = vu1->is_running();
+            passed = e->vu1->is_running();
         else
-            passed = !vu1->is_running();
+            passed = !e->vu1->is_running();
 
         if (likely)
             branch_likely(passed, offset);
@@ -1222,7 +1217,7 @@ namespace ee
     {
         for (int i = 0; i < 4; i++)
         {
-            set_gpr<uint32_t>(dest, vu0->get_gpr_u(cop_reg, i), i);
+            set_gpr<uint32_t>(dest, e->vu0->get_gpr_u(cop_reg, i), i);
         }
     }
 
@@ -1231,13 +1226,13 @@ namespace ee
         for (int i = 0; i < 4; i++)
         {
             uint32_t bark = get_gpr<uint32_t>(source, i);
-            vu0->set_gpr_u(cop_reg, i, bark);
+            e->vu0->set_gpr_u(cop_reg, i, bark);
         }
     }
 
     void EmotionEngine::cop2_updatevu0()
     {
-        if (!vu0->is_running())
+        if (!e->vu0->is_running())
         {
             uint32_t last_instr = read32(get_PC_now() - 4);
             uint32_t upper_instr = (last_instr >> 26);
@@ -1248,11 +1243,11 @@ namespace ee
             {
                 set_cycle_count(get_cycle_count() + 1);
             }
-            vu0->cop2_updatepipes();
+            e->vu0->cop2_updatepipes();
         }
-        else if (!vu0->is_interlocked())
+        else if (!e->vu0->is_interlocked())
         {
-            vu0->run_func(*vu0);
+            e->vu0->run_func(*e->vu0.get());
         }
     }
 }

@@ -1,6 +1,26 @@
+#include <emulator.hpp>
+#include <scheduler.hpp>
+#include <util/errors.hpp>
+#include <ee/dmac.hpp>
+#include <ee/emotion.hpp>
+#include <ee/intc.hpp>
+#include <ee/ipu/ipu.hpp>
+#include <ee/timers.hpp>
+#include <ee/vu/vif.hpp>
+#include <ee/vu/vu.hpp>
+#include <iop/iop.hpp>
+#include <iop/dma.hpp>
+#include <iop/intc.hpp>
+#include <iop/timers.hpp>
+#include <iop/sio2/memcard.hpp>
+#include <iop/sio2/sio2.hpp>
+#include <iop/spu/spu.hpp>
+#include <iop/sio2/firewire.hpp>
+#include <gs/gs.hpp>
+#include <gs/gif.hpp>
+#include <sif.hpp>
 #include <fstream>
 #include <cstring>
-#include "emulator.hpp"
 
 /* DobieStation version */
 constexpr uint32_t VER_MAJOR = 0;
@@ -71,50 +91,50 @@ namespace core
         state.read((char*)&frames, sizeof(frames));
 
         //RAM
-        state.read((char*)cpu.rdram, 1024 * 1024 * 32);
-        state.read((char*)iop.ram, 1024 * 1024 * 2);
+        state.read((char*)cpu->rdram, 1024 * 1024 * 32);
+        state.read((char*)iop->ram, 1024 * 1024 * 2);
         state.read((char*)SPU_RAM, 1024 * 1024 * 2);
-        state.read((char*)cpu.scratchpad, 1024 * 16);
-        state.read((char*)iop.scratchpad, 1024);
-        state.read((char*)&iop.scratchpad_start, sizeof(iop.scratchpad_start));
+        state.read((char*)cpu->scratchpad, 1024 * 16);
+        state.read((char*)iop->scratchpad, 1024);
+        state.read((char*)&iop->scratchpad_start, sizeof(iop->scratchpad_start));
 
         //CPUs
-        cpu.load_state(state);
-        cpu.cp0->load_state(state);
-        cpu.fpu->load_state(state);
-        iop.load_state(state);
-        vu0.load_state(state);
-        vu1.load_state(state);
+        cpu->load_state(state);
+        cpu->cp0->load_state(state);
+        cpu->fpu->load_state(state);
+        iop->load_state(state);
+        vu0->load_state(state);
+        vu1->load_state(state);
 
         //Interrupt registers
-        intc.load_state(state);
-        iop_intc.load_state(state);
+        intc->load_state(state);
+        iop_intc->load_state(state);
 
         //Timers
-        timers.load_state(state);
-        iop_timers.load_state(state);
+        timers->load_state(state);
+        iop_timers->load_state(state);
 
         //DMA
-        dmac.load_state(state);
-        iop_dma.load_state(state);
+        dmac->load_state(state);
+        iop_dma->load_state(state);
 
         //"Interfaces"
-        gif.load_state(state);
-        sif.load_state(state);
-        vif0.load_state(state);
-        vif1.load_state(state);
+        gif->load_state(state);
+        sif->load_state(state);
+        vif0->load_state(state);
+        vif1->load_state(state);
 
         //CDVD
-        cdvd.load_state(state);
+        cdvd->load_state(state);
 
         //GS
         //Important note - this serialization function is located in gs.cpp as it contains a lot of thread-specific details
-        gs.load_state(state);
+        gs->load_state(state);
 
-        scheduler.load_state(state);
-        pad.load_state(state);
-        spu.load_state(state);
-        spu2.load_state(state);
+        scheduler->load_state(state);
+        pad->load_state(state);
+        spu->load_state(state);
+        spu2->load_state(state);
 
         state.close();
         printf("[Emulator] Success!\n");
@@ -146,50 +166,50 @@ namespace core
         state.write((char*)&frames, sizeof(frames));
 
         //RAM
-        state.write((char*)cpu.rdram, 1024 * 1024 * 32);
-        state.write((char*)iop.ram, 1024 * 1024 * 2);
+        state.write((char*)cpu->rdram, 1024 * 1024 * 32);
+        state.write((char*)iop->ram, 1024 * 1024 * 2);
         state.write((char*)SPU_RAM, 1024 * 1024 * 2);
-        state.write((char*)cpu.scratchpad, 1024 * 16);
-        state.write((char*)iop.scratchpad, 1024);
-        state.write((char*)&iop.scratchpad_start, sizeof(iop.scratchpad_start));
+        state.write((char*)cpu->scratchpad, 1024 * 16);
+        state.write((char*)iop->scratchpad, 1024);
+        state.write((char*)&iop->scratchpad_start, sizeof(iop->scratchpad_start));
 
         //CPUs
-        cpu.save_state(state);
-        cpu.cp0->save_state(state);
-        cpu.fpu->save_state(state);
-        iop.save_state(state);
-        vu0.save_state(state);
-        vu1.save_state(state);
+        cpu->save_state(state);
+        cpu->cp0->save_state(state);
+        cpu->fpu->save_state(state);
+        iop->save_state(state);
+        vu0->save_state(state);
+        vu1->save_state(state);
 
         //Interrupt registers
-        intc.save_state(state);
-        iop_intc.save_state(state);
+        intc->save_state(state);
+        iop_intc->save_state(state);
 
         //Timers
-        timers.save_state(state);
-        iop_timers.save_state(state);
+        timers->save_state(state);
+        iop_timers->save_state(state);
 
         //DMA
-        dmac.save_state(state);
-        iop_dma.save_state(state);
+        dmac->save_state(state);
+        iop_dma->save_state(state);
 
         //"Interfaces"
-        gif.save_state(state);
-        sif.save_state(state);
-        vif0.save_state(state);
-        vif1.save_state(state);
+        gif->save_state(state);
+        sif->save_state(state);
+        vif0->save_state(state);
+        vif1->save_state(state);
 
         //CDVD
-        cdvd.save_state(state);
+        cdvd->save_state(state);
 
         //GS
         //Important note - this serialization function is located in gs.cpp as it contains a lot of thread-specific details
-        gs.save_state(state);
+        gs->save_state(state);
 
-        scheduler.save_state(state);
-        pad.save_state(state);
-        spu.save_state(state);
-        spu2.save_state(state);
+        scheduler->save_state(state);
+        pad->save_state(state);
+        spu->save_state(state);
+        spu2->save_state(state);
 
         state.close();
         printf("Success!\n");

@@ -1,7 +1,6 @@
 #include <cmath>
 #include <chrono>
 #include <fstream>
-
 #include "emuthread.hpp"
 
 using namespace std;
@@ -116,8 +115,9 @@ bool EmuThread::gsdump_read(const char *name)
         gsdump.open(name,ios::binary);
         if (!gsdump.is_open())
             return 1;
-        e.get_gs().reset();
-        e.get_gs().load_state(gsdump);
+        
+        e.get_gs()->reset();
+        e.get_gs()->load_state(gsdump);
 
         printf("loaded gsdump\n");
         gsdump_reading = true;
@@ -168,12 +168,12 @@ void EmuThread::gsdump_run()
             switch (data.type)
             {
             case gs::set_xyz_t:
-                    e.get_gs().send_message(data);
-                    e.get_gs().wake_gs_thread();
+                    e.get_gs()->send_message(data);
+                    e.get_gs()->wake_gs_thread();
                     if (frame_advance && data.payload.xyz_payload.drawing_kick && --draws_sent <= 0)
                     {
                         uint16_t w, h;
-                        uint32_t* frame = e.get_gs().render_partial_frame(w, h);
+                        uint32_t* frame = e.get_gs()->render_partial_frame(w, h);
                         emit completed_frame(frame, w, h, w, h);
                         pause(PAUSE_EVENT::FRAME_ADVANCE);
                         return;
@@ -182,12 +182,12 @@ void EmuThread::gsdump_run()
             case gs::render_crt_t:
                 {
                     printf("gsdump frame render\n");
-                    e.get_gs().render_CRT();
+                    e.get_gs()->render_CRT();
                     int w, h, new_w, new_h;
                     e.get_inner_resolution(w, h);
                     e.get_resolution(new_w, new_h);
 
-                    emit completed_frame(e.get_gs().get_framebuffer(), w, h, new_w, new_h);
+                    emit completed_frame(e.get_gs()->get_framebuffer(), w, h, new_w, new_h);
                     printf("gsdump frame render complete\n");
                     pause(PAUSE_EVENT::FRAME_ADVANCE);
                     return;
@@ -202,7 +202,7 @@ void EmuThread::gsdump_run()
             case gs::load_state_t:
                     Errors::die("save_state save/load during gsdump not supported!");
                 default:
-                    e.get_gs().send_message(data);
+                    e.get_gs()->send_message(data);
                     //e.get_gs().wake_gs_thread();
             }
             if (gsdump_eof())

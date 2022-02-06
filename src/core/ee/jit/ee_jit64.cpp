@@ -5,6 +5,7 @@
 #include <ee/vu/vu.hpp>
 #include <gs/gif.hpp>
 #include <util/errors.hpp>
+#include <emulator.hpp>
 
 /**
     * Calling convention notes (needed for calling C++ functions within generated code)
@@ -1445,20 +1446,20 @@ namespace ee
         uint64_t EE_JIT64::get_vf_addr(const EmotionEngine&ee, int index) const
         {
             if (index < 32)
-                return (uint64_t)&ee.vu0->gpr[index];
+                return (uint64_t)&ee.e->vu0->gpr[index];
 
             switch (index)
             {
                 case VU_SpecialReg::ACC:
-                    return (uint64_t)&ee.vu0->ACC;
+                    return (uint64_t)&ee.e->vu0->ACC;
                 case VU_SpecialReg::I:
-                    return (uint64_t)&ee.vu0->I;
+                    return (uint64_t)&ee.e->vu0->I;
                 case VU_SpecialReg::Q:
-                    return (uint64_t)&ee.vu0->Q;
+                    return (uint64_t)&ee.e->vu0->Q;
                 case VU_SpecialReg::P:
-                    return (uint64_t)&ee.vu0->P;
+                    return (uint64_t)&ee.e->vu0->P;
                 case VU_SpecialReg::R:
-                    return (uint64_t)&ee.vu0->R;
+                    return (uint64_t)&ee.e->vu0->R;
                 default:
                     Errors::die("[EE_JIT64] get_vf_addr error: Unrecognized reg %d", index);
             }

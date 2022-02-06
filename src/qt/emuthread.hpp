@@ -2,12 +2,11 @@
 #define EMUTHREAD_HPP
 
 #include <chrono>
-
 #include <QMutex>
 #include <QThread>
 #include <string>
-
 #include "../core/emulator.hpp"
+#include "../core/gs/gs.hpp"
 #include "../core/util/errors.hpp"
 
 #define GSDUMP_BUFFERED_MESSAGES 100000

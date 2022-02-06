@@ -1,6 +1,7 @@
 #include <ee/cop0.hpp>
 #include <ee/dmac.hpp>
 #include <emulator.hpp>
+#include <ee/emotion.hpp>
 
 namespace ee
 {
@@ -197,8 +198,8 @@ namespace ee
     bool Cop0::get_condition()
     {
         auto& dmac = e->dmac;
-        uint32_t STAT = dmac.read32(0x1000E010) & 0x3FF;
-        uint32_t PCR = dmac.read32(0x1000E020) & 0x3FF;
+        uint32_t STAT = dmac->read32(0x1000E010) & 0x3FF;
+        uint32_t PCR = dmac->read32(0x1000E020) & 0x3FF;
         return ((~PCR | STAT) & 0x3FF) == 0x3FF;
     }
 
@@ -426,7 +427,7 @@ namespace ee
         uint32_t odd_virt_addr = odd_virt_page * 4096;
         uint32_t odd_phy_addr = (entry->pfn[1] >> entry->page_shift) * entry->page_size;
 
-        uint8_t* spr = &e->cpu.scratchpad[0];
+        uint8_t* spr = &e->cpu->scratchpad[0];
         if (entry->is_scratchpad)
         {
             if (entry->valid[0])
@@ -500,7 +501,7 @@ namespace ee
         if (paddr < 0x10000000)
         {
             paddr &= (1024 * 1024 * 32) - 1;
-            return e->cpu.rdram + paddr;
+            return e->cpu->rdram + paddr;
         }
 
         if (paddr >= 0x1FC00000 && paddr < 0x20000000)

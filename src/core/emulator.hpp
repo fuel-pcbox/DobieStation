@@ -1,31 +1,67 @@
 #pragma once
 #include <fstream>
 #include <functional>
-
-#include "ee/dmac.hpp"
-#include "ee/emotion.hpp"
-#include "ee/intc.hpp"
-#include "ee/ipu/ipu.hpp"
-#include "ee/timers.hpp"
-#include "ee/vu/vif.hpp"
-#include "ee/vu/vu.hpp"
-
-#include "iop/cdvd/cdvd.hpp"
-#include "iop/sio2/gamepad.hpp"
-#include "iop/iop.hpp"
-#include "iop/dma.hpp"
-#include "iop/intc.hpp"
-#include "iop/timers.hpp"
-#include "iop/sio2/memcard.hpp"
-#include "iop/sio2/sio2.hpp"
-#include "iop/spu/spu.hpp"
-#include "iop/sio2/firewire.hpp"
-
+#include <memory>
 #include <util/int128.hpp>
-#include <gs/gs.hpp>
-#include <gs/gif.hpp>
-#include <sif.hpp>
-#include "scheduler.hpp"
+#include <iop/sio2/gamepad.hpp>
+#include <iop/cdvd/cdvd.hpp>
+
+namespace core
+{
+    class Scheduler;
+    class SubsystemInterface;
+}
+
+namespace ee
+{
+    class EmotionEngine;
+    class EmotionTiming;
+    class INTC;
+    class DMAC;
+}
+
+namespace iop
+{
+    class IOP;
+    class IOPTiming;
+    class INTC;
+    class DMA;
+}
+
+namespace sio2
+{
+    class SIO2;
+    class Firewire;
+    class Memcard;
+    class Gamepad;
+}
+
+namespace gs
+{
+    class GraphicsSynthesizer;
+    class GraphicsInterface;
+}
+
+namespace ipu
+{
+    class ImageProcessingUnit;
+}
+
+namespace vu
+{
+    class VectorInterface;
+    class VectorUnit;
+}
+
+namespace spu
+{
+    class SPU;
+}
+
+namespace cdvd
+{
+    class CDVD_Drive;
+}
 
 namespace core
 {
@@ -62,26 +98,29 @@ namespace core
         std::atomic_bool save_requested, load_requested, gsdump_requested, gsdump_single_frame, gsdump_running;
         std::string save_state_path;
         int frames;
-        cdvd::CDVD_Drive cdvd;
-        ee::DMAC dmac;
-        ee::EmotionEngine cpu;
-        ee::EmotionTiming timers;
-        sio2::Firewire firewire;
-        sio2::Gamepad pad;
-        gs::GraphicsSynthesizer gs;
-        gs::GraphicsInterface gif;
-        iop::IOP iop;
-        iop::DMA iop_dma;
-        iop::IOPTiming iop_timers;
-        ee::INTC intc;
-        ipu::ImageProcessingUnit ipu;
-        sio2::Memcard memcard;
-        Scheduler scheduler;
-        sio2::SIO2 sio2;
-        spu::SPU spu, spu2;
-        SubsystemInterface sif;
-        vu::VectorInterface vif0, vif1;
-        vu::VectorUnit vu0, vu1;
+        
+        /* Emulation components */
+        std::unique_ptr<cdvd::CDVD_Drive> cdvd;
+        std::unique_ptr<ee::DMAC> dmac;
+        std::unique_ptr<ee::EmotionEngine> cpu;
+        std::unique_ptr<ee::EmotionTiming> timers;
+        std::unique_ptr<ee::INTC> intc;
+        std::unique_ptr<sio2::Firewire> firewire;
+        std::unique_ptr<sio2::Gamepad> pad;
+        std::unique_ptr<gs::GraphicsSynthesizer> gs;
+        std::unique_ptr<gs::GraphicsInterface> gif;
+        std::unique_ptr<iop::IOP> iop;
+        std::unique_ptr<iop::DMA> iop_dma;
+        std::unique_ptr<iop::IOPTiming> iop_timers;
+        std::unique_ptr<iop::INTC> iop_intc;
+        std::unique_ptr<ipu::ImageProcessingUnit> ipu;
+        std::unique_ptr<sio2::Memcard> memcard;
+        std::unique_ptr<Scheduler> scheduler;
+        std::unique_ptr<sio2::SIO2> sio2;
+        std::unique_ptr<spu::SPU> spu, spu2;
+        std::unique_ptr<SubsystemInterface> sif;
+        std::unique_ptr<vu::VectorInterface> vif0, vif1;
+        std::unique_ptr<vu::VectorUnit> vu0, vu1;
 
         int vblank_start_id, vblank_end_id, spu_event_id, hblank_event_id, gs_vblank_event_id;
 
@@ -98,8 +137,6 @@ namespace core
         uint8_t rdram_sdevid;
 
         uint8_t IOP_POST;
-
-        iop::INTC iop_intc;
 
         SKIP_HACK skip_BIOS_hack;
 
@@ -179,7 +216,7 @@ namespace core
         void iop_puts();
 
         void test_iop();
-        gs::GraphicsSynthesizer& get_gs();//used for gs dumps
+        gs::GraphicsSynthesizer* get_gs();//used for gs dumps
 
         void set_wav_output(bool state);
     };

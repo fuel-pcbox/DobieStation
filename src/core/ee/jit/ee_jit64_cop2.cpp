@@ -1,6 +1,7 @@
 #include <cmath>
 #include <algorithm>
 #include "ee_jit64.hpp"
+#include <emulator.hpp>
 
 namespace ee
 {
@@ -95,7 +96,7 @@ namespace ee
             emitter.OR32_REG(R15, REG_64::RAX);
             emitter.AND32_EAX((field << 4) | field);
 
-            emitter.load_addr((uint64_t)&ee.vu0->new_MAC_flags, R15);
+            emitter.load_addr((uint64_t)&ee.e->vu0->new_MAC_flags, R15);
             emitter.MOV16_TO_MEM(REG_64::RAX, R15);
 
             free_xmm_reg(ee, XMM0);
@@ -160,7 +161,7 @@ namespace ee
 
         void EE_JIT64::vabs(EmotionEngine& ee, IR::Instruction& instr)
         {
-            prepare_abi((uint64_t)ee.vu0);
+            prepare_abi((uint64_t)ee.e->vu0.get());
             call_abi_func((uint64_t)&vu_flush_pipes);
 
             uint8_t field = convert_field(instr.get_field());
@@ -181,7 +182,7 @@ namespace ee
 
         void EE_JIT64::vadd_vectors(EmotionEngine& ee, IR::Instruction& instr)
         {
-            prepare_abi((uint64_t)ee.vu0);
+            prepare_abi((uint64_t)ee.e->vu0.get());
             call_abi_func((uint64_t)&vu_flush_pipes);
 
             uint8_t field = convert_field(instr.get_field());
@@ -212,7 +213,7 @@ namespace ee
 
         void EE_JIT64::vmul_vectors(EmotionEngine& ee, IR::Instruction& instr)
         {
-            prepare_abi((uint64_t)ee.vu0);
+            prepare_abi((uint64_t)ee.e->vu0.get());
             call_abi_func((uint64_t)&vu_flush_pipes);
 
             uint8_t field = convert_field(instr.get_field());
@@ -243,7 +244,7 @@ namespace ee
 
         void EE_JIT64::vsub_vectors(EmotionEngine& ee, IR::Instruction& instr)
         {
-            prepare_abi((uint64_t)ee.vu0);
+            prepare_abi((uint64_t)ee.e->vu0.get());
             call_abi_func((uint64_t)&vu_flush_pipes);
 
             uint8_t field = convert_field(instr.get_field());

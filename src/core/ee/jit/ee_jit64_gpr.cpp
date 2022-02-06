@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "ee_jit64.hpp"
 #include <ee/vu/vu.hpp>
+#include <emulator.hpp>
 
 namespace ee
 {
@@ -139,7 +140,7 @@ namespace ee
             REG_64 R15 = lalloc_int_reg(ee, 0, REG_TYPE::INTSCRATCHPAD, REG_STATE::SCRATCHPAD);
 
             // Conditionally move the success or failure destination into ee.PC
-            emitter.load_addr((uint64_t)&ee.vu1->running, REG_64::RAX);
+            emitter.load_addr((uint64_t)&ee.e->vu1->running, REG_64::RAX);
             emitter.MOV8_FROM_MEM(REG_64::RAX, REG_64::RAX);
             emitter.MOV8_REG_IMM(instr.get_field(), R15);
             emitter.CMP8_REG(REG_64::RAX, R15);
@@ -1723,17 +1724,17 @@ namespace ee
 
         void EE_JIT64::vcall_ms(EmotionEngine& ee, IR::Instruction& instr)
         {
-            prepare_abi((uint64_t)ee.vu0);
+            prepare_abi((uint64_t)ee.e->vu0.get());
             prepare_abi(instr.get_source());
             call_abi_func((uint64_t)vu0_start_program);
         }
 
         void EE_JIT64::vcall_msr(EmotionEngine& ee, IR::Instruction& instr)
         {
-            prepare_abi((uint64_t)ee.vu0);
+            prepare_abi((uint64_t)ee.e->vu0.get());
             call_abi_func((uint64_t)vu0_read_CMSAR0_shl3);
 
-            prepare_abi((uint64_t)ee.vu0);
+            prepare_abi((uint64_t)ee.e->vu0.get());
             prepare_abi_reg(REG_64::RAX);
             call_abi_func((uint64_t)vu0_start_program);
         }

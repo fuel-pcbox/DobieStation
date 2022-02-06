@@ -1,3 +1,11 @@
+#include <ee/vu/vu.hpp>
+#include <ee/vu/vu_interpreter.hpp>
+#include <ee/vu/vu_jit.hpp>
+#include <ee/vu/vu_disasm.hpp>
+#include <ee/intc.hpp>
+#include <emulator.hpp>
+#include <util/errors.hpp>
+#include <gs/gif.hpp>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -5,14 +13,6 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
-#include "vu.hpp"
-#include "vu_interpreter.hpp"
-#include "vu_jit.hpp"
-#include "vu_disasm.hpp"
-
-#include <emulator.hpp>
-#include <util/errors.hpp>
-#include <gs/gif.hpp>
 
 #define _x(f) f&8
 #define _y(f) f&4
