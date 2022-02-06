@@ -38,7 +38,7 @@ namespace core
         gif(&gs, &dmac),
         gs(&intc),
         iop(this),
-        iop_dma(&iop_intc, &cdvd, &sif, &sio2, &spu, &spu2),
+        iop_dma(this),
         iop_intc(&iop),
         iop_timers(&iop_intc, &scheduler),
         intc(&cpu, &scheduler),

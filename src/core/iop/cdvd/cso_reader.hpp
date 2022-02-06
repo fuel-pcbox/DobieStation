@@ -5,7 +5,6 @@
 
 namespace cdvd
 {
-
     class CSO_Reader : public CDVD_Container
     {
     protected:

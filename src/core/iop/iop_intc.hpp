@@ -4,7 +4,6 @@
 
 namespace iop
 {
-
     class IOP;
 
     class IOP_INTC

@@ -48,6 +48,7 @@ namespace sio2
         void sector_op(uint8_t value);
         void read_mem(uint32_t addr, uint8_t size);
         void write_mem(uint8_t data);
+    
     public:
         Memcard();
         ~Memcard();

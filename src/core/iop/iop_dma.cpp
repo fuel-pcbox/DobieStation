@@ -1,25 +1,26 @@
-#include <cstdio>
-#include "cdvd/cdvd.hpp"
-#include "iop_dma.hpp"
-#include "iop_intc.hpp"
+#include <iop/iop_dma.hpp>
+#include <iop/cdvd/cdvd.hpp>
+#include <iop/iop_intc.hpp>
 #include <iop/sio2/sio2.hpp>
-#include "spu/spu.hpp"
+#include <iop/spu/spu.hpp>
 #include <util/errors.hpp>
 #include <sif.hpp>
+#include <emulator.hpp>
+#include <fmt/core.h>
 
 namespace iop
 {
-    IOP_DMA::IOP_DMA(IOP_INTC* intc, cdvd::CDVD_Drive* cdvd, core::SubsystemInterface* sif, sio2::SIO2* sio2, spu::SPU* spu, spu::SPU* spu2) :
-        intc(intc), cdvd(cdvd), sif(sif), sio2(sio2), spu(spu), spu2(spu2)
+    constexpr const char* CHANNEL[] =
+    { 
+        "MDECin", "MDECout", "SIF2", "CDVD", 
+        "SPU1", "PIO", "OTC", "67", "SPU2", 
+        "DEV9", "SIF0", "SIF1", "SIO2in", "SIO2out" 
+    };
+
+    IOP_DMA::IOP_DMA(core::Emulator* e) :
+        e(e), intc(&e->iop_intc)
     {
         apply_dma_functions();
-    }
-
-    const char* IOP_DMA::CHAN(int index)
-    {
-        static const char* borp[] =
-        { "MDECin", "MDECout", "GPU", "CDVD", "SPU", "PIO", "OTC", "67", "SPU2", "8", "SIF0", "SIF1", "SIO2in", "SIO2out" };
-        return borp[index];
     }
 
     void IOP_DMA::reset(uint8_t* RAM)
@@ -65,9 +66,11 @@ namespace iop
 
     void IOP_DMA::process_CDVD()
     {
+        auto& cdvd = e->cdvd;
         uint32_t count = channels[IOP_CDVD].word_count * channels[IOP_CDVD].block_size * 4;
-        printf("[IOP DMA] CDVD bytes: $%08X\n", count);
-        uint32_t bytes_read = cdvd->read_to_RAM(RAM + channels[IOP_CDVD].addr, count);
+        fmt::print("[IOP][DMA] CDVD bytes: {:#x}\n", count);
+        
+        uint32_t bytes_read = cdvd.read_to_RAM(RAM + channels[IOP_CDVD].addr, count);
         if (count <= bytes_read)
         {
             transfer_end(IOP_CDVD);
@@ -80,13 +83,13 @@ namespace iop
 
     void IOP_DMA::process_SPU()
     {
+        auto& spu = e->spu;
         bool write_to_spu = channels[IOP_SPU].control.direction_from;
-        if (spu->running_ADMA())
+        if (spu.running_ADMA())
         {
             if (!write_to_spu)
                 Errors::die("[IOP_DMA] SPU doing ADMA read!");
-            spu->write_ADMA(RAM + channels[IOP_SPU].addr);
-            //printf("[IOP DMA] SPU transfer: $%08X\n", channels[IOP_SPU].size * 2);
+            spu.write_ADMA(RAM + channels[IOP_SPU].addr);
             channels[IOP_SPU].size--;
             channels[IOP_SPU].addr += 4;
         }
@@ -98,11 +101,11 @@ namespace iop
                 if (write_to_spu)
                 {
                     uint32_t value = *(uint32_t*)&RAM[channels[IOP_SPU].addr];
-                    spu->write_DMA(value);
+                    spu.write_DMA(value);
                 }
                 else
                 {
-                    uint32_t value = spu->read_DMA();
+                    uint32_t value = spu.read_DMA();
                     *(uint32_t*)&RAM[channels[IOP_SPU].addr] = value;
                 }
                 channels[IOP_SPU].size--;
@@ -117,20 +120,21 @@ namespace iop
         {
             channels[IOP_SPU].word_count = 0;
             transfer_end(IOP_SPU);
-            spu->finish_DMA();
+            spu.finish_DMA();
             return;
         }
     }
 
     void IOP_DMA::process_SPU2()
     {
+        auto& spu2 = e->spu2;
         bool write_to_spu = channels[IOP_SPU2].control.direction_from;
-        if (spu2->running_ADMA())
+        if (spu2.running_ADMA())
         {
             if (!write_to_spu)
                 Errors::die("[IOP_DMA] SPU2 doing ADMA read!");
-            //Transfer 512 bytes of data (128 words) at once
-            spu2->write_ADMA(RAM + channels[IOP_SPU2].addr);
+            /* Transfer 512 bytes of data(128 words) at once */
+            spu2.write_ADMA(RAM + channels[IOP_SPU2].addr);
             channels[IOP_SPU2].size--;
             channels[IOP_SPU2].addr += 4;
         }
@@ -138,15 +142,15 @@ namespace iop
         {
             if (channels[IOP_SPU2].delay <= 0)
             {
-                //Normal DMA transfer
+                /* Normal DMA transfer */
                 if (write_to_spu)
                 {
                     uint32_t value = *(uint32_t*)&RAM[channels[IOP_SPU2].addr];
-                    spu2->write_DMA(value);
+                    spu2.write_DMA(value);
                 }
                 else
                 {
-                    uint32_t value = spu2->read_DMA();
+                    uint32_t value = spu2.read_DMA();
                     *(uint32_t*)&RAM[channels[IOP_SPU2].addr] = value;
                 }
                 channels[IOP_SPU2].size--;
@@ -161,36 +165,37 @@ namespace iop
         {
             channels[IOP_SPU2].word_count = 0;
             transfer_end(IOP_SPU2);
-            spu2->finish_DMA();
+            spu2.finish_DMA();
             return;
         }
     }
 
     void IOP_DMA::process_SIF0()
     {
+        auto& sif = e->sif;
         static int junk_words = 0;
         if (channels[IOP_SIF0].word_count)
         {
             uint32_t data = *(uint32_t*)&RAM[channels[IOP_SIF0].addr];
-            sif->write_SIF0(data);
+            sif.write_SIF0(data);
 
             channels[IOP_SIF0].addr += 4;
             channels[IOP_SIF0].word_count--;
             if (!channels[IOP_SIF0].word_count)
             {
-                sif->send_SIF0_junk(junk_words);
+                sif.send_SIF0_junk(junk_words);
                 if (channels[IOP_SIF0].tag_end)
                     transfer_end(IOP_SIF0);
             }
         }
         //Read tag if there's enough room to transfer the EE's tag
-        else if (sif->get_SIF0_size() <= core::SubsystemInterface::MAX_FIFO_SIZE - 2)
+        else if (sif.get_SIF0_size() <= core::SubsystemInterface::MAX_FIFO_SIZE - 2)
         {
             uint32_t data = *(uint32_t*)&RAM[channels[IOP_SIF0].tag_addr];
             uint32_t words = *(uint32_t*)&RAM[channels[IOP_SIF0].tag_addr + 4];
             //Transfer EEtag
-            sif->write_SIF0(*(uint32_t*)&RAM[channels[IOP_SIF0].tag_addr + 8]);
-            sif->write_SIF0(*(uint32_t*)&RAM[channels[IOP_SIF0].tag_addr + 12]);
+            sif.write_SIF0(*(uint32_t*)&RAM[channels[IOP_SIF0].tag_addr + 8]);
+            sif.write_SIF0(*(uint32_t*)&RAM[channels[IOP_SIF0].tag_addr + 12]);
 
             channels[IOP_SIF0].addr = data & 0xFFFFFF;
             channels[IOP_SIF0].word_count = words & 0xFFFFF;
@@ -209,10 +214,10 @@ namespace iop
 
             channels[IOP_SIF0].tag_addr += 16;
 
-            printf("[IOP DMA] Read SIF0 DMAtag!\n");
-            printf("Data: $%08X\n", data);
-            printf("Words: $%08X\n", channels[IOP_SIF0].word_count);
-            printf("Junk: %d\n", junk_words);
+            fmt::print("[IOP][DMA] Read SIF0 DMAtag!\n");
+            fmt::print("Data: {:#x}\n", data);
+            fmt::print("Words: {:#x}\n", channels[IOP_SIF0].word_count);
+            fmt::print("Junk: {:d}\n", junk_words);
 
             if ((data & (1 << 31)) || (data & (1 << 30)))
                 channels[IOP_SIF0].tag_end = true;
@@ -221,9 +226,10 @@ namespace iop
 
     void IOP_DMA::process_SIF1()
     {
+        auto& sif = e->sif;
         if (channels[IOP_SIF1].word_count)
         {
-            uint32_t data = sif->read_SIF1();
+            uint32_t data = sif.read_SIF1();
 
             *(uint32_t*)&RAM[channels[IOP_SIF1].addr] = data;
             channels[IOP_SIF1].addr += 4;
@@ -231,19 +237,21 @@ namespace iop
             if (!channels[IOP_SIF1].word_count && channels[IOP_SIF1].tag_end)
                 transfer_end(IOP_SIF1);
         }
-        else if (sif->get_SIF1_size() >= 4)
+        else if (sif.get_SIF1_size() >= 4)
         {
             //Read IOP DMAtag
-            uint32_t data = sif->read_SIF1();
+            uint32_t data = sif.read_SIF1();
             channels[IOP_SIF1].addr = data & 0xFFFFFF;
-            channels[IOP_SIF1].word_count = sif->read_SIF1() & 0xFFFFC;
+            channels[IOP_SIF1].word_count = sif.read_SIF1() & 0xFFFFC;
 
             //EEtag
-            sif->read_SIF1();
-            sif->read_SIF1();
-            printf("[IOP DMA] Read SIF1 DMAtag!\n");
-            printf("Addr: $%08X\n", channels[IOP_SIF1].addr);
-            printf("Words: $%08X\n", channels[IOP_SIF1].word_count);
+            sif.read_SIF1();
+            sif.read_SIF1();
+            
+            fmt::print("[IOP][DMA] Read SIF1 DMAtag!\n");
+            fmt::print("Addr: {:#x}\n", channels[IOP_SIF1].addr);
+            fmt::print("Words: {:#x}\n", channels[IOP_SIF1].word_count);
+            
             if ((data & (1 << 31)) || (data & (1 << 30)))
                 channels[IOP_SIF1].tag_end = true;
         }
@@ -251,11 +259,12 @@ namespace iop
 
     void IOP_DMA::process_SIO2in()
     {
-        sio2->dma_reset();
+        auto& sio2 = e->sio2;
+        sio2.dma_reset();
         int size = channels[IOP_SIO2in].word_count * channels[IOP_SIO2in].block_size * 4;
         while (size)
         {
-            sio2->write_dma(RAM[channels[IOP_SIO2in].addr]);
+            sio2.write_dma(RAM[channels[IOP_SIO2in].addr]);
             channels[IOP_SIO2in].addr++;
             size--;
         }
@@ -266,10 +275,11 @@ namespace iop
 
     void IOP_DMA::process_SIO2out()
     {
+        auto& sio2 = e->sio2;
         int size = channels[IOP_SIO2out].word_count * channels[IOP_SIO2out].block_size * 4;
         while (size)
         {
-            RAM[channels[IOP_SIO2out].addr] = sio2->read_serial();
+            RAM[channels[IOP_SIO2out].addr] = sio2.read_serial();
             channels[IOP_SIO2out].addr++;
             size--;
         }
@@ -280,7 +290,7 @@ namespace iop
 
     void IOP_DMA::transfer_end(int index)
     {
-        printf("[IOP DMA] %s transfer ended\n", CHAN(index));
+        fmt::print("[IOP][DMA] {} transfer ended\n", CHANNEL[index]);
         channels[index].control.busy = false;
         channels[index].tag_end = false;
 
@@ -292,7 +302,7 @@ namespace iop
             index -= 8;
         if (DICR.MASK[dicr2] & (1 << index))
         {
-            printf("[IOP DMA] IRQ requested: $%08X $%08X\n", DICR.STAT[dicr2], DICR.MASK[dicr2]);
+            fmt::print("[IOP][DMA] IRQ requested: {:#x} {:#x}\n", DICR.STAT[dicr2], DICR.MASK[dicr2]);
             DICR.STAT[dicr2] |= 1 << index;
             intc->assert_irq(3);
         }
@@ -383,7 +393,7 @@ namespace iop
 
     void IOP_DMA::set_DPCR(uint32_t value)
     {
-        printf("[IOP DMA] Set DPCR: $%08X\n", value);
+        fmt::print("[IOP][DMA] Set DPCR: {:#x}\n", value);
         for (int i = 0; i < 8; i++)
         {
             bool old_enable = DPCR.enable[i];
@@ -396,7 +406,7 @@ namespace iop
 
     void IOP_DMA::set_DPCR2(uint32_t value)
     {
-        printf("[IOP DMA] Set DPCR2: $%08X\n", value);
+        fmt::print("[IOP][DMA] Set DPCR2: {:#x}\n", value);
         for (int i = 8; i < 16; i++)
         {
             int bit = i - 8;
@@ -452,13 +462,13 @@ namespace iop
 
     void IOP_DMA::set_chan_addr(int index, uint32_t value)
     {
-        printf("[IOP DMA] %s addr: $%08X\n", CHAN(index), value);
+        fmt::print("[IOP][DMA] {} address: {:#x}\n", CHANNEL[index], value);
         channels[index].addr = value;
     }
 
     void IOP_DMA::set_chan_block(int index, uint32_t value)
     {
-        printf("[IOP DMA] %s block: $%08X\n", CHAN(index), value);
+        fmt::print("[IOP][DMA] {} block: {:#x}\n", CHANNEL[index], value);
         channels[index].block_size = value & 0xFFFF;
         channels[index].word_count = value >> 16;
         channels[index].size = channels[index].block_size * channels[index].word_count;
@@ -466,21 +476,24 @@ namespace iop
 
     void IOP_DMA::set_chan_size(int index, uint16_t value)
     {
-        printf("[IOP DMA] %s size: $%04X\n", CHAN(index), value);
+        fmt::print("[IOP][DMA] {} size: {:#x}\n", CHANNEL[index], value);
         channels[index].block_size = value;
         channels[index].size = channels[index].block_size * channels[index].word_count;
     }
 
     void IOP_DMA::set_chan_count(int index, uint16_t value)
     {
-        printf("[IOP DMA] %s count: $%04X\n", CHAN(index), value);
+        fmt::print("[IOP][DMA] {} count: {:#x}\n", CHANNEL[index], value);
         channels[index].word_count = value;
         channels[index].size = channels[index].block_size * channels[index].word_count;
     }
 
     void IOP_DMA::set_chan_control(int index, uint32_t value)
     {
-        printf("[IOP DMA] %s control: $%08X\n", CHAN(index), value);
+        auto& spu = e->spu;
+        auto& spu2 = e->spu2;
+
+        fmt::print("[IOP][DMA] {} control: {:#x}\n", CHANNEL[index], value);
         bool old_busy = channels[index].control.busy;
         channels[index].control.direction_from = value & 1;
         channels[index].control.unk8 = value & (1 << 8);
@@ -490,12 +503,12 @@ namespace iop
         {
             if (index == IOP_SPU)
             {
-                spu->start_DMA(channels[index].size * 2);
+                spu.start_DMA(channels[index].size * 2);
                 channels[index].delay = 3;
             }
             if (index == IOP_SPU2)
             {
-                spu2->start_DMA(channels[index].size * 2);
+                spu2.start_DMA(channels[index].size * 2);
                 channels[index].delay = 3;
             }
             active_dma_check(index);
@@ -504,16 +517,16 @@ namespace iop
         {
             deactivate_dma(index);
             if (index == IOP_SPU)
-                spu->pause_DMA();
+                spu.pause_DMA();
             else if (index == IOP_SPU2)
-                spu2->pause_DMA();
+                spu2.pause_DMA();
         }
         channels[index].control.unk30 = value & (1 << 30);
     }
 
     void IOP_DMA::set_chan_tag_addr(int index, uint32_t value)
     {
-        printf("[IOP DMA] %s tag addr: $%08X\n", CHAN(index), value);
+        fmt::print("[IOP][DMA] {} tag address: {:#x}\n", CHANNEL[index], value);
         channels[index].tag_addr = value;
     }
 
@@ -573,7 +586,7 @@ namespace iop
         }
 
         queued_channels.erase(channel_to_erase);
-        printf("New active channel: %s\n", CHAN(active_channel->index));
+        fmt::print("[IOP][DMA] New active channel: {}\n", CHANNEL[active_channel->index]);
     }
 
     void IOP_DMA::apply_dma_functions()

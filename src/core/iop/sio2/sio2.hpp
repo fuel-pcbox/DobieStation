@@ -47,6 +47,7 @@ namespace sio2
         int send3_port;
 
         void write_device(uint8_t value);
+    
     public:
         SIO2(iop::IOP_INTC* intc, Gamepad* pad, Memcard* memcard);
 

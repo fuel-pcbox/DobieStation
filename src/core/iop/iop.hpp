@@ -12,6 +12,18 @@ namespace core
 
 namespace iop
 {
+    constexpr const char* REG[] =
+    {
+        "zero", "at", "v0", "v1",
+        "a0", "a1", "a2", "a3",
+        "t0", "t1", "t2", "t3",
+        "t4", "t5", "t6", "t7",
+        "s0", "s1", "s2", "s3",
+        "s4", "s5", "s6", "s7",
+        "t8", "t9", "k0", "k1",
+        "gp", "sp", "fp", "ra"
+    };
+
     struct IOP_ICacheLine
     {
         bool valid;
@@ -43,7 +55,6 @@ namespace iop
         uint32_t translate_addr(uint32_t addr);
     public:
         IOP(core::Emulator* e);
-        static const char* REG(int id);
 
         void reset();
         void run(int cycles);
@@ -152,6 +163,7 @@ namespace iop
     {
         if (muldiv_delay)
             cycles_to_run -= muldiv_delay;
+        
         muldiv_delay = delay;
     }
 }

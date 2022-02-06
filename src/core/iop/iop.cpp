@@ -1,43 +1,24 @@
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include "iop.hpp"
-#include "iop_interpreter.hpp"
-
-#include <emulator.hpp>
+#include <iop/iop.hpp>
+#include <iop/iop_interpreter.hpp>
 #include <ee/interpreter/emotiondisasm.hpp>
+#include <emulator.hpp>
 #include <util/errors.hpp>
+#include <algorithm>
+#include <cstring>
+#include <fmt/core.h>
 
 namespace iop
 {
     IOP::IOP(core::Emulator* e) : 
         e(e)
     {
-
-    }
-
-    const char* IOP::REG(int id)
-    {
-        static const char* names[] =
-        {
-            "zero", "at", "v0", "v1",
-            "a0", "a1", "a2", "a3",
-            "t0", "t1", "t2", "t3",
-            "t4", "t5", "t6", "t7",
-            "s0", "s1", "s2", "s3",
-            "s4", "s5", "s6", "s7",
-            "t8", "t9", "k0", "k1",
-            "gp", "sp", "fp", "ra"
-        };
-        return names[id];
     }
 
     void IOP::reset()
     {
         cop0.reset();
         PC = 0xBFC00000;
-        memset(icache, 0, sizeof(icache));
+        std::memset(icache, 0, sizeof(icache));
         gpr[0] = 0;
         branch_delay = 0;
         will_branch = false;
@@ -73,11 +54,11 @@ namespace iop
                 uint32_t instr = read_instr(PC);
                 if (can_disassemble)
                 {
-                    printf("[IOP] [$%08X] $%08X - %s\n", PC, instr, ee::interpreter::disasm_instr(instr, PC).c_str());
+                    fmt::print("[IOP] [{:#x}] {:#x} - {}\n", PC, instr, ee::interpreter::disasm_instr(instr, PC).c_str());
                     //print_state();
                 }
+                
                 interpreter::interpret(*this, instr);
-
                 PC += 4;
 
                 if (will_branch)
@@ -105,16 +86,17 @@ namespace iop
 
     void IOP::print_state()
     {
-        printf("pc:$%08X\n", PC);
+        fmt::print("pc:{:#x}\n", PC);
         for (int i = 1; i < 32; i++)
         {
-            printf("%s:$%08X", REG(i), get_gpr(i));
+            fmt::print("{}:{:#x}", REG[i], get_gpr(i));
             if (i % 4 == 3)
-                printf("\n");
+                fmt::print("\n");
             else
-                printf("\t");
+                fmt::print("\t");
         }
-        printf("lo:$%08X\thi:$%08X\n", LO, HI);
+        
+        fmt::print("lo:{:#x}\thi:{:#x}\n", LO, HI);
     }
 
     void IOP::set_disassembly(bool dis)
@@ -155,7 +137,7 @@ namespace iop
         cop0.status.IEp = cop0.status.IEc;
         cop0.status.IEc = false;
 
-        //We do this to offset PC being incremented
+        /* We do this to offset PC being incremented */
         PC = addr - 4;
         branch_delay = 0;
         will_branch = false;
@@ -176,7 +158,7 @@ namespace iop
 
     void IOP::interrupt()
     {
-        printf("[IOP] Processing interrupt!\n");
+        fmt::print("[IOP] Processing interrupt!\n");
         handle_exception(0x80000084, 0x00);
         unhalt();
     }
@@ -213,8 +195,6 @@ namespace iop
 
         cop0.status.IEc = cop0.status.IEp;
         cop0.status.IEp = cop0.status.IEo;
-        //printf("[IOP] RFE!\n");
-        //can_disassemble = false;
     }
 
     uint8_t IOP::read8(uint32_t addr)
@@ -244,7 +224,7 @@ namespace iop
 
     uint32_t IOP::read_instr(uint32_t addr)
     {
-        //Uncached RAM waitstate. In the future might be good idea to do BIOS as well
+        /* Uncached RAM waitstate. In the future might be good idea to do BIOS as well */
         if (addr >= 0xA0000000 || !(cache_control & (1 << 11)))
         {
             cycles_to_run -= 4;

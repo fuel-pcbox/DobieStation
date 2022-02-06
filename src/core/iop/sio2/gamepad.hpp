@@ -73,6 +73,7 @@ namespace sio2
 
         void reset_vibrate();
         void set_result(const uint8_t* result);
+    
     public:
         Gamepad();
 

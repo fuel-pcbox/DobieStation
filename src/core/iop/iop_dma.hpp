@@ -5,6 +5,7 @@
 
 namespace core
 {
+    class Emulator;
     class SubsystemInterface;
 }
 
@@ -94,10 +95,7 @@ namespace iop
     private:
         uint8_t* RAM;
         IOP_INTC* intc;
-        cdvd::CDVD_Drive* cdvd;
-        core::SubsystemInterface* sif;
-        sio2::SIO2* sio2;
-        spu::SPU* spu, * spu2;
+        core::Emulator* e;
         IOP_DMA_Channel channels[16];
         IOP_DMA_Channel* active_channel;
         std::list<IOP_DMA_Channel*> queued_channels;
@@ -119,9 +117,9 @@ namespace iop
         void deactivate_dma(int index);
         void find_new_active_channel();
         void apply_dma_functions();
+    
     public:
-        static const char* CHAN(int index);
-        IOP_DMA(IOP_INTC* intc, cdvd::CDVD_Drive* cdvd, core::SubsystemInterface* sif, sio2::SIO2* sio2, spu::SPU* spu, spu::SPU* spu2);
+        IOP_DMA(core::Emulator* e);
 
         void reset(uint8_t* RAM);
         void run(int cycles);
