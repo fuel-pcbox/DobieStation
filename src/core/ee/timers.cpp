@@ -1,17 +1,15 @@
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include "intc.hpp"
-#include "timers.hpp"
-#include <util/errors.hpp>
+#include <ee/timers.hpp>
+#include <ee/intc.hpp>
 #include <scheduler.hpp>
+#include <util/errors.hpp>
+#include <algorithm>
+#include <fmt/core.h>
 
 namespace ee
 {
     EmotionTiming::EmotionTiming(INTC* intc, core::Scheduler* scheduler) : 
         intc(intc), scheduler(scheduler)
     {
-
     }
 
     void EmotionTiming::reset()
@@ -120,7 +118,7 @@ namespace ee
         case 2:
             return timers[index].compare & 0xFFFF;
         default:
-            printf("[EE Timing] Unrecognized read32 from $%08X\n", addr);
+            fmt::print("[EE][TIMERS] Unrecognized read32 from {:#x}\n", addr);
             return 0;
         }
     }
@@ -132,7 +130,7 @@ namespace ee
         switch (reg)
         {
         case 0:
-            printf("[EE Timing] Write32 timer %d counter: $%08X\n", id, value);
+            fmt::print("[EE][TIMERS] Write32 timer {:d} counter: {:#x}\n", id, value);
             timers[id].counter = value & 0xFFFF;
             scheduler->set_timer_counter(events[id], timers[id].counter);
             break;
@@ -145,12 +143,12 @@ namespace ee
                 timers[id].control.compare_int_enable);
             break;
         case 2:
-            printf("[EE Timing] Write32 timer %d compare: $%08X\n", id, value);
+            fmt::print("[EE][TIMERS] Write32 timer {:d} compare: {:#x}\n", id, value);
             timers[id].compare = value & 0xFFFF;
             scheduler->set_timer_target(events[id], timers[id].compare);
             break;
         default:
-            printf("[EE Timing] Unrecognized write32 to $%08X of $%08X\n", addr, value);
+            fmt::print("[EE][TIMERS] Unrecognized write32 to {:#x} of {:#x}\n", addr, value);
             break;
         }
     }
@@ -173,7 +171,7 @@ namespace ee
 
     void EmotionTiming::write_control(int index, uint32_t value)
     {
-        printf("[EE Timing] Write32 timer %d control: $%08X\n", index, value);
+        fmt::print("[EE][TIMERS] Write32 timer {:d} control: {:#x}\n", index, value);
 
         timers[index].control.mode = value & 0x3;
         timers[index].control.gate_enable = value & (1 << 2);

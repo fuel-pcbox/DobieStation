@@ -15,11 +15,6 @@ extern "C" uint8_t * exec_block_ee(ee::jit::EE_JIT64& jit, ee::EmotionEngine& ee
 
 namespace ee
 {
-    namespace jit
-    {
-        class EE_JIT64;
-    }
-
     enum CACHE_MODE
     {
         UNCACHED = 2,

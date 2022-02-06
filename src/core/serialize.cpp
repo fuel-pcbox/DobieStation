@@ -80,8 +80,8 @@ namespace core
 
         //CPUs
         cpu.load_state(state);
-        cp0.load_state(state);
-        fpu.load_state(state);
+        cpu.cp0->load_state(state);
+        cpu.fpu->load_state(state);
         iop.load_state(state);
         vu0.load_state(state);
         vu1.load_state(state);
@@ -155,8 +155,8 @@ namespace core
 
         //CPUs
         cpu.save_state(state);
-        cp0.save_state(state);
-        fpu.save_state(state);
+        cpu.cp0->save_state(state);
+        cpu.fpu->save_state(state);
         iop.save_state(state);
         vu0.save_state(state);
         vu1.save_state(state);

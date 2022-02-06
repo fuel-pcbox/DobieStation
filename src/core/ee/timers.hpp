@@ -55,8 +55,10 @@ namespace ee
 
         bool is_timer_enabled(int index);
         void timer_interrupt(int index, bool overflow);
+    
     public:
         EmotionTiming(INTC* intc, core::Scheduler* scheduler);
+        ~EmotionTiming() = default;
 
         void reset();
         void run(int cycles);

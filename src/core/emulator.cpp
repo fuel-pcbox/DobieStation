@@ -33,9 +33,8 @@ namespace core
 {
     Emulator::Emulator() :
         cdvd(&iop_intc, &iop_dma, &scheduler),
-        cp0(&dmac),
-        cpu(&cp0, &fpu, this, &sif, &vu0, &vu1),
-        dmac(&cpu, this, &gif, &ipu, &sif, &vif0, &vif1, &vu0, &vu1),
+        cpu(this),
+        dmac(this),
         gif(&gs, &dmac),
         gs(&intc),
         iop(this),
@@ -166,13 +165,11 @@ namespace core
         scheduler.reset();
 
         cdvd.reset();
-        cp0.reset();
-        cp0.init_mem_pointers(RDRAM, BIOS, (uint8_t*)&scratchpad);
         cpu.reset();
+        cpu.cp0->init_mem_pointers(RDRAM, BIOS, (uint8_t*)&scratchpad);
         cpu.init_tlb();
         dmac.reset(RDRAM, (uint8_t*)&scratchpad);
         firewire.reset();
-        fpu.reset();
         gs.reset();
         gif.reset();
         iop.reset();

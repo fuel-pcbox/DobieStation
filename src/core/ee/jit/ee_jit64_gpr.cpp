@@ -84,7 +84,7 @@ namespace ee
         void EE_JIT64::branch_cop0(EmotionEngine& ee, IR::Instruction &instr)
         {
             // Call cop0.get_condition to get value to compare
-            prepare_abi((uint64_t)ee.cp0);
+            prepare_abi((uint64_t)ee.cp0.get());
             call_abi_func((uint64_t)cop0_get_condition);
 
             // Alloc scratchpad register

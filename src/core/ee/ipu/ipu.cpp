@@ -1,12 +1,13 @@
-    #include <cmath>
-    #include <cstdio>
-    #include <cstdlib>
-    #include <cstring>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <limits>
 #include "ipu.hpp"
 #include <ee/dmac.hpp>
 #include <ee/intc.hpp>
 #include <util/errors.hpp>
+#include <numbers>
 
 #define printf(fmt, ...)(0)
 
@@ -633,18 +634,12 @@ namespace ipu
         }
     }
 
-    //IDCT code here taken from mpeg2decode
-    //Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved.
-
-    #ifndef PI
-    #	ifdef M_PI
-    #		define PI M_PI
-    #	else
-    #		define PI 3.14159265358979323846
-    #	endif
-    #endif
+    /* IDCT code here taken from mpeg2decode
+       Copyright (C) 1996, MPEG Software Simulation Group. All Rights Reserved. */
     void ImageProcessingUnit::prepare_IDCT()
     {
+        using namespace std::numbers;
+
         int freq, time;
         double scale;
 
@@ -653,7 +648,7 @@ namespace ipu
             scale = (freq == 0) ? sqrt(0.125) : 0.5;
             for (time=0; time<8; time++)
             {
-                IDCT_table[freq][time] = scale*cos((PI/8.0)*freq*(time + 0.5));
+                IDCT_table[freq][time] = scale*cos((pi/8.0)*freq*(time + 0.5));
             }
         }
     }

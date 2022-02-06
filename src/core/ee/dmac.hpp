@@ -101,13 +101,7 @@ namespace ee
     {
     private:
         uint8_t* RDRAM, * scratchpad;
-        EmotionEngine* cpu;
         core::Emulator* e;
-        gs::GraphicsInterface* gif;
-        ipu::ImageProcessingUnit* ipu;
-        core::SubsystemInterface* sif;
-        vu::VectorInterface* vif0, * vif1;
-        vu::VectorUnit* vu0, * vu1;
         DMA_Channel channels[15];
 
         DMA_Channel* active_channel;
@@ -154,8 +148,7 @@ namespace ee
         void find_new_active_channel();
     public:
         static const char* CHAN(int index);
-        DMAC(EmotionEngine* cpu, core::Emulator* e, gs::GraphicsInterface* gif, ipu::ImageProcessingUnit* ipu, core::SubsystemInterface* sif,
-            vu::VectorInterface* vif0, vu::VectorInterface* vif1, vu::VectorUnit* vu0, vu::VectorUnit* vu1);
+        DMAC(core::Emulator* e);
         void reset(uint8_t* RDRAM, uint8_t* scratchpad);
         void run(int cycles);
         void start_DMA(int index);

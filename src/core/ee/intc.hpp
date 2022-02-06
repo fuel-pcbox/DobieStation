@@ -33,16 +33,17 @@ namespace ee
     class INTC
     {
     private:
-        EmotionEngine* cpu;
+        EmotionEngine* ee;
         core::Scheduler* scheduler;
-        uint32_t INTC_MASK, INTC_STAT;
-
-        int read_stat_count;
-        bool stat_speedhack_active;
-
+        
+        uint32_t INTC_MASK = 0, INTC_STAT = 0;
+        int read_stat_count = 0;
+        bool stat_speedhack_active = 0;
         int int_check_event_id;
+    
     public:
         INTC(EmotionEngine* cpu, core::Scheduler* scheduler);
+        ~INTC() = default;
 
         void reset();
         void int0_check();

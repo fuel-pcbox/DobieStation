@@ -6,11 +6,6 @@
 
 namespace ee
 {
-    Cop1::Cop1()
-    {
-
-    }
-
     //Returns a floating point value that may be changed to accomodate the FPU's non-compliance to the IEEE 754 standard.
     float Cop1::convert(uint32_t value)
     {

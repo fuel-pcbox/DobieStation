@@ -86,8 +86,7 @@ add_library(${TARGET}
     sif.cpp
 )
 
-# Enable C++20 and link all the sources
-target_compile_features(${TARGET} PRIVATE cxx_std_20)
+# Link all the sources
 target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 add_library(Dobie::Core ALIAS ${TARGET})
 

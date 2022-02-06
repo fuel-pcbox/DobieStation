@@ -6,6 +6,7 @@
 #include <ee/cop0.hpp>
 #include <ee/cop1.hpp>
 #include <util/int128.hpp>
+#include <memory>
 
 namespace core
 {
@@ -45,26 +46,39 @@ namespace ee
         uint32_t tag[2];
     };
 
-    //Taken from PS2SDK
+    /* Taken from PS2SDK */
     struct EE_OsdConfigParam
     {
-        /** 0=enabled, 1=disabled */
-        /*00*/uint32_t spdifMode : 1;
-        /** 0=4:3, 1=fullscreen, 2=16:9 */
-        /*01*/uint32_t screenType : 2;
-        /** 0=rgb(scart), 1=component */
-        /*03*/uint32_t videoOutput : 1;
-        /** 0=japanese, 1=english(non-japanese) */
-        /*04*/uint32_t japLanguage : 1;
-        /** Playstation driver settings. */
-        /*05*/uint32_t ps1drvConfig : 8;
-        /** 0 = early Japanese OSD, 1 = OSD2, 2 = OSD2 with extended languages.
+        /* 0 = enabled, 1 = disabled */
+        uint32_t spdifMode : 1;
+        /* 0 = 4:3, 1 = fullscreen, 2 = 16:9 */
+        uint32_t screenType : 2;
+        /* 0 = rgb(scart), 1 = component */
+        uint32_t videoOutput : 1;
+        /* 0 = japanese, 1 = english(non-japanese) */
+        uint32_t japLanguage : 1;
+        /* Playstation driver settings. */
+        uint32_t ps1drvConfig : 8;
+        /* 0 = early Japanese OSD, 1 = OSD2, 2 = OSD2 with extended languages.
          * Early kernels cannot retain the value set in this field (Hence always 0). */
-        /*13*/uint32_t version : 3;
-        /** LANGUAGE_??? value */
-        /*16*/uint32_t language : 5;
-        /** timezone minutes offset from gmt */
-        /*21*/uint32_t timezoneOffset : 11;
+        uint32_t version : 3;
+        /* LANGUAGE_??? value */
+        uint32_t language : 5;
+        /* timezone minutes offset from gmt */
+        uint32_t timezoneOffset : 11;
+    };
+
+    /* EE register */
+    static const char* REG[] =
+    {
+        "zero", "at", "v0", "v1",
+        "a0", "a1", "a2", "a3",
+        "t0", "t1", "t2", "t3",
+        "t4", "t5", "t6", "t7",
+        "s0", "s1", "s2", "s3",
+        "s4", "s5", "s6", "s7",
+        "t8", "t9", "k0", "k1",
+        "gp", "sp", "fp", "ra"
     };
 
     class EmotionEngine
@@ -77,8 +91,8 @@ namespace ee
         int32_t cycles_to_run;
         uint64_t run_event;
 
-        Cop0* cp0;
-        Cop1* fpu;
+        std::unique_ptr<Cop0> cp0;
+        std::unique_ptr<Cop1> fpu;
         vu::VectorUnit* vu0;
         vu::VectorUnit* vu1;
 
@@ -118,10 +132,12 @@ namespace ee
         void deci2call(uint32_t func, uint32_t param);
 
         void log_sifrpc(uint32_t dma_struct_ptr, int len);
+    
     public:
-        EmotionEngine(Cop0* cp0, Cop1* fpu, core::Emulator* e, core::SubsystemInterface* sif, vu::VectorUnit* vu0, vu::VectorUnit* vu1);
-        static const char* REG(int id);
+        EmotionEngine(core::Emulator* e);
+        
         static const char* SYSCALL(int id);
+        
         void reset();
         void init_tlb();
         void run(int cycles);
@@ -140,6 +156,7 @@ namespace ee
         template <typename T> T get_LO(int offset = 0);
         template <typename T> void set_gpr(int id, T value, int offset = 0);
         template <typename T> void set_LO(int id, T value, int offset = 0);
+        
         uint32_t get_PC();
         uint32_t get_PC_now();
         uint64_t get_LO();
@@ -230,13 +247,6 @@ namespace ee
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-
-        //Friends needed for JIT convenience
-        friend class jit::EE_JIT64;
-        friend class jit::EE_JitTranslator;
-
-        friend void emit_dispatcher();
-        friend uint8_t* exec_block_ee(jit::EE_JIT64& jit, EmotionEngine& ee);
     };
 
     template <typename T>

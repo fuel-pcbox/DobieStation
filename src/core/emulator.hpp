@@ -58,12 +58,10 @@ namespace core
 
     class Emulator
     {
-    private:
+    public:
         std::atomic_bool save_requested, load_requested, gsdump_requested, gsdump_single_frame, gsdump_running;
         std::string save_state_path;
         int frames;
-        ee::Cop0 cp0;
-        ee::Cop1 fpu;
         cdvd::CDVD_Drive cdvd;
         ee::DMAC dmac;
         ee::EmotionEngine cpu;

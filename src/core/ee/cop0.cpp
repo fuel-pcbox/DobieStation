@@ -5,7 +5,8 @@
 
 namespace ee
 {
-    Cop0::Cop0(DMAC* dmac) : dmac(dmac)
+    Cop0::Cop0(DMAC* dmac) : 
+        dmac(dmac)
     {
         RDRAM = nullptr;
         BIOS = nullptr;

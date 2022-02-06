@@ -1,13 +1,12 @@
-#include <cstdio>
-#include "emotion.hpp"
-#include "intc.hpp"
+#include <ee/intc.hpp>
+#include <ee/emotion.hpp>
 #include <scheduler.hpp>
+#include <fmt/core.h>
 
 namespace ee
 {
-
     INTC::INTC(EmotionEngine* cpu, core::Scheduler* scheduler) : 
-        cpu(cpu), scheduler(scheduler)
+        ee(cpu), scheduler(scheduler)
     {
     }
 
@@ -15,10 +14,8 @@ namespace ee
     {
         INTC_MASK = 0;
         INTC_STAT = 0;
-
         read_stat_count = 0;
         stat_speedhack_active = false;
-
         int_check_event_id = scheduler->register_function([this](uint64_t param) { int0_check(); });
     }
 
@@ -32,16 +29,17 @@ namespace ee
         read_stat_count++;
         if (read_stat_count >= 1000)
         {
-            cpu->halt();
+            ee->halt();
             stat_speedhack_active = true;
         }
+
         return INTC_STAT;
     }
 
     void INTC::write_mask(uint32_t value)
     {
         INTC_MASK ^= (value & 0x7FFF);
-        printf("[INTC] New INTC_MASK: $%08X\n", INTC_MASK);
+        fmt::print("[INTC] New INTC_MASK: {:#x}\n", INTC_MASK);
         int0_check();
     }
 
@@ -53,20 +51,18 @@ namespace ee
 
     void INTC::assert_IRQ(int id)
     {
-        //printf("[INTC] EE IRQ: %d\n", id);
         INTC_STAT |= (1 << id);
         if (stat_speedhack_active)
         {
-            cpu->unhalt();
+            ee->unhalt();
             stat_speedhack_active = false;
             read_stat_count = 0;
         }
 
-        //Some games will enter a wait-for-VBLANK loop where they poll INTC_STAT while a VBLANK interrupt handler
-        //is registered.
-        //If we fire the interrupt immediately, those games will never exit the loop.
-        //I don't know the exact number of cycles we need to wait, but 8 seems to work.
-
+        /* Some games will enter a wait - for - VBLANK loop where they poll INTC_STAT while a VBLANK interrupt handler
+           is registered.
+           If we fire the interrupt immediately, those games will never exit the loop.
+           I don't know the exact number of cycles we need to wait, but 8 seems to work. */
         scheduler->add_event(int_check_event_id, 8);
     }
 
@@ -80,11 +76,12 @@ namespace ee
     {
         if (stat_speedhack_active)
         {
-            cpu->unhalt();
+            ee->unhalt();
             stat_speedhack_active = false;
             read_stat_count = 0;
         }
+
         read_stat_count = 0;
-        cpu->set_int0_signal(INTC_STAT & INTC_MASK);
+        ee->set_int0_signal(INTC_STAT & INTC_MASK);
     }
 }

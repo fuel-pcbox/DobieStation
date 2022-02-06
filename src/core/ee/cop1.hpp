@@ -17,7 +17,6 @@ namespace ee
 {
     namespace jit
     {
-        class EE_JIT64;
         class EE_JitTranslator;
     }
 
@@ -53,10 +52,9 @@ namespace ee
         void check_overflow(uint32_t& dest, bool set_flags);
         void check_underflow(uint32_t& dest, bool set_flags);
     public:
-        Cop1();
+        Cop1() = default;
 
         void reset();
-
         bool get_condition();
 
         uint32_t get_gpr(int index);

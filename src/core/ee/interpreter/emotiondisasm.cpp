@@ -164,11 +164,11 @@ namespace ee
             uint64_t rs = RS;
             uint64_t rt = RT;
 
-            output << EmotionEngine::REG(rs) << ", ";
+            output << REG[rs] << ", ";
             if (!rt)
                 opcode += "z";
             else
-                output << EmotionEngine::REG(rt) << ", ";
+                output << REG[rt] << ", ";
             output << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + offset + 4);
 
             return opcode + " " + output.str();
@@ -218,7 +218,7 @@ namespace ee
             }
             int32_t offset = IMM;
             offset <<= 2;
-            output << EmotionEngine::REG(RS) << ", "
+            output << REG[RS] << ", "
                    << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + offset + 4);
 
             return opcode + " " + output.str();
@@ -228,14 +228,14 @@ namespace ee
         std::string disasm_mtsab(uint32_t instruction)
         {
             std::stringstream output;
-            output << "mtsab " << EmotionEngine::REG(RS) << ", " << (uint16_t)IMM;
+            output << "mtsab " << REG[RS] << ", " << (uint16_t)IMM;
             return output.str();
         }
 
         std::string disasm_mtsah(uint32_t instruction)
         {
             std::stringstream output;
-            output << "mtsah " << EmotionEngine::REG(RS) << ", " << (uint16_t)IMM;
+            output << "mtsah " << REG[RS] << ", " << (uint16_t)IMM;
             return output.str();
         }
 
@@ -358,9 +358,9 @@ namespace ee
         std::string disasm_variableshift(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RD) << ", "
-                   << EmotionEngine::REG(RT) << ", "
-                   << EmotionEngine::REG(RS);
+            output << REG[RD] << ", "
+                   << REG[RT] << ", "
+                   << REG[RS];
 
             return opcode + " " + output.str();
         }
@@ -384,7 +384,7 @@ namespace ee
         {
             std::stringstream output;
             std::string opcode = "jr";
-            output << EmotionEngine::REG(RS);
+            output << REG[RS];
 
             return opcode + " " + output.str();
         }
@@ -394,8 +394,8 @@ namespace ee
             std::stringstream output;
             std::string opcode = "jalr";
             if (RD != 31)
-                output << EmotionEngine::REG(RD) << ", ";
-            output << EmotionEngine::REG(RS);
+                output << REG[RD] << ", ";
+            output << REG[RS];
 
             return opcode + " " + output.str();
         }
@@ -403,9 +403,9 @@ namespace ee
         std::string disasm_conditional_move(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RD) << ", "
-                   << EmotionEngine::REG(RS) << ", "
-                   << EmotionEngine::REG(RT);
+            output << REG[RD] << ", "
+                   << REG[RS] << ", "
+                   << REG[RT];
 
             return opcode + " " + output.str();
         }
@@ -433,7 +433,7 @@ namespace ee
         std::string disasm_movereg(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RD);
+            output << REG[RD];
             return opcode + " " + output.str();
         }
 
@@ -445,7 +445,7 @@ namespace ee
         std::string disasm_moveto(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RS);
+            output << REG[RS];
             return opcode + " " + output.str();
         }
 
@@ -492,8 +492,8 @@ namespace ee
         std::string disasm_division(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RS) << ", "
-                   << EmotionEngine::REG(RT);
+            output << REG[RS] << ", "
+                   << REG[RT];
 
             return opcode + " " + output.str();
         }
@@ -511,9 +511,9 @@ namespace ee
         std::string disasm_special_simplemath(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RD) << ", "
-                   << EmotionEngine::REG(RS) << ", "
-                   << EmotionEngine::REG(RT);
+            output << REG[RD] << ", "
+                   << REG[RS] << ", "
+                   << REG[RT];
 
             return opcode + " " + output.str();
         }
@@ -603,8 +603,8 @@ namespace ee
         std::string disasm_special_shift(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RD) << ", "
-                   << EmotionEngine::REG(RT) << ", "
+            output << REG[RD] << ", "
+                   << REG[RT] << ", "
                    << SA;
             return opcode + " " + output.str();
         }
@@ -652,7 +652,7 @@ namespace ee
             int32_t offset = IMM;
             offset <<= 2;
 
-            output << EmotionEngine::REG(RS) << ", "
+            output << REG[RS] << ", "
                    << "$" << std::setfill('0') << std::setw(8) << std::hex << (instr_addr + offset + 4);
 
             return opcode + " " + output.str();
@@ -672,7 +672,7 @@ namespace ee
         std::string disasm_math(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RT) << ", " << EmotionEngine::REG(RS) << ", "
+            output << REG[RT] << ", " << REG[RS] << ", "
                    << "$" << std::setfill('0') << std::setw(4) << std::hex << IMM;
             return opcode + " " + output.str();
         }
@@ -708,8 +708,8 @@ namespace ee
         {
             std::stringstream output;
             std::string opcode = "move";
-            output << EmotionEngine::REG(RD) << ", "
-                   << EmotionEngine::REG(RS);
+            output << REG[RD] << ", "
+                   << REG[RS];
 
             return opcode + " " + output.str();
         }
@@ -723,7 +723,7 @@ namespace ee
         {
             std::stringstream output;
             std::string opcode = "lui";
-            output << EmotionEngine::REG(RT) << ", "
+            output << REG[RT] << ", "
                    << "$" << std::setfill('0') << std::setw(4) << std::hex << IMM;
 
             return opcode + " " + output.str();
@@ -752,9 +752,9 @@ namespace ee
         std::string disasm_loadstore(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RT) << ", "
+            output << REG[RT] << ", "
                    << IMM
-                   << "{" << EmotionEngine::REG(RS) << "}";
+                   << "{" << REG[RS] << "}";
             return opcode + " " + output.str();
         }
 
@@ -763,7 +763,7 @@ namespace ee
             std::stringstream output;
             output << "vf" << RT << ", "
                    << IMM
-                   << "{" << EmotionEngine::REG(RS) << "}";
+                   << "{" << REG[RS] << "}";
             return opcode + " " + output.str();
         }
 
@@ -953,7 +953,7 @@ namespace ee
 
             int cop_id = (instruction >> 26) & 0x3;
 
-            output << opcode << cop_id << " " << EmotionEngine::REG(RT) << ", "
+            output << opcode << cop_id << " " << REG[RT] << ", "
                    << RD;
 
             return output.str();
@@ -1247,7 +1247,7 @@ namespace ee
             output << opcode;
             if (instruction & 1)
                 output << ".i";
-            output << " " << EmotionEngine::REG(RT) << ", vf" << ((instruction >> 11) & 0x1F);
+            output << " " << REG[RT] << ", vf" << ((instruction >> 11) & 0x1F);
             return output.str();
         }
 
@@ -2105,8 +2105,8 @@ namespace ee
         std::string disasm_mmi_copy(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RD) << ", "
-                   << EmotionEngine::REG(RT);
+            output << REG[RD] << ", "
+                   << REG[RT];
 
             return opcode + " " + output.str();
         }
@@ -2114,7 +2114,7 @@ namespace ee
         std::string disasm_mmi_copy_hilo(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RD) << ", hi, lo";
+            output << REG[RD] << ", hi, lo";
 
             return opcode + " " + output.str();
         }
@@ -2122,7 +2122,7 @@ namespace ee
         std::string disasm_mmi_copyto_hilo(const std::string opcode, uint32_t instruction)
         {
             std::stringstream output;
-            output << EmotionEngine::REG(RS) << ", hi, lo";
+            output << REG[RS] << ", hi, lo";
 
             return opcode + " " + output.str();
         }
@@ -2181,8 +2181,8 @@ namespace ee
         {
             std::stringstream output;
             std::string opcode = "plzcw";
-            output << EmotionEngine::REG(RD) << ", "
-                   << EmotionEngine::REG(RS);
+            output << REG[RD] << ", "
+                   << REG[RS];
             return opcode + " " + output.str();
         }
 
@@ -2254,7 +2254,7 @@ namespace ee
         std::string disasm_pext5(uint32_t instruction)
         {
             std::stringstream output;
-            output << "pext5 " << EmotionEngine::REG(RD) << ", " << EmotionEngine::REG(RT);
+            output << "pext5 " << REG[RD] << ", " << REG[RT];
             return output.str();
         }
 
@@ -2307,14 +2307,14 @@ namespace ee
         std::string disasm_pabsw(uint32_t instruction)
         {
             std::stringstream output;
-            output << "pabsw " << EmotionEngine::REG(RD) << ", " << EmotionEngine::REG(RT);
+            output << "pabsw " << REG[RD] << ", " << REG[RT];
             return output.str();
         }
 
         std::string disasm_pabsh(uint32_t instruction)
         {
             std::stringstream output;
-            output << "pabsh " << EmotionEngine::REG(RD) << ", " << EmotionEngine::REG(RT);
+            output << "pabsh " << REG[RD] << ", " << REG[RT];
             return output.str();
         }
 

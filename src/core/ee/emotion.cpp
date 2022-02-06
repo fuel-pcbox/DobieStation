@@ -12,28 +12,19 @@
 
 namespace ee
 {
-    EmotionEngine::EmotionEngine(Cop0* cp0, Cop1* fpu, core::Emulator* e, core::SubsystemInterface* sif,
-                                 vu::VectorUnit* vu0, vu::VectorUnit* vu1) :
-        cp0(cp0), fpu(fpu), e(e), sif(sif), vu0(vu0), vu1(vu1)
+    EmotionEngine::EmotionEngine(core::Emulator* e) :
+        e(e)
     {
+        /* Construct the EE coprocessors */
+        cp0 = std::make_unique<Cop0>(&e->dmac);
+        fpu = std::make_unique<Cop1>();
+        
+        sif = &e->sif;
+        vu0 = &e->vu0;
+        vu1 = &e->vu1;
+
         tlb_map = nullptr;
         set_run_func(&EmotionEngine::run_interpreter);
-    }
-
-    const char* EmotionEngine::REG(int id)
-    {
-        static const char* names[] =
-        {
-            "zero", "at", "v0", "v1",
-            "a0", "a1", "a2", "a3",
-            "t0", "t1", "t2", "t3",
-            "t4", "t5", "t6", "t7",
-            "s0", "s1", "s2", "s3",
-            "s4", "s5", "s6", "s7",
-            "t8", "t9", "k0", "k1",
-            "gp", "sp", "fp", "ra"
-        };
-        return names[id];
     }
 
     const char* EmotionEngine::SYSCALL(int id)
@@ -108,13 +99,18 @@ namespace ee
         wait_for_interlock = false;
         delay_slot = 0;
 
-        //OsdConfigParam is used by certain games to detect language settings.
-        //This is not initialized until OSDSYS boots. Since fast boot skips this,
-        //games that rely on this will read zeroed out data (this usually manifests as Japanese).
-        //The solution is to HLE the syscalls used to access the config.
-        //This allows us to set the default BIOS language to English. The settings can still be changed at full boot.
-        //TODO: Read in system settings from NVM so that non-English languages can be used at fast boot.
-        //TODO: Expose language setting in the UI so that a default language can be selected even without NVM.
+        /* Reset coprocessors */
+        cp0->reset();
+        fpu->reset();
+
+        /* OsdConfigParam is used by certain games to detect language settings.
+           This is not initialized until OSDSYS boots. Since fast boot skips this,
+           games that rely on this will read zeroed out data (this usually manifests as Japanese).
+           The solution is to HLE the syscalls used to access the config.
+           This allows us to set the default BIOS language to English. The settings can still be changed at full boot.
+           TODO: Read in system settings from NVM so that non-English languages can be used at fast boot.
+           TODO: Expose language setting in the UI so that a default language can be selected even without NVM.
+        */
         osd_config_param.screenType = 0; //4:3
         osd_config_param.ps1drvConfig = 0; //???
         osd_config_param.spdifMode = 0; //Enabled
@@ -268,7 +264,7 @@ namespace ee
         printf("pc:$%08X\n", PC);
         for (int i = 0; i < 32; i++)
         {
-            printf("%s:$%08X_%08X_%08X_%08X", REG(i), get_gpr<uint32_t>(i, 3), get_gpr<uint32_t>(i, 2), get_gpr<uint32_t>(i, 1), get_gpr<uint32_t>(i));
+            printf("%s:$%08X_%08X_%08X_%08X", REG[i], get_gpr<uint32_t>(i, 3), get_gpr<uint32_t>(i, 2), get_gpr<uint32_t>(i, 1), get_gpr<uint32_t>(i));
             if ((i & 1) == 1)
                 printf("\n");
             else
