@@ -144,7 +144,6 @@ namespace ee
         void check_for_activation(int index);
         void deactivate_channel(int index);
         void arbitrate();
-        void find_new_active_channel();
     
     public:
         DMAC(core::Emulator* e);

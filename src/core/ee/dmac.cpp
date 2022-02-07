@@ -191,11 +191,12 @@ namespace ee
 
     void DMAC::transfer_end(int index)
     {
-        printf("[DMAC] %s transfer ended\n", CHANNEL[index]);
+        fmt::print("[DMAC] {} transfer ended\n", CHANNEL[index]);
 
         channels[index].control &= ~0x100;
         channels[index].started = false;
         interrupt_stat.channel_stat[index] = true;
+        
         int1_check();
         deactivate_channel(index);
     }
@@ -231,30 +232,34 @@ namespace ee
     int DMAC::process_VIF0()
     {
         int count = 0;
+        auto& channel = channels[VIF0];
         auto& vif0 = e->vif0;
-        if (channels[VIF0].quadword_count)
+
+        if (channel.quadword_count)
         {
-            uint32_t max_qwc = 8 - ((channels[VIF0].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[VIF0].quadword_count, max_qwc);
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
             while (count < quads_to_transfer)
             {
-                if (!vif0->feed_DMA(fetch128(channels[VIF0].address)))
+                uint128_t data = fetch128(channel.address);
+                if (!vif0->feed_DMA(data))
                     break;
+                
                 advance_source_dma(VIF0);
                 count++;
             }
         }
-        if (!channels[VIF0].quadword_count)
+        if (!channel.quadword_count)
         {
-            if (channels[VIF0].tag_end)
+            if (channel.tag_end)
             {
                 transfer_end(VIF0);
                 return count;
             }
             else
             {
-                uint128_t DMAtag = fetch128(channels[VIF0].tag_address);
-                if (channels[VIF0].control & (1 << 6))
+                uint128_t DMAtag = fetch128(channel.tag_address);
+                if (channel.control & (1 << 6))
                 {
                     if (!vif0->transfer_DMAtag(DMAtag))
                     {
@@ -274,28 +279,31 @@ namespace ee
     int DMAC::process_VIF1()
     {
         int count = 0;
+        auto& channel = channels[VIF1];
         auto& vif1 = e->vif1;
-        if (channels[VIF1].quadword_count)
-        {
-            uint32_t max_qwc = 8 - ((channels[VIF1].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[VIF1].quadword_count, max_qwc);
 
-            if ((channels[VIF1].control & 0x1) && control.stall_dest_channel == 1 && channels[VIF1].can_stall_drain)
+        if (channel.quadword_count)
+        {
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
+
+            if ((channel.control & 0x1) && control.stall_dest_channel == 1 && channel.can_stall_drain)
             {
-                if (channels[VIF1].address + (quads_to_transfer * 16) > STADR)
+                if (channel.address + (quads_to_transfer * 16) > STADR)
                 {
-                    if (channels[VIF1].has_dma_stalled == false)
+                    if (channel.has_dma_stalled == false)
                     {
-                        printf("[DMAC] VIF1 DMA Stall at %x STADR = %x\n", channels[VIF1].address, STADR);
+                        fmt::print("[DMAC] VIF1 DMA Stall at {:#x} STADR = {:#x}\n", channel.address, STADR);
                         interrupt_stat.channel_stat[DMA_STALL] = true;
                         int1_check();
-                        channels[VIF1].has_dma_stalled = true;
+                        channel.has_dma_stalled = true;
                     }
 
                     clear_DMA_request(VIF1);
                     return count;
                 }
-                channels[VIF1].has_dma_stalled = false;
+                
+                channel.has_dma_stalled = false;
             }
 
             while (count < quads_to_transfer)
@@ -305,29 +313,33 @@ namespace ee
                     arbitrate();
                     return count;
                 }
-                if (channels[VIF1].control & 0x1)
+                
+                if (channel.control & 0x1)
                 {
-                    if (!vif1->feed_DMA(fetch128(channels[VIF1].address)))
+                    uint128_t data = fetch128(channel.address);
+                    if (!vif1->feed_DMA(data))
                         break;
                 }
                 else
                 {
                     auto quad_data = vif1->readFIFO();
                     if (std::get<1>(quad_data))
-                        store128(channels[VIF1].address, std::get<0>(quad_data));
+                        store128(channel.address, std::get<0>(quad_data));
                     else
                     {
                         arbitrate();
                         return count;
                     }
                 }
+                
                 advance_source_dma(VIF1);
                 count++;
             }
         }
-        if (!channels[VIF1].quadword_count)
+        
+        if (!channel.quadword_count)
         {
-            if (channels[VIF1].tag_end)
+            if (channel.tag_end)
             {
                 transfer_end(VIF1);
                 return count;
@@ -339,6 +351,7 @@ namespace ee
                     arbitrate();
                     return count;
                 }
+                
                 uint128_t DMAtag = fetch128(channels[VIF1].tag_address);
                 if (channels[VIF1].control & (1 << 6))
                 {
@@ -348,6 +361,7 @@ namespace ee
                         return count;
                     }
                 }
+
                 handle_source_chain(VIF1);
             }
         }
@@ -355,82 +369,39 @@ namespace ee
             arbitrate();
 
         return count;
-        /*while (cycles)
-        {
-            if (!mfifo_handler(VIF1))
-                return;
-            cycles--;
-            if (channels[VIF1].quadword_count)
-            {
-                if (channels[VIF1].control & 0x1)
-                {
-                    if (control.stall_dest_channel == 1 && channels[VIF1].can_stall_drain)
-                    {
-                        if (channels[VIF1].address + (8 * 16) > STADR)
-                            return;
-                    }
-                    if (!vif1->feed_DMA(fetch128(channels[VIF1].address)))
-                        return;
-
-                    advance_source_dma(VIF1);
-                }
-                else
-                {
-                    store128(channels[VIF1].address, vif1->readFIFO());
-                    channels[VIF1].quadword_count--;
-                    channels[VIF1].address += 16;
-                }
-            }
-            else
-            {
-                if (channels[VIF1].tag_end)
-                {
-                    transfer_end(VIF1);
-                    return;
-                }
-                else
-                {
-                    uint128_t DMAtag = fetch128(channels[VIF1].tag_address);
-                    if (channels[VIF1].control & (1 << 6))
-                    {
-                        if (!vif1->transfer_DMAtag(DMAtag))
-                            return;
-                    }
-                    handle_source_chain(VIF1);
-                }
-            }
-        }*/
     }
 
     int DMAC::process_GIF()
     {
         int count = 0;
-
+        auto& channel = channels[GIF];
         auto& gif = e->gif;
+
         gif->dma_running(true);
-
-        if (channels[GIF].quadword_count)
+        if (channel.quadword_count)
         {
-            uint32_t max_qwc = 8 - ((channels[GIF].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[GIF].quadword_count, max_qwc);
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
 
-            if (control.stall_dest_channel == 2 && channels[GIF].can_stall_drain)
+            if (control.stall_dest_channel == 2 && channel.can_stall_drain)
             {
-                if (channels[GIF].address + (quads_to_transfer * 16) > STADR)
+                if (channel.address + (quads_to_transfer * 16) > STADR)
                 {
-                    if (channels[GIF].has_dma_stalled == false)
+                    if (channel.has_dma_stalled == false)
                     {
-                        printf("[DMAC] GIF DMA Stall at %x STADR = %x\n", channels[GIF].address, STADR);
+                        fmt::print("[DMAC] GIF DMA Stall at {:#x} STADR = {:#x}\n", channel.address, STADR);
                         interrupt_stat.channel_stat[DMA_STALL] = true;
+                        
                         int1_check();
                         gif->deactivate_PATH(3);
-                        channels[GIF].has_dma_stalled = true;
+                        channel.has_dma_stalled = true;
                     }
 
                     clear_DMA_request(GIF);
                     return count;
                 }
-                channels[GIF].has_dma_stalled = false;
+                
+                channel.has_dma_stalled = false;
             }
 
             while (count < quads_to_transfer)
@@ -441,11 +412,11 @@ namespace ee
                     gif->deactivate_PATH(3);
                     return count;
                 }
-
             
                 if (!gif->fifo_full() && !gif->fifo_draining())
                 {
-                    gif->send_PATH3(fetch128(channels[GIF].address));
+                    uint128_t data = fetch128(channels[GIF].address);
+                    gif->send_PATH3(data);
                     advance_source_dma(GIF);
                     count++;
                 }
@@ -455,10 +426,11 @@ namespace ee
                 }
             }
         }
+        
         //gif->intermittent_check();
-        if (!channels[GIF].quadword_count)
+        if (!channel.quadword_count)
         {
-            if (channels[GIF].tag_end)
+            if (channel.tag_end)
             {
                 gif->dma_running(false);
                 transfer_end(GIF);
@@ -471,6 +443,7 @@ namespace ee
                     gif->deactivate_PATH(3);
                     return count;
                 }
+
                 handle_source_chain(GIF);
             }
         }
@@ -478,87 +451,40 @@ namespace ee
             arbitrate();
 
         return count;
-
-        /*while (cycles)
-        {
-            if (!mfifo_handler(GIF))
-                return;
-            cycles--;
-            if (channels[GIF].quadword_count)
-            {
-                gif->request_PATH(3, false);
-                if (gif->path_active(3, false) && !gif->fifo_full() && !gif->fifo_draining())
-                {
-                    if (control.stall_dest_channel == 2 && channels[GIF].can_stall_drain)
-                    {
-                        if (channels[GIF].address + (8 * 16) > STADR)
-                        {
-                            gif->dma_waiting(true);
-                            return;
-                        }
-                    }
-                    //printf("Sending GIF PATH3 DMA\n");
-                    gif->dma_waiting(false);
-
-                    gif->send_PATH3(fetch128(channels[GIF].address));
-
-                    advance_source_dma(GIF);
-                    //Do this to get the timing right for PATH3 masking
-                    //might make GIF run a little slower if there's lots of tiny packets, but unlikely
-                    if (gif->path3_done())
-                        return;
-                }
-                else
-                {
-                    gif->dma_waiting(true);
-                    return;
-                }
-            }
-            else
-            {
-                if (channels[GIF].tag_end)
-                {
-                    transfer_end(GIF);
-                    gif->deactivate_PATH(3);
-                    return;
-                }
-                else
-                {
-                    handle_source_chain(GIF);
-                }
-            }
-        }*/
     }
 
     int DMAC::process_IPU_FROM()
     {
         int count = 0;
+        auto& channel = channels[IPU_FROM];
         auto& ipu = e->ipu;
-        if (channels[IPU_FROM].quadword_count)
+
+        if (channel.quadword_count)
         {
-            uint32_t max_qwc = 8 - ((channels[IPU_FROM].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[IPU_FROM].quadword_count, max_qwc);
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
             while (count < quads_to_transfer)
             {
                 if (!ipu->can_read_FIFO())
                     break;
+                
                 uint128_t data = ipu->read_FIFO();
-                store128(channels[IPU_FROM].address, data);
+                store128(channel.address, data);
 
                 advance_dest_dma(IPU_FROM);
                 count++;
             }
         }
+        
         if (control.stall_source_channel == 3)
-            update_stadr(channels[IPU_FROM].address);
-        if (!channels[IPU_FROM].quadword_count)
+            update_stadr(channel.address);
+        
+        if (!channel.quadword_count)
         {
-            if (channels[IPU_FROM].tag_end)
+            if (channel.tag_end)
                 transfer_end(IPU_FROM);
             else
-            {
                 Errors::die("[DMAC] IPU_FROM uses dest chain!\n");
-            }
         }
         else
             arbitrate();
@@ -569,23 +495,28 @@ namespace ee
     int DMAC::process_IPU_TO()
     {
         int count = 0;
+        auto& channel = channels[IPU_TO];
         auto& ipu = e->ipu;
-        if (channels[IPU_TO].quadword_count)
+
+        if (channel.quadword_count)
         {
-            uint32_t max_qwc = 8 - ((channels[IPU_TO].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[IPU_TO].quadword_count, max_qwc);
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
+            
             while (count < quads_to_transfer)
             {
                 if (!ipu->can_write_FIFO())
                     break;
-                ipu->write_FIFO(fetch128(channels[IPU_TO].address));
+                
+                ipu->write_FIFO(fetch128(channel.address));
                 advance_source_dma(IPU_TO);
                 count++;
             }
         }
-        if (!channels[IPU_TO].quadword_count)
+
+        if (!channel.quadword_count)
         {
-            if (channels[IPU_TO].tag_end)
+            if (channel.tag_end)
                 transfer_end(IPU_TO);
             else
                 handle_source_chain(IPU_TO);
@@ -598,23 +529,26 @@ namespace ee
 
     int DMAC::process_SIF0()
     {
-        uint32_t max_qwc = 8 - ((channels[EE_SIF0].address >> 4) & 0x7);
-        auto& sif = e->sif;
-        int quads_to_transfer = std::min({channels[EE_SIF0].quadword_count, max_qwc, sif->get_SIF0_size() / 4U});
         int count = 0;
+        auto& sif = e->sif;
+        auto& channel = channels[EE_SIF0];
+
+        uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+        int quads_to_transfer = std::min({channel.quadword_count, max_qwc, sif->get_SIF0_size() / 4U});
         while (count < quads_to_transfer)
         {
             uint128_t quad;
             for (int i = 0; i < 4; i++)
                 quad._u32[i] = sif->read_SIF0();
-            store128(channels[EE_SIF0].address, quad);
+            
+            store128(channel.address, quad);
             advance_dest_dma(EE_SIF0);
             count++;
         }
 
-        if (!channels[EE_SIF0].quadword_count)
+        if (!channel.quadword_count)
         {
-            if (channels[EE_SIF0].tag_end)
+            if (channel.tag_end)
             {
                 transfer_end(EE_SIF0);
                 return count;
@@ -623,22 +557,23 @@ namespace ee
             {
                 uint64_t DMAtag = sif->read_SIF0();
                 DMAtag |= (uint64_t)sif->read_SIF0() << 32;
-                printf("[DMAC] SIF0 tag: $%08lX_%08lX\n", DMAtag >> 32, DMAtag & 0xFFFFFFFF);
+                channel.quadword_count = DMAtag & 0xFFFF;
+                channel.address = DMAtag >> 32;
 
-                channels[EE_SIF0].quadword_count = DMAtag & 0xFFFF;
-                channels[EE_SIF0].address = DMAtag >> 32;
-                uint32_t addr = channels[EE_SIF0].address;
-                channels[EE_SIF0].is_spr = (addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000;
-
-                channels[EE_SIF0].tag_id = (DMAtag >> 28) & 0x7;
+                fmt::print("[DMAC] SIF0 tag: {:#x}\n", DMAtag);
+                
+                uint32_t address = channel.address;
+                channel.is_spr = (address & (1 << 31)) || (address & 0x70000000) == 0x70000000;
+                channel.tag_id = (DMAtag >> 28) & 0x7;
 
                 bool IRQ = (DMAtag & (1UL << 31));
-                bool TIE = channels[EE_SIF0].control & (1 << 7);
-                if (channels[EE_SIF0].tag_id == 7 || (IRQ && TIE))
-                    channels[EE_SIF0].tag_end = true;
+                bool TIE = channel.control & (1 << 7);
+                
+                if (channel.tag_id == 7 || (IRQ && TIE))
+                    channel.tag_end = true;
 
-                channels[EE_SIF0].control &= 0xFFFF;
-                channels[EE_SIF0].control |= DMAtag & 0xFFFF0000;
+                channel.control &= 0xFFFF;
+                channel.control |= DMAtag & 0xFFFF0000;
                 arbitrate();
             }
         }
@@ -646,190 +581,127 @@ namespace ee
             arbitrate();
 
         return count;
-
-        /*while (cycles)
-        {
-            cycles--;
-            if (channels[EE_SIF0].quadword_count)
-            {
-                if (sif->get_SIF0_size() >= 4)
-                {
-                    for (int i = 0; i < 4; i++)
-                    {
-                        uint32_t word = sif->read_SIF0();
-                        e->write32(channels[EE_SIF0].address + (i * 4), word);
-                    }
-                    advance_dest_dma(EE_SIF0);
-                }
-                else
-                    return;
-            }
-            else
-            {
-                if (channels[EE_SIF0].tag_end)
-                {
-                    transfer_end(EE_SIF0);
-                    return;
-                }
-                else if (sif->get_SIF0_size() >= 2)
-                {
-                    uint64_t DMAtag = sif->read_SIF0();
-                    DMAtag |= (uint64_t)sif->read_SIF0() << 32;
-                    printf("[DMAC] SIF0 tag: $%08lX_%08lX\n", DMAtag >> 32, DMAtag & 0xFFFFFFFF);
-
-                    channels[EE_SIF0].quadword_count = DMAtag & 0xFFFF;
-                    channels[EE_SIF0].address = DMAtag >> 32;
-
-                    channels[EE_SIF0].tag_id = (DMAtag >> 28) & 0x7;
-
-                    bool IRQ = (DMAtag & (1UL << 31));
-                    bool TIE = channels[EE_SIF0].control & (1 << 7);
-                    if (channels[EE_SIF0].tag_id == 7 || (IRQ && TIE))
-                        channels[EE_SIF0].tag_end = true;
-
-                    channels[EE_SIF0].control &= 0xFFFF;
-                    channels[EE_SIF0].control |= DMAtag & 0xFFFF0000;
-                }
-            }
-        }*/
     }
 
     int DMAC::process_SIF1()
     {
         int count = 0;
+        auto& channel = channels[EE_SIF1];
         auto& sif = e->sif;
-        if (channels[EE_SIF1].quadword_count)
-        {
-            uint32_t max_qwc = 8 - ((channels[EE_SIF1].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[EE_SIF1].quadword_count, max_qwc);
 
-            if (control.stall_dest_channel == 3 && channels[EE_SIF1].can_stall_drain)
+        if (channel.quadword_count)
+        {
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
+
+            if (control.stall_dest_channel == 3 && channel.can_stall_drain)
             {
-                if (channels[EE_SIF1].address + (quads_to_transfer * 16) > STADR)
+                if (channel.address + (quads_to_transfer * 16) > STADR)
                 {
-                    if (channels[EE_SIF1].has_dma_stalled == false)
+                    if (channel.has_dma_stalled == false)
                     {
-                        printf("[DMAC] SIF1 DMA Stall at %x STADR = %x\n", channels[EE_SIF1].address, STADR);
+                        fmt::print("[DMAC] SIF1 DMA Stall at {} STADR = {:#x}\n", channel.address, STADR);
+                        
                         interrupt_stat.channel_stat[DMA_STALL] = true;
                         int1_check();
-                        channels[EE_SIF1].has_dma_stalled = true;
+                        channel.has_dma_stalled = true;
                     }
+                    
                     clear_DMA_request(EE_SIF1);
                     return count;
                 }
-                channels[EE_SIF1].has_dma_stalled = false;
+                
+                channel.has_dma_stalled = false;
             }
 
             while (count < quads_to_transfer)
             {
-                sif->write_SIF1(fetch128(channels[EE_SIF1].address));
+                uint128_t data = fetch128(channel.address);
+                sif->write_SIF1(data);
+                
                 advance_source_dma(EE_SIF1);
                 count++;
             }
         }
-        if (!channels[EE_SIF1].quadword_count)
+
+        if (!channel.quadword_count)
         {
-            if (channels[EE_SIF1].tag_end)
+            if (channel.tag_end)
                 transfer_end(EE_SIF1);
             else
                 handle_source_chain(EE_SIF1);
         }
 
         return count;
-        /*while (cycles)
-        {
-            cycles--;
-            if (channels[EE_SIF1].quadword_count)
-            {
-                if (control.stall_dest_channel == 3 && channels[EE_SIF1].can_stall_drain)
-                {
-                    if (channels[EE_SIF1].address + (8 * 16) > STADR)
-                        return;
-                }
-                if (sif->get_SIF1_size() <= SubsystemInterface::MAX_FIFO_SIZE - 4)
-                {
-                    sif->write_SIF1(fetch128(channels[EE_SIF1].address));
-
-                    advance_source_dma(EE_SIF1);
-                }
-                else
-                    return;
-            }
-            else
-            {
-                if (channels[EE_SIF1].tag_end)
-                {
-                    transfer_end(EE_SIF1);
-                    return;
-                }
-                else
-                    handle_source_chain(EE_SIF1);
-            }
-        }*/
     }
 
     int DMAC::process_SPR_FROM()
     {
         int count = 0;
-        if (channels[SPR_FROM].quadword_count)
+        auto& channel = channels[SPR_FROM];
+
+        if (channel.quadword_count)
         {
-            uint32_t max_qwc = 8 - ((channels[SPR_FROM].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[SPR_FROM].quadword_count, max_qwc);
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
+            
             while (count < quads_to_transfer)
             {
                 if (control.mem_drain_channel != 0)
                 {
-                    channels[SPR_FROM].address = RBOR | (channels[SPR_FROM].address & RBSR);
+                    channel.address = RBOR | (channel.address & RBSR);
                 }
-                uint128_t DMAData = fetch128(channels[SPR_FROM].scratchpad_address | (1 << 31));
-                store128(channels[SPR_FROM].address & 0x7FFFFFFF, DMAData);
+                uint128_t DMAData = fetch128(channel.scratchpad_address | (1 << 31));
+                store128(channel.address & 0x7FFFFFFF, DMAData);
 
-                channels[SPR_FROM].scratchpad_address += 16;
+                channel.scratchpad_address += 16;
                 advance_dest_dma(SPR_FROM);
                 count++;
 
-                if (((channels[SPR_FROM].control >> 2) & 0x3) == 0x2)
+                if (((channel.control >> 2) & 0x3) == 0x2)
                 {
-                    channels[SPR_FROM].interleaved_qwc--;
-                    if (!channels[SPR_FROM].interleaved_qwc)
+                    channel.interleaved_qwc--;
+                    if (!channel.interleaved_qwc)
                     {
-                        channels[SPR_FROM].interleaved_qwc = SQWC.transfer_qwc;
-                        channels[SPR_FROM].address += SQWC.skip_qwc * 16;
+                        channel.interleaved_qwc = SQWC.transfer_qwc;
+                        channel.address += SQWC.skip_qwc * 16;
+                        
                         arbitrate();
                         break;
                     }
                 }
 
                 if (control.mem_drain_channel != 0)
-                    channels[SPR_FROM].address = RBOR | (channels[SPR_FROM].address & RBSR);
+                    channel.address = RBOR | (channel.address & RBSR);
             }
         }
-        if (!channels[SPR_FROM].quadword_count)
+
+        if (!channel.quadword_count)
         {
-            if (channels[SPR_FROM].tag_end)
+            if (channel.tag_end)
             {
                 transfer_end(SPR_FROM);
                 return count;
             }
             else
             {
-                uint128_t DMAtag = fetch128(channels[SPR_FROM].scratchpad_address | (1 << 31));
-                printf("[DMAC] SPR_FROM tag: $%08X_%08X\n", DMAtag._u32[1], DMAtag._u32[0]);
+                uint128_t DMAtag = fetch128(channel.scratchpad_address | (1 << 31));
+                fmt::print("[DMAC] SPR_FROM tag: {:#x}\n", DMAtag._u64[0]);
 
-                channels[SPR_FROM].quadword_count = DMAtag._u32[0] & 0xFFFF;
-                channels[SPR_FROM].address = DMAtag._u32[1];
-                channels[SPR_FROM].scratchpad_address += 16;
-                channels[SPR_FROM].scratchpad_address &= 0x3FFF;
-
-                channels[SPR_FROM].tag_id = (DMAtag._u32[0] >> 28) & 0x7;
+                channel.quadword_count = DMAtag._u32[0] & 0xFFFF;
+                channel.address = DMAtag._u32[1];
+                channel.scratchpad_address += 16;
+                channel.scratchpad_address &= 0x3FFF;
+                channel.tag_id = (DMAtag._u32[0] >> 28) & 0x7;
 
                 bool IRQ = (DMAtag._u32[0] & (1UL << 31));
-                bool TIE = channels[SPR_FROM].control & (1 << 7);
-                if (channels[SPR_FROM].tag_id == 7 || (IRQ && TIE))
-                    channels[SPR_FROM].tag_end = true;
+                bool TIE = channel.control & (1 << 7);
+                
+                if (channel.tag_id == 7 || (IRQ && TIE))
+                    channel.tag_end = true;
 
-                channels[SPR_FROM].control &= 0xFFFF;
-                channels[SPR_FROM].control |= DMAtag._u32[0] & 0xFFFF0000;
+                channel.control &= 0xFFFF;
+                channel.control |= DMAtag._u32[0] & 0xFFFF0000;
                 arbitrate();
             }
         }
@@ -840,27 +712,30 @@ namespace ee
     int DMAC::process_SPR_TO()
     {
         int count = 0;
-        if (channels[SPR_TO].quadword_count)
+        auto& channel = channels[SPR_TO];
+        
+        if (channel.quadword_count)
         {
-            uint32_t max_qwc = 8 - ((channels[SPR_TO].address >> 4) & 0x7);
-            int quads_to_transfer = std::min(channels[SPR_TO].quadword_count, max_qwc);
+            uint32_t max_qwc = 8 - ((channel.address >> 4) & 0x7);
+            int quads_to_transfer = std::min(channel.quadword_count, max_qwc);
+            
             while (count < quads_to_transfer)
             {
-                uint128_t DMAData = fetch128(channels[SPR_TO].address & 0x7FFFFFFF);
-                store128(channels[SPR_TO].scratchpad_address | (1 << 31), DMAData);
-                channels[SPR_TO].scratchpad_address += 16;
+                uint128_t DMAData = fetch128(channel.address & 0x7FFFFFFF);
+                store128(channel.scratchpad_address | (1 << 31), DMAData);
+                channel.scratchpad_address += 16;
 
                 advance_source_dma(SPR_TO);
                 count++;
 
                 //Interleave mode
-                if (((channels[SPR_TO].control >> 2) & 0x3) == 0x2)
+                if (((channel.control >> 2) & 0x3) == 0x2)
                 {
-                    channels[SPR_TO].interleaved_qwc--;
-                    if (!channels[SPR_TO].interleaved_qwc)
+                    channel.interleaved_qwc--;
+                    if (!channel.interleaved_qwc)
                     {
-                        channels[SPR_TO].interleaved_qwc = SQWC.transfer_qwc;
-                        channels[SPR_TO].address += SQWC.skip_qwc * 16;
+                        channel.interleaved_qwc = SQWC.transfer_qwc;
+                        channel.address += SQWC.skip_qwc * 16;
 
                         //On interleave boundaries, always arbitrate
                         arbitrate();
@@ -869,18 +744,20 @@ namespace ee
                 }
             }
         }
-        if (!channels[SPR_TO].quadword_count)
+
+        if (!channel.quadword_count)
         {
-            if (channels[SPR_TO].tag_end)
+            if (channel.tag_end)
                 transfer_end(SPR_TO);
             else
             {
-                uint128_t DMAtag = fetch128(channels[SPR_TO].tag_address);
-                if (channels[SPR_TO].control & (1 << 6))
+                uint128_t DMAtag = fetch128(channel.tag_address);
+                if (channel.control & (1 << 6))
                 {
-                    store128(channels[SPR_TO].scratchpad_address | (1 << 31), DMAtag);
-                    channels[SPR_TO].scratchpad_address += 16;
+                    store128(channel.scratchpad_address | (1 << 31), DMAtag);
+                    channel.scratchpad_address += 16;
                 }
+
                 handle_source_chain(SPR_TO);
             }
         }
@@ -891,17 +768,15 @@ namespace ee
     void DMAC::advance_source_dma(int index)
     {
         int mode = (channels[index].control >> 2) & 0x3;
-
         channels[index].address += 16;
 
-        //PS2 checks MFIFO MADR as it transfers but it needs to check also at the end of a packet
-        //and send an empty signal.  This needs to be done on the MADR as TADR doesn't incrmenet on END tags
-        //For the code to work, we need to check this before the QWC decrements. HW Test confirmed
+        /* PS2 checks MFIFO MADR as it transfers but it needs to check also at the end of a packet
+           and send an empty signal. This needs to be done on the MADR as TADR doesn't incrmenet on END tags.
+           For the code to work, we need to check this before the QWC decrements. HW Test confirmed. */
         if (channels[index].quadword_count == 1)
             mfifo_handler(index);
 
         channels[index].quadword_count--;
-
         if (mode == 1) //Chain
         {
             switch (channels[index].tag_id)
@@ -939,110 +814,127 @@ namespace ee
 
     void DMAC::handle_source_chain(int index)
     {
-        uint128_t quad = fetch128(channels[index].tag_address);
+        auto& channel = channels[index];
+        uint128_t quad = fetch128(channel.tag_address);
         uint64_t DMAtag = quad._u64[0];
         //printf("[DMAC] Ch.%d Source DMAtag read $%08X: $%08X_%08X\n", index, channels[index].tag_address, DMAtag >> 32, DMAtag & 0xFFFFFFFF);
 
         //Change CTRL to have the upper 16 bits equal to bits 16-31 of the most recently read DMAtag
-        channels[index].control &= 0xFFFF;
-        channels[index].control |= DMAtag & 0xFFFF0000;
+        channel.control &= 0xFFFF;
+        channel.control |= DMAtag & 0xFFFF0000;
 
         uint16_t quadword_count = DMAtag & 0xFFFF;
         uint32_t addr = (DMAtag >> 32) & 0xFFFFFFF0;
-        channels[index].is_spr = (addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000;
+        channel.is_spr = (addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000;
         bool IRQ_after_transfer = DMAtag & (1UL << 31);
         bool TIE = channels[index].control & (1 << 7);
         int PCR_toggle = (DMAtag >> 26) & 0x3;
-        channels[index].tag_id = (DMAtag >> 28) & 0x7;
-        channels[index].quadword_count = quadword_count;
-        channels[index].can_stall_drain = false;
-        switch (channels[index].tag_id)
+        channel.tag_id = (DMAtag >> 28) & 0x7;
+        channel.quadword_count = quadword_count;
+        channel.can_stall_drain = false;
+        switch (channel.tag_id)
         {
             case 0:
+            {
                 //refe
-                channels[index].address = addr;
-                channels[index].tag_address += 16;
-                channels[index].tag_end = true;
+                channel.address = addr;
+                channel.tag_address += 16;
+                channel.tag_end = true;
                 break;
+            }
             case 1:
+            {
                 //cnt
-                channels[index].address = channels[index].tag_address + 16;
-                channels[index].tag_address = channels[index].address;
+                channel.address = channels[index].tag_address + 16;
+                channel.tag_address = channels[index].address;
                 break;
+            }
             case 2:
+            {
                 //next
-                channels[index].address = channels[index].tag_address + 16;
-                channels[index].tag_address = addr;
+                channel.address = channels[index].tag_address + 16;
+                channel.tag_address = addr;
                 break;
+            }
             case 3:
+            {
                 //ref
-                channels[index].address = addr;
-                channels[index].tag_address += 16;
+                channel.address = addr;
+                channel.tag_address += 16;
                 break;
+            }
             case 4:
+            {
                 //refs
-                channels[index].address = addr;
-                channels[index].tag_address += 16;
-                channels[index].can_stall_drain = true;
+                channel.address = addr;
+                channel.tag_address += 16;
+                channel.can_stall_drain = true;
                 break;
+            }
             case 5:
             {
                 //call
-                channels[index].address = channels[index].tag_address + 16;
-
-                int asp = (channels[index].control >> 4) & 0x3;
-                uint32_t saved_addr = channels[index].address + (channels[index].quadword_count << 4);
+                channel.address = channel.tag_address + 16;
+                int asp = (channel.control >> 4) & 0x3;
+                uint32_t saved_addr = channel.address + (channel.quadword_count << 4);
+                
                 switch (asp)
                 {
                     case 0:
-                        channels[index].tag_save0 = saved_addr;
+                        channel.tag_save0 = saved_addr;
                         break;
                     case 1:
-                        channels[index].tag_save1 = saved_addr;
+                        channel.tag_save1 = saved_addr;
                         break;
                     case 2:
                         Errors::die("[DMAC] DMAtag 'call' sent when ASP == 2!\n");
                 }
+                
                 asp++;
-                channels[index].control &= ~(0x3 << 4);
-                channels[index].control |= asp << 4;
+                channel.control &= ~(0x3 << 4);
+                channel.control |= asp << 4;
 
-                channels[index].tag_address = addr;
-            }
+                channel.tag_address = addr;
                 break;
+            }
             case 6:
             {
                 //ret
-                channels[index].address = channels[index].tag_address + 16;
-                int asp = (channels[index].control >> 4) & 0x3;
+                channel.address = channel.tag_address + 16;
+                int asp = (channel.control >> 4) & 0x3;
+                
                 switch (asp)
                 {
                     case 0:
-                        channels[index].tag_end = true;
+                        channel.tag_end = true;
                         break;
                     case 1:
-                        channels[index].tag_address = channels[index].tag_save0;
+                        channel.tag_address = channel.tag_save0;
                         asp--;
                         break;
                     case 2:
-                        channels[index].tag_address = channels[index].tag_save1;
+                        channel.tag_address = channel.tag_save1;
                         asp--;
                         break;
                 }
-                channels[index].control &= ~(0x3 << 4);
-                channels[index].control |= asp << 4;
+
+                channel.control &= ~(0x3 << 4);
+                channel.control |= asp << 4;
+                break;
             }
-                break;
             case 7:
+            {
                 //end
-                channels[index].address = channels[index].tag_address + 16;
-                channels[index].tag_end = true;
+                channel.address = channel.tag_address + 16;
+                channel.tag_end = true;
                 break;
+            }
             default:
-                Errors::die("[DMAC] Unrecognized source chain DMAtag id %d", channels[index].tag_id);
+                Errors::die("[DMAC] Unrecognized source chain DMAtag id %d", channel.tag_id);
         }
+        
         if (IRQ_after_transfer && TIE)
-            channels[index].tag_end = true;
+            channel.tag_end = true;
         //printf("New address: $%08X\n", channels[index].address);
         //printf("New tag addr: $%08X\n", channels[index].tag_address);
 
@@ -1066,24 +958,29 @@ namespace ee
 
     void DMAC::start_DMA(int index)
     {
-        printf("[DMAC] %s DMA started: $%08X\n", CHANNEL[index], channels[index].control);
-        int mode = (channels[index].control >> 2) & 0x3;
+        auto& channel = channels[index];
+        fmt::print("[DMAC] {} DMA started: {:#x}\n", CHANNEL[index], channel.control);
+        
+        int mode = (channel.control >> 2) & 0x3;
         if (mode == 3)
         {
             //Strange invalid mode... FFXII sets VIF1 DMA to this mode. Having it mean chain is what works best.
-            channels[index].control &= ~(1 << 3);
+            channel.control &= ~(1 << 3);
             mode = 1;
         }
-        channels[index].tag_end = !(mode & 0x1); //always end transfers in normal and interleave mode
+
+        channel.tag_end = !(mode & 0x1); //always end transfers in normal and interleave mode
 
         //Stall drain happens on either normal transfers or refs tags
-        int tag = (channels[index].control >> 28) & 0x7;
-        bool tag_irq = (channels[index].control >> 31) & 0x1;
-        bool TIE = channels[index].control & (1 << 7);
-        channels[index].can_stall_drain = !(mode & 0x1) || tag == 4;
+        int tag = (channel.control >> 28) & 0x7;
+        bool tag_irq = (channel.control >> 31) & 0x1;
+        bool TIE = channel.control & (1 << 7);
+        channel.can_stall_drain = !(mode & 0x1) || tag == 4;
+        
         switch (mode)
         {
             case 1: //Chain
+            {
                 //If QWC > 0 and the current tag in CHCR is a terminal tag, end the transfer
                 if (channels[index].quadword_count > 0)
                 {
@@ -1091,13 +988,17 @@ namespace ee
                     channels[index].tag_id = tag;
                 }
                 break;
+            }
             case 2: //Interleave
+            {
                 channels[index].interleaved_qwc = SQWC.transfer_qwc;
                 break;
+            }
         }
-        uint32_t addr = channels[index].address;
-        channels[index].is_spr = (addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000;
-        channels[index].started = true;
+
+        uint32_t addr = channel.address;
+        channel.is_spr = (addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000;
+        channel.started = true;
 
         if (!active_channel)
             cycles_to_run = 0;
@@ -1283,10 +1184,10 @@ namespace ee
                 reg = RBOR;
                 break;
             default:
-                printf("[DMAC] Unrecognized read32 from $%08X\n", address);
+                fmt::print("[DMAC] Unrecognized read32 from {:#x}\n", address);
                 break;
         }
-        //printf("[DMAC] Read32 $%08X: $%08X\n", address, reg);
+
         return reg;
     }
 
@@ -1325,7 +1226,7 @@ namespace ee
                 control.stall_dest_channel = (value >> 6) & 0x3;
                 break;
             default:
-                printf("[DMAC] Unrecognized write8 to $%08X of $%02X\n", address, value);
+                fmt::print("[DMAC] Unrecognized write8 to {:#x} of {:#x}\n", address, value);
                 break;
         }
     }
@@ -1356,7 +1257,7 @@ namespace ee
                 write32(address, (channels[SPR_TO].control & 0xFFFF0000) | value);
                 break;
             default:
-                printf("[DMAC] Unrecognized write16 to $%08X of $%04X\n", address, value);
+                fmt::print("[DMAC] Unrecognized write16 to {:#x} of {:#x}\n", address, value);
                 break;
         }
     }
@@ -1366,7 +1267,7 @@ namespace ee
         switch (address)
         {
             case 0x10008000:
-                printf("[DMAC] VIF0 CTRL: $%08X\n", value);
+                fmt::print("[DMAC] VIF0 CTRL: {:#x}\n", value);
                 if (!(channels[VIF0].control & 0x100))
                 {
                     channels[VIF0].control = value;
@@ -1384,27 +1285,27 @@ namespace ee
                 }
                 break;
             case 0x10008010:
-                printf("[DMAC] VIF0 M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] VIF0 M_ADR: {:#x}\n", value);
                 channels[VIF0].address = value & ~0xF;
                 break;
             case 0x10008020:
-                printf("[DMAC] VIF0 QWC: $%08X\n", value);
+                fmt::print("[DMAC] VIF0 QWC: {:#x}\n", value);
                 channels[VIF0].quadword_count = value & 0xFFFF;
                 break;
             case 0x10008030:
-                printf("[DMAC] VIF0 T_ADR: $%08X\n", value);
+                fmt::print("[DMAC] VIF0 T_ADR: {:#x}\n", value);
                 channels[VIF0].tag_address = value & ~0xF;
                 break;
             case 0x10008040:
-                printf("[DMAC] VIF0 ASR0: $%08X\n", value);
+                fmt::print("[DMAC] VIF0 ASR0: {:#x}\n", value);
                 channels[VIF0].tag_save0 = value & ~0xF;
                 break;
             case 0x10008050:
-                printf("[DMAC] VIF0 ASR1: $%08X\n", value);
+                fmt::print("[DMAC] VIF0 ASR1: {:#x}\n", value);
                 channels[VIF0].tag_save1 = value & ~0xF;
                 break;
             case 0x10009000:
-                printf("[DMAC] VIF1 CTRL: $%08X\n", value);
+                fmt::print("[DMAC] VIF1 CTRL: {:#x}\n", value);
                 if (!(channels[VIF1].control & 0x100))
                 {
                     channels[VIF1].control = value;
@@ -1422,27 +1323,27 @@ namespace ee
                 }
                 break;
             case 0x10009010:
-                printf("[DMAC] VIF1 M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] VIF1 M_ADR: {:#x}\n", value);
                 channels[VIF1].address = value & ~0xF;
                 break;
             case 0x10009020:
-                printf("[DMAC] VIF1 QWC: $%08X\n", value);
+                fmt::print("[DMAC] VIF1 QWC: {:#x}\n", value);
                 channels[VIF1].quadword_count = value & 0xFFFF;
                 break;
             case 0x10009030:
-                printf("[DMAC] VIF1 T_ADR: $%08X\n", value);
+                fmt::print("[DMAC] VIF1 T_ADR: {:#x}\n", value);
                 channels[VIF1].tag_address = value & ~0xF;
                 break;
             case 0x10009040:
-                printf("[DMAC] VIF1 ASR0: $%08X\n", value);
+                fmt::print("[DMAC] VIF1 ASR0: {:#x}\n", value);
                 channels[VIF1].tag_save0 = value & ~0xF;
                 break;
             case 0x10009050:
-                printf("[DMAC] VIF1 ASR1: $%08X\n", value);
+                fmt::print("[DMAC] VIF1 ASR1: {:#x}\n", value);
                 channels[VIF1].tag_save1 = value & ~0xF;
                 break;
             case 0x1000A000:
-                printf("[DMAC] GIF CTRL: $%08X\n", value);
+                fmt::print("[DMAC] GIF CTRL: {:#x}\n", value);
                 if (!(channels[GIF].control & 0x100))
                 {
                     channels[GIF].control = value;
@@ -1468,27 +1369,27 @@ namespace ee
                 }
                 break;
             case 0x1000A010:
-                printf("[DMAC] GIF M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] GIF M_ADR: {:#x}\n", value);
                 channels[GIF].address = value & ~0xF;
                 break;
             case 0x1000A020:
-                printf("[DMAC] GIF QWC: $%08X\n", value & 0xFFFF);
+                fmt::print("[DMAC] GIF QWC: {:#x}\n", value & 0xFFFF);
                 channels[GIF].quadword_count = value & 0xFFFF;
                 break;
             case 0x1000A030:
-                printf("[DMAC] GIF T_ADR: $%08X\n", value);
+                fmt::print("[DMAC] GIF T_ADR: {:#x}\n", value);
                 channels[GIF].tag_address = value & ~0xF;
                 break;
             case 0x1000A040:
-                printf("[DMAC] GIF ASR0: $%08X\n", value);
+                fmt::print("[DMAC] GIF ASR0: {:#x}\n", value);
                 channels[GIF].tag_save0 = value & ~0xF;
                 break;
             case 0x1000A050:
-                printf("[DMAC] GIF ASR1: $%08X\n", value);
+                fmt::print("[DMAC] GIF ASR1: {:#x}\n", value);
                 channels[GIF].tag_save1 = value & ~0xF;
                 break;
             case 0x1000B000:
-                printf("[DMAC] IPU_FROM CTRL: $%08X\n", value);
+                fmt::print("[DMAC] IPU_FROM CTRL: {:#x}\n", value);
                 if (!(channels[IPU_FROM].control & 0x100))
                 {
                     channels[IPU_FROM].control = value;
@@ -1506,15 +1407,15 @@ namespace ee
                 }
                 break;
             case 0x1000B010:
-                printf("[DMAC] IPU_FROM M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] IPU_FROM M_ADR: {:#x}\n", value);
                 channels[IPU_FROM].address = value & ~0xF;
                 break;
             case 0x1000B020:
-                printf("[DMAC] IPU_FROM QWC: $%08X\n", value);
+                fmt::print("[DMAC] IPU_FROM QWC: {:#x}\n", value);
                 channels[IPU_FROM].quadword_count = value & 0xFFFF;
                 break;
             case 0x1000B400:
-                printf("[DMAC] IPU_TO CTRL: $%08X\n", value);
+                fmt::print("[DMAC] IPU_TO CTRL: {:#x}\n", value);
                 if (!(channels[IPU_TO].control & 0x100))
                 {
                     channels[IPU_TO].control = value;
@@ -1532,19 +1433,19 @@ namespace ee
                 }
                 break;
             case 0x1000B410:
-                printf("[DMAC] IPU_TO M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] IPU_TO M_ADR: {:#x}\n", value);
                 channels[IPU_TO].address = value & ~0xF;
                 break;
             case 0x1000B420:
-                printf("[DMAC] IPU_TO QWC: $%08X\n", value);
+                fmt::print("[DMAC] IPU_TO QWC: {:#x}\n", value);
                 channels[IPU_TO].quadword_count = value & 0xFFFF;
                 break;
             case 0x1000B430:
-                printf("[DMAC] IPU_TO T_ADR: $%08X\n", value);
+                fmt::print("[DMAC] IPU_TO T_ADR: {:#x}\n", value);
                 channels[IPU_TO].tag_address = value & ~0xF;
                 break;
             case 0x1000C000:
-                printf("[DMAC] SIF0 CTRL: $%08X\n", value);
+                fmt::print("[DMAC] SIF0 CTRL: {:#x}\n", value);
                 if (!(channels[EE_SIF0].control & 0x100))
                 {
                     channels[EE_SIF0].control = value;
@@ -1562,15 +1463,15 @@ namespace ee
                 }
                 break;
             case 0x1000C010:
-                printf("[DMAC] SIF0 M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] SIF0 M_ADR: {:#x}\n", value);
                 channels[EE_SIF0].address = value & ~0xF;
                 break;
             case 0x1000C020:
-                printf("[DMAC] SIF0 QWC: $%08X\n", value);
+                fmt::print("[DMAC] SIF0 QWC: {:#x}\n", value);
                 channels[EE_SIF0].quadword_count = value & 0xFFFF;
                 break;
             case 0x1000C400:
-                printf("[DMAC] SIF1 CTRL: $%08X\n", value);
+                fmt::print("[DMAC] SIF1 CTRL: {:#x}\n", value);
                 if (!(channels[EE_SIF1].control & 0x100))
                 {
                     channels[EE_SIF1].control = value;
@@ -1588,19 +1489,19 @@ namespace ee
                 }
                 break;
             case 0x1000C410:
-                printf("[DMAC] SIF1 M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] SIF1 M_ADR: {:#x}\n", value);
                 channels[EE_SIF1].address = value & ~0xF;
                 break;
             case 0x1000C420:
-                printf("[DMAC] SIF1 QWC: $%08X\n", value);
+                fmt::print("[DMAC] SIF1 QWC: {:#x}\n", value);
                 channels[EE_SIF1].quadword_count = value & 0xFFFF;
                 break;
             case 0x1000C430:
-                printf("[DMAC] SIF1 T_ADR: $%08X\n", value);
+                fmt::print("[DMAC] SIF1 T_ADR: {:#x}\n", value);
                 channels[EE_SIF1].tag_address = value & ~0xF;
                 break;
             case 0x1000D000:
-                printf("[DMAC] SPR_FROM CTRL: $%08X\n", value);
+                fmt::print("[DMAC] SPR_FROM CTRL: {:#x}\n", value);
                 if (!(channels[SPR_FROM].control & 0x100))
                 {
                     channels[SPR_FROM].control = value;
@@ -1618,19 +1519,19 @@ namespace ee
                 }
                 break;
             case 0x1000D010:
-                printf("[DMAC] SPR_FROM M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] SPR_FROM M_ADR: {:#x}\n", value);
                 channels[SPR_FROM].address = value & ~0xF;
                 break;
             case 0x1000D020:
-                printf("[DMAC] SPR_FROM QWC: $%08X\n", value);
+                fmt::print("[DMAC] SPR_FROM QWC: {:#x}\n", value);
                 channels[SPR_FROM].quadword_count = value & 0xFFFF;
                 break;
             case 0x1000D080:
-                printf("[DMAC] SPR_FROM SADR: $%08X\n", value);
+                fmt::print("[DMAC] SPR_FROM SADR: {:#x}\n", value);
                 channels[SPR_FROM].scratchpad_address = value & 0x3FFC;
                 break;
             case 0x1000D400:
-                printf("[DMAC] SPR_TO CTRL: $%08X\n", value);
+                fmt::print("[DMAC] SPR_TO CTRL: {:#x}\n", value);
                 if (!(channels[SPR_TO].control & 0x100))
                 {
                     channels[SPR_TO].control = value;
@@ -1648,23 +1549,23 @@ namespace ee
                 }
                 break;
             case 0x1000D410:
-                printf("[DMAC] SPR_TO M_ADR: $%08X\n", value);
+                fmt::print("[DMAC] SPR_TO M_ADR: {:#x}\n", value);
                 channels[SPR_TO].address = value & ~0xF;
                 break;
             case 0x1000D420:
-                printf("[DMAC] SPR_TO QWC: $%08X\n", value);
+                fmt::print("[DMAC] SPR_TO QWC: {:#x}\n", value);
                 channels[SPR_TO].quadword_count = value & 0xFFFF;
                 break;
             case 0x1000D430:
-                printf("[DMAC] SPR_TO T_ADR: $%08X\n", value);
+                fmt::print("[DMAC] SPR_TO T_ADR: {:#x}\n", value);
                 channels[SPR_TO].tag_address = value & ~0xF;
                 break;
             case 0x1000D480:
-                printf("[DMAC] SPR_TO SADR: $%08X\n", value);
+                fmt::print("[DMAC] SPR_TO SADR: {:#x}\n", value);
                 channels[SPR_TO].scratchpad_address = value & 0x3FFC;
                 break;
             case 0x1000E000:
-                printf("[DMAC] Write32 D_CTRL: $%08X\n", value);
+                fmt::print("[DMAC] Write32 D_CTRL: {:#x}\n", value);
                 control.master_enable = value & 0x1;
                 control.cycle_stealing = value & 0x2;
                 control.mem_drain_channel = (value >> 2) & 0x3;
@@ -1674,7 +1575,7 @@ namespace ee
                 break;
             case 0x1000E010:
             case 0x1000E100:
-                printf("[DMAC] Write32 D_STAT: $%08X\n", value);
+                fmt::print("[DMAC] Write32 D_STAT: {:#x}\n", value);
                 for (int i = 0; i < 15; i++)
                 {
                     if (value & (1 << i))
@@ -1687,7 +1588,7 @@ namespace ee
                 int1_check();
                 break;
             case 0x1000E020:
-                printf("[DMAC] Write to PCR: $%08X\n", value);
+                fmt::print("[DMAC] Write to PCR: {:#x}\n", value);
                 PCR = value;
 
                 //Global priority control
@@ -1697,24 +1598,24 @@ namespace ee
                 }
                 break;
             case 0x1000E030:
-                printf("[DMAC] Write to SQWC: $%08X\n", value);
+                fmt::print("[DMAC] Write to SQWC: {:#x}\n", value);
                 SQWC.skip_qwc = value & 0xFF;
                 SQWC.transfer_qwc = (value >> 16) & 0xFF;
                 break;
             case 0x1000E040:
-                printf("[DMAC] Write to RBSR: $%08X\n", value);
+                fmt::print("[DMAC] Write to RBSR: {:#x}\n", value);
                 RBSR = value;
                 break;
             case 0x1000E050:
-                printf("[DMAC] Write to RBOR: $%08X\n", value);
+                fmt::print("[DMAC] Write to RBOR: {:#x}\n", value);
                 RBOR = value;
                 break;
             case 0x1000E060:
-                printf("[DMAC] Write to STADR: $%08X\n", value);
+                fmt::print("[DMAC] Write to STADR: {:#x}\n", value);
                 update_stadr(value);
                 break;
             default:
-                printf("[DMAC] Unrecognized write32 of $%08X to $%08X\n", value, address);
+                fmt::print("[DMAC] Unrecognized write32 of {:#x} to {:#x}\n", value, address);
                 break;
         }
     }
@@ -1766,7 +1667,8 @@ namespace ee
 
     void DMAC::check_for_activation(int index)
     {
-        if (channels[index].dma_req && channels[index].started)
+        auto& channel = channels[index];
+        if (channel.dma_req && channel.started)
         {
             //Keep a channel deactivated if it has been stalled
             bool do_stall_check = false;
@@ -1783,24 +1685,26 @@ namespace ee
                     break;
             }
 
-            if (do_stall_check && channels[index].can_stall_drain && channels[index].address == STADR)
+            if (do_stall_check && channel.can_stall_drain && channel.address == STADR)
             {
-                if (channels[index].has_dma_stalled == false)
+                if (channel.has_dma_stalled == false)
                 {
-                    printf("DMA Stall Drain channel %d Addr %x STADR %x\n", index, channels[index].address, STADR);
+                    fmt::print("[DMAC] Stall Drain channel: {:d} address: {:#x} STADR: {:#x}\n", index, channel.address, STADR);
                     interrupt_stat.channel_stat[DMA_STALL] = true;
+                    
                     int1_check();
-                    channels[index].has_dma_stalled = true;
+                    channel.has_dma_stalled = true;
                 }
-                queued_channels.push_back(&channels[index]);
+                
+                queued_channels.push_back(&channel);
                 return;
             }
 
             if (!active_channel)
-                active_channel = &channels[index];
+                active_channel = &channel;
             else
             {
-                queued_channels.push_back(&channels[index]);
+                queued_channels.push_back(&channel);
             }
         }
     }
@@ -1811,8 +1715,7 @@ namespace ee
         if (active_channel == &channels[index])
         {
             active_channel = nullptr;
-            if (queued_channels.size())
-                find_new_active_channel();
+            arbitrate();
         }
         else
         {
@@ -1833,27 +1736,14 @@ namespace ee
         //Only switch to a new channel if something is queued
         if (queued_channels.size())
         {
-            /*bool is_active = active_channel;
-            if (is_active)
-                printf("[DMAC] Arbitrating from %s to ", CHAN(active_channel->index));*/
-            find_new_active_channel();
+            if (active_channel)
+            {
+                queued_channels.push_back(active_channel);
+                active_channel = nullptr;
+            }
 
-            /*if (is_active)
-                printf("%s\n", CHAN(active_channel->index));
-            else
-                printf("[DMAC] Arbitrating to %s\n", CHAN(active_channel->index));*/
+            active_channel = queued_channels.front();
+            queued_channels.pop_front();
         }
-    }
-
-    void DMAC::find_new_active_channel()
-    {
-        if (active_channel)
-        {
-            queued_channels.push_back(active_channel);
-            active_channel = nullptr;
-        }
-
-        active_channel = queued_channels.front();
-        queued_channels.pop_front();
     }
 }
