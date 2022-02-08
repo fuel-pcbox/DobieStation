@@ -198,8 +198,8 @@ namespace ee
     bool Cop0::get_condition()
     {
         auto& dmac = e->dmac;
-        uint32_t STAT = dmac->read32(0x1000E010) & 0x3FF;
-        uint32_t PCR = dmac->read32(0x1000E020) & 0x3FF;
+        uint32_t STAT = dmac->read<uint32_t>(0x1000E010) & 0x3FF;
+        uint32_t PCR = dmac->read<uint32_t>(0x1000E020) & 0x3FF;
         return ((~PCR | STAT) & 0x3FF) == 0x3FF;
     }
 

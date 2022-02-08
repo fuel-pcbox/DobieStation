@@ -539,7 +539,7 @@ namespace core
         if ((address & (0xFF000000)) == 0x12000000)
             return (gs->read32_privileged(address & ~0x3) >> (8 * (address & 0x3)));
         if (address >= 0x10008000 && address < 0x1000F000)
-            return dmac->read8(address);
+            return dmac->read<uint8_t>(address);
         if (address >= 0x11000000 && address < 0x11004000)
             return vu0->read_instr<uint8_t>(address);
         if (address >= 0x11004000 && address < 0x11008000)
@@ -567,7 +567,7 @@ namespace core
         if (address >= 0x10000000 && address < 0x10002000)
             return (uint16_t)timers->read32(address);
         if (address >= 0x10008000 && address < 0x1000F000)
-            return dmac->read16(address);
+            return dmac->read<uint16_t>(address);
         if ((address & (0xFF000000)) == 0x12000000)
             return (gs->read32_privileged(address & ~0x3) >> (8 * (address & 0x2)));
         if (address >= 0x1C000000 && address < 0x1C200000)
@@ -599,7 +599,7 @@ namespace core
         if ((address & (0xFF000000)) == 0x12000000)
             return gs->read32_privileged(address);
         if (address >= 0x10008000 && address < 0x1000F000)
-            return dmac->read32(address);
+            return dmac->read<uint32_t>(address);
         if (address >= 0x1C000000 && address < 0x1C200000)
             return *(uint32_t*)&iop->ram[address & 0x1FFFFF];
         if (address >= 0x11000000 && address < 0x11004000)
@@ -709,7 +709,7 @@ namespace core
         if (address >= 0x10000000 && address < 0x10002000)
             return timers->read32(address);
         if (address >= 0x10008000 && address < 0x1000F000)
-            return dmac->read32(address);
+            return dmac->read<uint32_t>(address);
         if ((address & (0xFF000000)) == 0x12000000)
             return gs->read64_privileged(address);
         if (address >= 0x1C000000 && address < 0x1C200000)
@@ -759,7 +759,7 @@ namespace core
     {
         if (address >= 0x10008000 && address < 0x1000F000)
         {
-            dmac->write8(address, value);
+            dmac->write<uint8_t>(address, value);
             return;
         }
         if (address >= 0x1C000000 && address < 0x1C200000)
@@ -802,7 +802,7 @@ namespace core
     {
         if (address >= 0x10008000 && address < 0x1000F000)
         {
-            dmac->write16(address, value);
+            dmac->write<uint16_t>(address, value);
             return;
         }
         if (address >= 0x1C000000 && address < 0x1C200000)
@@ -859,7 +859,7 @@ namespace core
         }
         if (address >= 0x10008000 && address < 0x1000F000)
         {
-            dmac->write32(address, value);
+            dmac->write<uint32_t>(address, value);
             return;
         }
         if (address >= 0x1A000000 && address < 0x1FC00000)
@@ -986,7 +986,7 @@ namespace core
         }
         if (address >= 0x10008000 && address < 0x1000F000)
         {
-            dmac->write32(address, value);
+            dmac->write<uint32_t>(address, value);
             return;
         }
         if ((address & (0xFF000000)) == 0x12000000)

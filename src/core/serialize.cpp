@@ -463,13 +463,7 @@ namespace ee
 
         apply_dma_funcs();
 
-        state.read((char*)&control, sizeof(control));
-        state.read((char*)&interrupt_stat, sizeof(interrupt_stat));
-        state.read((char*)&PCR, sizeof(PCR));
-        state.read((char*)&RBOR, sizeof(RBOR));
-        state.read((char*)&RBSR, sizeof(RBSR));
-        state.read((char*)&SQWC, sizeof(SQWC));
-        state.read((char*)&STADR, sizeof(STADR));
+        state.read((char*)&globals, sizeof(globals));
         state.read((char*)&mfifo_empty_triggered, sizeof(mfifo_empty_triggered));
         state.read((char*)&cycles_to_run, sizeof(cycles_to_run));
         state.read((char*)&master_disable, sizeof(master_disable));
@@ -497,13 +491,7 @@ namespace ee
     {
         state.write((char*)&channels, sizeof(channels));
 
-        state.write((char*)&control, sizeof(control));
-        state.write((char*)&interrupt_stat, sizeof(interrupt_stat));
-        state.write((char*)&PCR, sizeof(PCR));
-        state.write((char*)&RBOR, sizeof(RBOR));
-        state.write((char*)&RBSR, sizeof(RBSR));
-        state.write((char*)&SQWC, sizeof(SQWC));
-        state.write((char*)&STADR, sizeof(STADR));
+        state.write((char*)&globals, sizeof(globals));
         state.write((char*)&mfifo_empty_triggered, sizeof(mfifo_empty_triggered));
         state.write((char*)&cycles_to_run, sizeof(cycles_to_run));
         state.write((char*)&master_disable, sizeof(master_disable));
