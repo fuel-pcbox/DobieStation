@@ -39,6 +39,16 @@ namespace ee
             uint32_t address : 30;
             uint32_t mem_select : 1;
         };
+
+        DMACAddress operator+(int val)
+        {
+            return { .value = value + val };
+        }
+
+        inline bool is_scratchpad() const
+        {
+            return mem_select || (address & 0x70000000) == 0x70000000;
+        }
     };
 
     union DCHCR
@@ -55,6 +65,28 @@ namespace ee
             uint32_t running : 1;
             uint32_t : 7;
             uint32_t tag : 16;
+        };
+        struct
+        {
+            uint32_t : 26;
+            uint32_t priority : 2;
+            uint32_t id : 3;
+            uint32_t irq : 1;
+        } tag_info;
+    };
+
+    union DMACTag
+    {
+        uint128_t value;
+        struct
+        {
+            uint64_t qwords : 16;
+            uint64_t : 10;
+            uint64_t priority : 2;
+            uint64_t id : 3;
+            uint64_t irq : 1;
+            uint64_t address : 32;
+            uint64_t data : 64;
         };
     };
 

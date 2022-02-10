@@ -541,25 +541,22 @@ namespace ee
             }
             else if (sif->get_SIF0_size() >= 2)
             {
-                uint64_t DMAtag = sif->read_SIF0();
-                DMAtag |= (uint64_t)sif->read_SIF0() << 32;
-                channel.qword_count = DMAtag & 0xFFFF;
-                channel.address.value = DMAtag >> 32;
+                uint128_t data;
+                data._u32[0] = sif->read_SIF0();
+                data._u32[1] = sif->read_SIF0();
+                fmt::print("[DMAC] SIF0 tag: {:#x}\n", data._u64[0]);
 
-                fmt::print("[DMAC] SIF0 tag: {:#x}\n", DMAtag);
-                
-                uint32_t address = channel.address.value;
-                channel.is_spr = (address & (1 << 31)) || (address & 0x70000000) == 0x70000000;
-                channel.tag_id = (DMAtag >> 28) & 0x7;
+                /* Read data from DMA tag */
+                DMACTag tag = { .value = data };
+                channel.control.tag = tag.value._u16[1];
+                channel.qword_count = tag.qwords;
+                channel.address.value = tag.address;            
+                channel.tag_id = tag.id;
+                channel.is_spr = channel.address.is_scratchpad();
 
-                bool IRQ = (DMAtag & (1UL << 31));
-                bool TIE = channel.control.value & (1 << 7);
-                
-                if (channel.tag_id == 7 || (IRQ && TIE))
+                if (channel.tag_id == 7 || (tag.irq && channel.control.enable_irq_bit))
                     channel.tag_end = true;
 
-                channel.control.value &= 0xFFFF;
-                channel.control.value |= DMAtag & 0xFFFF0000;
                 arbitrate();
             }
         }
@@ -672,23 +669,20 @@ namespace ee
             }
             else
             {
-                uint128_t DMAtag = fetch128(channel.scratchpad_address | (1 << 31));
-                fmt::print("[DMAC] SPR_FROM tag: {:#x}\n", DMAtag._u64[0]);
-
-                channel.qword_count = DMAtag._u32[0] & 0xFFFF;
-                channel.address.value = DMAtag._u32[1];
+                /* Read data from tag */
+                DMACTag tag = { .value = fetch128(channel.scratchpad_address | (1 << 31)) };
+                channel.qword_count = tag.qwords;
+                channel.address.value = tag.address;
                 channel.scratchpad_address += 16;
                 channel.scratchpad_address &= 0x3FFF;
-                channel.tag_id = (DMAtag._u32[0] >> 28) & 0x7;
+                channel.control.tag = tag.value._u16[1];
+                channel.tag_id = tag.id;
 
-                bool IRQ = (DMAtag._u32[0] & (1UL << 31));
-                bool TIE = channel.control.value & (1 << 7);
-                
-                if (channel.tag_id == 7 || (IRQ && TIE))
+                fmt::print("[DMAC] SPR_FROM tag: {:#x}\n", tag.value._u64[0]);
+
+                if (channel.tag_id == 7 || (tag.irq && channel.control.enable_irq_bit))
                     channel.tag_end = true;
 
-                channel.control.value &= 0xFFFF;
-                channel.control.value |= DMAtag._u32[0] & 0xFFFF0000;
                 arbitrate();
             }
         }
@@ -804,29 +798,22 @@ namespace ee
     void DMAC::handle_source_chain(int index)
     {
         auto& channel = channels[index];
-        uint128_t quad = fetch128(channel.tag_address.value);
-        uint64_t DMAtag = quad._u64[0];
-        //printf("[DMAC] Ch.%d Source DMAtag read $%08X: $%08X_%08X\n", index, channels[index].tag_address, DMAtag >> 32, DMAtag & 0xFFFFFFFF);
+        DMACTag tag = { .value = fetch128(channel.tag_address.value) };
+        DMACAddress address = { .value = tag.address & ~0xF };
 
-        //Change CTRL to have the upper 16 bits equal to bits 16-31 of the most recently read DMAtag
-        channel.control.value &= 0xFFFF;
-        channel.control.value |= DMAtag & 0xFFFF0000;
-
-        uint16_t quadword_count = DMAtag & 0xFFFF;
-        uint32_t addr = (DMAtag >> 32) & 0xFFFFFFF0;
-        channel.is_spr = (addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000;
-        bool IRQ_after_transfer = DMAtag & (1UL << 31);
-        bool TIE = channels[index].control.value & (1 << 7);
-        int PCR_toggle = (DMAtag >> 26) & 0x3;
-        channel.tag_id = (DMAtag >> 28) & 0x7;
-        channel.qword_count = quadword_count;
+        /* Update channel according to the data in the tag */
+        channel.control.tag = tag.value._u16[1];
+        channel.is_spr = address.is_scratchpad();
+        channel.tag_id = tag.id;
+        channel.qword_count = tag.qwords;
         channel.can_stall_drain = false;
+
         switch (channel.tag_id)
         {
             case 0:
             {
                 //refe
-                channel.address.value = addr;
+                channel.address = address;
                 channel.tag_address.value += 16;
                 channel.tag_end = true;
                 break;
@@ -834,28 +821,28 @@ namespace ee
             case 1:
             {
                 //cnt
-                channel.address.value = channel.tag_address.value + 16;
-                channel.tag_address.value = channel.address.value;
+                channel.address = channel.tag_address + 16;
+                channel.tag_address = channel.address;
                 break;
             }
             case 2:
             {
                 //next
-                channel.address.value = channels[index].tag_address.value + 16;
-                channel.tag_address.value = addr;
+                channel.address = channel.tag_address + 16;
+                channel.tag_address = address;
                 break;
             }
             case 3:
             {
                 //ref
-                channel.address.value = addr;
+                channel.address = address;
                 channel.tag_address.value += 16;
                 break;
             }
             case 4:
             {
                 //refs
-                channel.address.value = addr;
+                channel.address = address;
                 channel.tag_address.value += 16;
                 channel.can_stall_drain = true;
                 break;
@@ -863,22 +850,19 @@ namespace ee
             case 5:
             {
                 //call
-                channel.address.value = channel.tag_address.value + 16;
-                int asp = (channel.control.value >> 4) & 0x3;
-                channel.saved_tag_address[asp].value = channel.address.value + (channel.qword_count << 4);
-                
-                asp++;
-                channel.control.value &= ~(0x3 << 4);
-                channel.control.value |= asp << 4;
+                int asp = channel.control.stack_ptr;
+                channel.address = channel.tag_address + 16;
+                channel.tag_address = address;
 
-                channel.tag_address.value = addr;
+                channel.saved_tag_address[asp] = channel.address + (channel.qword_count << 4);
+                channel.control.stack_ptr = ++asp;
                 break;
             }
             case 6:
             {
                 //ret
-                channel.address.value = channel.tag_address.value + 16;
-                int asp = (channel.control.value >> 4) & 0x3;
+                channel.address = channel.tag_address + 16;
+                int asp = channel.control.stack_ptr;
                 
                 switch (asp)
                 {
@@ -895,14 +879,13 @@ namespace ee
                         break;
                 }
 
-                channel.control.value &= ~(0x3 << 4);
-                channel.control.value |= asp << 4;
+                channel.control.stack_ptr = asp;
                 break;
             }
             case 7:
             {
                 //end
-                channel.address.value = channel.tag_address.value + 16;
+                channel.address = channel.tag_address + 16;
                 channel.tag_end = true;
                 break;
             }
@@ -910,12 +893,10 @@ namespace ee
                 Errors::die("[DMAC] Unrecognized source chain DMAtag id %d", channel.tag_id);
         }
         
-        if (IRQ_after_transfer && TIE)
+        if (tag.irq && channel.control.enable_irq_bit)
             channel.tag_end = true;
-        //printf("New address: $%08X\n", channels[index].address);
-        //printf("New tag addr: $%08X\n", channels[index].tag_address);
-
-        switch (PCR_toggle)
+        
+        switch (tag.priority)
         {
             case 1:
                 Errors::die("[DMAC] PCR info set to 1!");
@@ -941,28 +922,29 @@ namespace ee
         int mode = channel.control.mode;
         if (mode == 3)
         {
-            //Strange invalid mode... FFXII sets VIF1 DMA to this mode. Having it mean chain is what works best.
-            channel.control.value &= ~(1 << 3);
+            /* Strange invalid mode... FFXII sets VIF1 DMA to this mode.
+               Having it mean chain is what works best. */
+            channel.control.mode &= ~0x2;
             mode = 1;
         }
 
-        channel.tag_end = !(mode & 0x1); //always end transfers in normal and interleave mode
-
-        //Stall drain happens on either normal transfers or refs tags
-        int tag = (channel.control.value >> 28) & 0x7;
-        bool tag_irq = (channel.control.value >> 31) & 0x1;
-        bool TIE = channel.control.value & (1 << 7);
-        channel.can_stall_drain = !(mode & 0x1) || tag == 4;
+        /* Always end transfers in normaland interleave mode */
+        channel.tag_end = !(mode & 0x1); 
+        
+        /* Stall drain happens on either normal transfers or refs tags */
+        int tag_id = channel.control.tag_info.id;
+        channel.can_stall_drain = channel.tag_end || tag_id == 4;
         
         switch (mode)
         {
             case 1: //Chain
             {
-                //If QWC > 0 and the current tag in CHCR is a terminal tag, end the transfer
+                /* If QWC > 0 and the current tag in CHCR is a terminal tag, end the transfer. */
                 if (channel.qword_count > 0)
                 {
-                    channel.tag_end = (tag == 0 || tag == 7) || (TIE && tag_irq);
-                    channel.tag_id = tag;
+                    channel.tag_id = tag_id;
+                    channel.tag_end = (channel.control.enable_irq_bit && channel.control.tag_info.irq) || 
+                                      (tag_id == 0 || tag_id == 7);
                 }
                 break;
             }
@@ -973,8 +955,7 @@ namespace ee
             }
         }
 
-        uint32_t addr = channel.address.value;
-        channel.is_spr = (addr & (1 << 31)) || (addr & 0x70000000) == 0x70000000;
+        channel.is_spr = channel.address.is_scratchpad();
         channel.started = true;
 
         if (!active_channel)
@@ -997,6 +978,7 @@ namespace ee
     {
         bool old_req = channels[index].dma_req;
         channels[index].dma_req = true;
+        
         if (!old_req)
             check_for_activation(index);
     }
@@ -1034,7 +1016,7 @@ namespace ee
                 Errors::die("DMAC::update_stall_address: control.stall_dest_channel >= 4");
         }
 
-        if(channels[c].has_dma_stalled)
+        if (channels[c].has_dma_stalled)
             set_DMA_request(c);
     }
 
@@ -1076,9 +1058,7 @@ namespace ee
             if (!active_channel)
                 active_channel = &channel;
             else
-            {
                 queued_channels.push_back(&channel);
-            }
         }
     }
 
