@@ -1,5 +1,5 @@
 #pragma once
-#include <list>
+#include <deque>
 #include "ir_instr.hpp"
 
 namespace IR
@@ -8,7 +8,7 @@ namespace IR
 class Block
 {
     private:
-        std::list<Instruction> instructions;
+        std::deque<Instruction> instructions;
         int cycle_count;
     public:
         Block();
