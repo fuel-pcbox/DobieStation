@@ -324,8 +324,10 @@ namespace ee
             switch (reg)
             {
             case 1:
+            {
                 /* D_STAT is only written with word alignment, but just in case */
-                assert(std::is_same<T, uint32_t>::value);
+                constexpr bool is_word_aligned = std::is_same<T, uint32_t>::value;
+                assert(is_word_aligned);
 
                 /* The lower bits are cleared while the upper ones are reversed */
                 status.clear &= ~(value & 0xffff);
@@ -333,6 +335,7 @@ namespace ee
 
                 int1_check();
                 return;
+            }
             case 6:
                 update_stadr(value);
                 return;
