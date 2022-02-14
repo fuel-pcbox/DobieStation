@@ -84,10 +84,10 @@ EmuWindow::EmuWindow(QWidget *parent) : QMainWindow(parent)
     create_menu();
 
     connect(this, SIGNAL(shutdown()), &emu_thread, SLOT(shutdown()));
-    connect(this, SIGNAL(press_key(PAD_BUTTON)), &emu_thread, SLOT(press_key(PAD_BUTTON)));
-    connect(this, SIGNAL(release_key(PAD_BUTTON)), &emu_thread, SLOT(release_key(PAD_BUTTON)));
-    connect(this, SIGNAL(update_joystick(JOYSTICK, JOYSTICK_AXIS, uint8_t)),
-        &emu_thread, SLOT(update_joystick(JOYSTICK, JOYSTICK_AXIS, uint8_t))
+    connect(this, SIGNAL(press_key(sio2::PAD_BUTTON)), &emu_thread, SLOT(press_key(sio2::PAD_BUTTON)));
+    connect(this, SIGNAL(release_key(sio2::PAD_BUTTON)), &emu_thread, SLOT(release_key(sio2::PAD_BUTTON)));
+    connect(this, SIGNAL(update_joystick(sio2::JOYSTICK, sio2::JOYSTICK_AXIS, uint8_t)),
+        &emu_thread, SLOT(update_joystick(sio2::JOYSTICK, sio2::JOYSTICK_AXIS, uint8_t))
     );
     connect(&emu_thread, SIGNAL(update_FPS(double)), this, SLOT(update_FPS(double)));
     connect(&emu_thread, SIGNAL(emu_error(QString)), this, SLOT(emu_error(QString)));
