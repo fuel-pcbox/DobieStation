@@ -49,6 +49,8 @@ namespace ee
         Write
     };
 
+    using InterpreterFunc = void(*)(EmotionEngine&, uint32_t);
+
     struct EE_InstrInfo
     {
         /**
@@ -83,19 +85,31 @@ namespace ee
             MAC1 = 0x2000,
         };
 
-        friend Pipeline operator& (Pipeline x, Pipeline y)
+        friend inline Pipeline operator& (Pipeline x, Pipeline y)
         {
-            return (Pipeline)((uint8_t)x & (uint8_t)y);
+            using T = std::underlying_type_t<Pipeline>;
+            auto p1 = static_cast<T>(x);
+            auto p2 = static_cast<T>(y);
+
+            return static_cast<Pipeline>(p1 & p2);
         }
 
-        friend Pipeline operator| (Pipeline x, Pipeline y)
+        friend inline Pipeline operator| (Pipeline x, Pipeline y)
         {
-            return (Pipeline)((uint8_t)x | (uint8_t)y);
+            using T = std::underlying_type_t<Pipeline>;
+            auto p1 = static_cast<T>(x);
+            auto p2 = static_cast<T>(y);
+
+            return static_cast<Pipeline>(p1 | p2);
         }
 
-        friend Pipeline operator^ (Pipeline x, Pipeline y)
+        friend inline Pipeline operator^ (Pipeline x, Pipeline y)
         {
-            return (Pipeline)((uint8_t)x ^ (uint8_t)y);
+            using T = std::underlying_type_t<Pipeline>;
+            auto p1 = static_cast<T>(x);
+            auto p2 = static_cast<T>(y);
+
+            return static_cast<Pipeline>(p1 ^ p2);
         }
 
         // Used for throughput calculations
@@ -118,7 +132,8 @@ namespace ee
         // requires no dynamic memory allocation
         std::basic_string<uint16_t> write_dependencies = std::basic_string<uint16_t>();
         std::basic_string<uint16_t> read_dependencies = std::basic_string<uint16_t>();
-        void(*interpreter_fn)(EmotionEngine&, uint32_t) = nullptr;
+        InterpreterFunc interpreter_fn = nullptr;
+        
         Pipeline pipeline = Pipeline::Unknown;
         InstructionType instruction_type = InstructionType::OTHER;
 
@@ -129,13 +144,14 @@ namespace ee
 
         inline void add_dependency(DependencyType dtype, RegType rtype, uint8_t reg)
         {
+            auto dep = (static_cast<int>(rtype) << 8) | reg;
             switch (dtype)
             {
             case DependencyType::Read:
-                read_dependencies.push_back((int)rtype << 8 | reg);
+                read_dependencies.push_back(dep);
                 break;
             case DependencyType::Write:
-                write_dependencies.push_back((int)rtype << 8 | reg);
+                write_dependencies.push_back(dep);
                 break;
             default:
                 break;
@@ -147,11 +163,11 @@ namespace ee
             switch (dtype)
             {
             case DependencyType::Read:
-                dest.type = (RegType)(read_dependencies[idx] >> 8);
+                dest.type = static_cast<RegType>(read_dependencies[idx] >> 8);
                 dest.reg = read_dependencies[idx] & 0xFF;
                 break;
             case DependencyType::Write:
-                dest.type = (RegType)(write_dependencies[idx] >> 8);
+                dest.type = static_cast<RegType>(write_dependencies[idx] >> 8);
                 dest.reg = write_dependencies[idx] & 0xFF;
                 break;
             default:
