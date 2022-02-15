@@ -4,42 +4,25 @@
 
 namespace ee
 {
-    enum EE_NormalReg
+    enum Registers
     {
-        zero = 0,
-        at = 1,
-        v0 = 2, v1 = 3,
-        a0 = 4, a1 = 5, a2 = 6, a3 = 7,
-        t0 = 8, t1 = 9, t2 = 10, t3 = 11, t4 = 12, t5 = 13, t6 = 14, t7 = 15, t8 = 24, t9 = 25,
-        s0 = 16, s1 = 17, s2 = 18, s3 = 19, s4 = 20, s5 = 21, s6 = 22, s7 = 23,
-        k0 = 26, k1 = 27,
-        gp = 28,
-        sp = 29,
-        fp = 30,
-        ra = 31
-    };
+        /* EE general purpose registers */
+        ZERO, AT, V0, V1,
+        A0, A1, A2, A3,
+        T0, T1, T2, T3, T4,
+        T5, T6, T7, T8, T9,
+        S0, S1, S2, S3, S4,
+        S5, S6, S7, K0, K1,
+        GP, SP, FP, RA,
 
-    enum class EE_SpecialReg
-    {
-        EE_Regular = 0,
-        LO = 32,
-        LO1,
-        HI,
-        HI1,
-        SA,
-        COP1_ACC,
+        /* EE special registers */
+        LO0, LO1,
+        HI0, HI1, SA,
+        MAX_VALUE,
 
-        MAX_VALUE
-    };
-
-    enum class COP1_Control_SpecialReg
-    {
-        CONDITION
-    };
-
-    enum class COP2_Control_SpecialReg
-    {
-        CONDITION
+        /* Coprocessor special registers */
+        COP1_COND = 0,
+        COP2_COND = 0, 
     };
 
     enum class RegType
@@ -69,65 +52,34 @@ namespace ee
     struct EE_InstrInfo
     {
         /**
-            * The EE has a dual-issue pipeline, meaning that under ideal circumstances, it can execute two instructions
-            * per cycle. The two instructions must have no dependencies with each other, exist in separate physical
-            * pipelines, and cause no stalls for the two to be executed in a single cycle.
-            *
-            * There are six physical pipelines: two integer pipelines, load/store, branch, COP1, and COP2.
-            * MMI instructions use both integer pipelines, so an MMI instruction and any other ALU instruction
-            * can never both be issued in the same cycle.
-            *
-            * Because the EE is in-order, assuming no stalls, one can achieve optimal performance by pairing together
-            * instructions using different physical pipelines.
-            */
+        * The EE has a dual-issue pipeline, meaning that under ideal circumstances, it can execute two instructions
+        * per cycle. The two instructions must have no dependencies with each other, exist in separate physical
+        * pipelines, and cause no stalls for the two to be executed in a single cycle.
+        *
+        * There are six physical pipelines: two integer pipelines, load/store, branch, COP1, and COP2.
+        * MMI instructions use both integer pipelines, so an MMI instruction and any other ALU instruction
+        * can never both be issued in the same cycle.
+        *
+        * Because the EE is in-order, assuming no stalls, one can achieve optimal performance by pairing together
+        * instructions using different physical pipelines.
+        */
         enum class Pipeline : uint16_t
         {
-            //Uninitialized. Error out if an instruction's pipeline is set to this.
-            Unk = 0,
-
-            //ALU instruction that can only be used in integer pipeline 0.
+            Unknown = 0,
             Int0 = 1,
-
-            //ALU instruction that can only be used in integer pipeline 1.
             Int1 = 2,
-
-            //MMI instruction. Takes up both integer pipelines.
             IntWide = Int0 | Int1,
-
-            //Generic ALU instruction. Can be placed in either integer pipeline.
             IntGeneric = 4,
-
-            //Load/store instructions.
             LoadStore = 8,
-
-            //Branches, jumps, and calls. This includes COP1 and COP2 branches.
             Branch = 0x10,
-
-            //COP0
             COP0 = 0x20,
-
-            //COP1
             COP1 = 0x40,
-
-            //COP2
             COP2 = 0x80,
-
-            // SA operations
             SA = 0x100,
-
-            // ERET
             ERET = 0x200,
-
-            // SYNC
             SYNC = 0x400,
-
-            // LZC
             LZC = 0x800,
-
-            // MAC0, e.g. mult, div, madd
             MAC0 = 0x1000,
-
-            // MAC1, e.g. mult1, div1, madd1
             MAC1 = 0x2000,
         };
 
@@ -167,7 +119,7 @@ namespace ee
         std::basic_string<uint16_t> write_dependencies = std::basic_string<uint16_t>();
         std::basic_string<uint16_t> read_dependencies = std::basic_string<uint16_t>();
         void(*interpreter_fn)(EmotionEngine&, uint32_t) = nullptr;
-        Pipeline pipeline = Pipeline::Unk;
+        Pipeline pipeline = Pipeline::Unknown;
         InstructionType instruction_type = InstructionType::OTHER;
 
         uint8_t latency = 1;

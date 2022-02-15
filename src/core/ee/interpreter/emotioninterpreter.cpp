@@ -38,7 +38,7 @@ namespace ee
                 case 0x03:
                     info.interpreter_fn = &jal;
                     info.pipeline = EE_InstrInfo::Pipeline::Branch;
-                    info.add_dependency(DependencyType::Write, RegType::GPR, EE_NormalReg::ra);
+                    info.add_dependency(DependencyType::Write, RegType::GPR, Registers::RA);
                     break;
                 case 0x04:
                     info.interpreter_fn = &beq;
@@ -347,37 +347,37 @@ namespace ee
                 case 0x10:
                     info.interpreter_fn = &bltzal;
                     info.pipeline = EE_InstrInfo::Pipeline::Branch;
-                    info.add_dependency(DependencyType::Write, RegType::GPR, EE_NormalReg::ra);
+                    info.add_dependency(DependencyType::Write, RegType::GPR, Registers::RA);
                     info.add_dependency(DependencyType::Read, RegType::GPR, (instruction >> 21) & 0x1F);
                     break;
                 case 0x11:
                     info.interpreter_fn = &bgezal;
                     info.pipeline = EE_InstrInfo::Pipeline::Branch;
-                    info.add_dependency(DependencyType::Write, RegType::GPR, EE_NormalReg::ra);
+                    info.add_dependency(DependencyType::Write, RegType::GPR, Registers::RA);
                     info.add_dependency(DependencyType::Read, RegType::GPR, (instruction >> 21) & 0x1F);
                     break;
                 case 0x12:
                     info.interpreter_fn = &bltzall;
                     info.pipeline = EE_InstrInfo::Pipeline::Branch;
-                    info.add_dependency(DependencyType::Write, RegType::GPR, EE_NormalReg::ra);
+                    info.add_dependency(DependencyType::Write, RegType::GPR, Registers::RA);
                     info.add_dependency(DependencyType::Read, RegType::GPR, (instruction >> 21) & 0x1F);
                     break;
                 case 0x13:
                     info.interpreter_fn = &bgezall;
                     info.pipeline = EE_InstrInfo::Pipeline::Branch;
-                    info.add_dependency(DependencyType::Write, RegType::GPR, EE_NormalReg::ra);
+                    info.add_dependency(DependencyType::Write, RegType::GPR, Registers::RA);
                     info.add_dependency(DependencyType::Read, RegType::GPR, (instruction >> 21) & 0x1F);
                     break;
                 case 0x18:
                     info.interpreter_fn = &mtsab;
                     info.pipeline = EE_InstrInfo::Pipeline::SA;
-                    info.add_dependency(DependencyType::Write, RegType::GPR, (uint8_t)EE_SpecialReg::SA);
+                    info.add_dependency(DependencyType::Write, RegType::GPR, (uint8_t)Registers::SA);
                     info.add_dependency(DependencyType::Read, RegType::GPR, (instruction >> 21) & 0x1F);
                     break;
                 case 0x19:
                     info.interpreter_fn = &mtsah;
                     info.pipeline = EE_InstrInfo::Pipeline::SA;
-                    info.add_dependency(DependencyType::Write, RegType::GPR, (uint8_t)EE_SpecialReg::SA);
+                    info.add_dependency(DependencyType::Write, RegType::GPR, (uint8_t)Registers::SA);
                     info.add_dependency(DependencyType::Read, RegType::GPR, (instruction >> 21) & 0x1F);
                     break;
                 default:
@@ -1114,12 +1114,12 @@ namespace ee
                 case 0x108:
                     info.interpreter_fn = &cop_bc1;
                     info.pipeline = EE_InstrInfo::Pipeline::COP1;
-                    info.add_dependency(DependencyType::Read, RegType::COP1_CONTROL, (uint8_t)COP1_Control_SpecialReg::CONDITION);
+                    info.add_dependency(DependencyType::Read, RegType::COP1_CONTROL, (uint8_t)Registers::COP1_COND);
                     break;
                 case 0x208:
                     info.interpreter_fn = &cop2_bc2;
                     info.pipeline = EE_InstrInfo::Pipeline::COP2;
-                    info.add_dependency(DependencyType::Read, RegType::COP2_CONTROL, (uint8_t)COP2_Control_SpecialReg::CONDITION);
+                    info.add_dependency(DependencyType::Read, RegType::COP2_CONTROL, (uint8_t)Registers::COP2_COND);
                     break;
                 case 0x110:
                     cop_s(info, instruction);

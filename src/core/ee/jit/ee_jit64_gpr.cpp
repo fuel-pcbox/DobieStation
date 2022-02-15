@@ -228,7 +228,7 @@ namespace ee
             if (instr.get_is_link())
             {
                 // Set the link register
-                REG_64 link = alloc_reg(ee, EE_NormalReg::ra, REG_TYPE::GPR, REG_STATE::WRITE);
+                REG_64 link = alloc_reg(ee, Registers::RA, REG_TYPE::GPR, REG_STATE::WRITE);
                 emitter.MOV32_REG_IMM(instr.get_return_addr(), link);
             }
 
@@ -319,7 +319,7 @@ namespace ee
             if (instr.get_is_link())
             {
                 // Set the link register
-                REG_64 link = alloc_reg(ee, EE_NormalReg::ra, REG_TYPE::GPR, REG_STATE::WRITE);
+                REG_64 link = alloc_reg(ee, Registers::RA, REG_TYPE::GPR, REG_STATE::WRITE);
                 emitter.MOV32_REG_IMM(instr.get_return_addr(), link);
             }
 
@@ -416,8 +416,8 @@ namespace ee
         void EE_JIT64::divide_unsigned_word(EmotionEngine& ee, IR::Instruction& instr, bool hi)
         {
             // choose destination registers based on operation pipeline
-            EE_SpecialReg lo_reg = hi ? EE_SpecialReg::LO1 : EE_SpecialReg::LO;
-            EE_SpecialReg hi_reg = hi ? EE_SpecialReg::HI1 : EE_SpecialReg::HI;
+            Registers lo_reg = hi ? Registers::LO1 : Registers::LO0;
+            Registers hi_reg = hi ? Registers::HI1 : Registers::HI0;
 
             // idiv result is stored in RAX:RDX, so we allocate those registers first.
             REG_64 RDX = lalloc_int_reg(ee, 0, REG_TYPE::INTSCRATCHPAD, REG_STATE::SCRATCHPAD, REG_64::RDX);
@@ -485,8 +485,8 @@ namespace ee
             */
 
             // choose destination registers based on operation pipeline
-            EE_SpecialReg lo_reg = hi ? EE_SpecialReg::LO1 : EE_SpecialReg::LO;
-            EE_SpecialReg hi_reg = hi ? EE_SpecialReg::HI1 : EE_SpecialReg::HI;
+            Registers lo_reg = hi ? Registers::LO1 : Registers::LO0;
+            Registers hi_reg = hi ? Registers::HI1 : Registers::HI0;
 
             // idiv result is stored in RAX:RDX, so we allocate those registers first.
             REG_64 RDX = lalloc_int_reg(ee, 0, REG_TYPE::INTSCRATCHPAD, REG_STATE::SCRATCHPAD, REG_64::RDX);
@@ -642,7 +642,7 @@ namespace ee
             if (instr.get_is_link())
             {
                 // Set the link register
-                REG_64 link = alloc_reg(ee, EE_NormalReg::ra, REG_TYPE::GPR, REG_STATE::WRITE);
+                REG_64 link = alloc_reg(ee, Registers::RA, REG_TYPE::GPR, REG_STATE::WRITE);
                 emitter.MOV32_REG_IMM(instr.get_return_addr(), link);
             }
         }
@@ -1028,8 +1028,8 @@ namespace ee
         void EE_JIT64::multiply_add_unsigned_word(EmotionEngine& ee, IR::Instruction& instr, bool hi)
         {
             // choose destination registers based on operation pipeline
-            EE_SpecialReg lo_reg = hi ? EE_SpecialReg::LO1 : EE_SpecialReg::LO;
-            EE_SpecialReg hi_reg = hi ? EE_SpecialReg::HI1 : EE_SpecialReg::HI;
+            Registers lo_reg = hi ? Registers::LO1 : Registers::LO0;
+            Registers hi_reg = hi ? Registers::HI1 : Registers::HI0;
 
             REG_64 RDX = lalloc_int_reg(ee, 0, REG_TYPE::INTSCRATCHPAD, REG_STATE::SCRATCHPAD, REG_64::RDX);
             REG_64 source = alloc_reg(ee, instr.get_source(), REG_TYPE::GPR, REG_STATE::READ);
@@ -1058,8 +1058,8 @@ namespace ee
         void EE_JIT64::multiply_add_word(EmotionEngine& ee, IR::Instruction& instr, bool hi)
         {
             // choose destination registers based on operation pipeline
-            EE_SpecialReg lo_reg = hi ? EE_SpecialReg::LO1 : EE_SpecialReg::LO;
-            EE_SpecialReg hi_reg = hi ? EE_SpecialReg::HI1 : EE_SpecialReg::HI;
+            Registers lo_reg = hi ? Registers::LO1 : Registers::LO0;
+            Registers hi_reg = hi ? Registers::HI1 : Registers::HI0;
 
             REG_64 RDX = lalloc_int_reg(ee, 0, REG_TYPE::INTSCRATCHPAD, REG_STATE::SCRATCHPAD, REG_64::RDX);
             REG_64 source = alloc_reg(ee, instr.get_source(), REG_TYPE::GPR, REG_STATE::READ);
@@ -1088,8 +1088,8 @@ namespace ee
         void EE_JIT64::multiply_unsigned_word(EmotionEngine& ee, IR::Instruction& instr, bool hi)
         {
             // choose destination registers based on operation pipeline
-            EE_SpecialReg lo_reg = hi ? EE_SpecialReg::LO1 : EE_SpecialReg::LO;
-            EE_SpecialReg hi_reg = hi ? EE_SpecialReg::HI1 : EE_SpecialReg::HI;
+            Registers lo_reg = hi ? Registers::LO1 : Registers::LO0;
+            Registers hi_reg = hi ? Registers::HI1 : Registers::HI0;
 
             REG_64 RDX = lalloc_int_reg(ee, 0, REG_TYPE::INTSCRATCHPAD, REG_STATE::SCRATCHPAD, REG_64::RDX);
             REG_64 source = alloc_reg(ee, instr.get_source(), REG_TYPE::GPR, REG_STATE::READ);
@@ -1114,8 +1114,8 @@ namespace ee
         void EE_JIT64::multiply_word(EmotionEngine& ee, IR::Instruction& instr, bool hi)
         {
             // choose destination registers based on operation pipeline
-            EE_SpecialReg lo_reg = hi ? EE_SpecialReg::LO1 : EE_SpecialReg::LO;
-            EE_SpecialReg hi_reg = hi ? EE_SpecialReg::HI1 : EE_SpecialReg::HI;
+            Registers lo_reg = hi ? Registers::LO1 : Registers::LO0;
+            Registers hi_reg = hi ? Registers::HI1 : Registers::HI0;
 
             REG_64 RDX = lalloc_int_reg(ee, 0, REG_TYPE::INTSCRATCHPAD, REG_STATE::SCRATCHPAD, REG_64::RDX);
             REG_64 source = alloc_reg(ee, instr.get_source(), REG_TYPE::GPR, REG_STATE::READ);

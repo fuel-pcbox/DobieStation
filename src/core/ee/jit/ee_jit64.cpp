@@ -1199,7 +1199,7 @@ namespace ee
                             switch (type)
                             {
                                 case REG_TYPE::GPR:
-                                    emitter.load_addr((uint64_t)get_gpr_addr(ee, (EE_NormalReg)reg), (REG_64)destination);
+                                    emitter.load_addr((uint64_t)get_gpr_addr(ee, reg), (REG_64)destination);
                                     break;
                                 case REG_TYPE::VI:
                                     // TODO
@@ -1303,7 +1303,7 @@ namespace ee
                                     emitter.MOVAPS_FROM_MEM(REG_64::RAX, (REG_64)destination);
                                     break;
                                 case REG_TYPE::GPREXTENDED:
-                                    emitter.load_addr((uint64_t)get_gpr_addr(ee, (EE_NormalReg)reg), REG_64::RAX);
+                                    emitter.load_addr((uint64_t)get_gpr_addr(ee, reg), REG_64::RAX);
                                     emitter.MOVAPS_FROM_MEM(REG_64::RAX, (REG_64)destination);
                                     break;
                                 default:
@@ -1486,17 +1486,17 @@ namespace ee
             if (index < 32)
                 return (uint64_t)&ee.gpr[index * sizeof(uint128_t)];
 
-            switch (static_cast<EE_SpecialReg>(index))
+            switch (static_cast<Registers>(index))
             {
-                case EE_SpecialReg::LO:
+                case Registers::LO0:
                     return (uint64_t)&ee.LO.lo;
-                case EE_SpecialReg::LO1:
+                case Registers::LO1:
                     return (uint64_t)&ee.LO.hi;
-                case EE_SpecialReg::HI:
+                case Registers::HI0:
                     return (uint64_t)&ee.HI.lo;
-                case EE_SpecialReg::HI1:
+                case Registers::HI1:
                     return (uint64_t)&ee.HI.hi;
-                case EE_SpecialReg::SA:
+                case Registers::SA:
                     return (uint64_t)&ee.SA;
                 default:
                     Errors::die("[EE_JIT64] get_gpr_addr error: Unrecognized reg %d", index);

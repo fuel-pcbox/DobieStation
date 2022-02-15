@@ -405,8 +405,8 @@ namespace ee
 
             REG_64 dividend = alloc_reg(ee, instr.get_source(), REG_TYPE::GPREXTENDED, REG_STATE::READ);
             REG_64 divisor = alloc_reg(ee, instr.get_source2(), REG_TYPE::GPREXTENDED, REG_STATE::READ);
-            REG_64 LO = alloc_reg(ee, (int)EE_SpecialReg::LO, REG_TYPE::GPREXTENDED, REG_STATE::WRITE);
-            REG_64 HI = alloc_reg(ee, (int)EE_SpecialReg::HI, REG_TYPE::GPREXTENDED, REG_STATE::WRITE);
+            REG_64 LO = alloc_reg(ee, (int)Registers::LO0, REG_TYPE::GPREXTENDED, REG_STATE::WRITE);
+            REG_64 HI = alloc_reg(ee, (int)Registers::HI0, REG_TYPE::GPREXTENDED, REG_STATE::WRITE);
 
             emitter.MOVD_FROM_XMM(dividend, dividend64);
             emitter.MOVD_FROM_XMM(divisor, divisor64);

@@ -293,7 +293,7 @@ namespace ee
                 instr1.get_dependency(wdependency, j, DependencyType::Write);
 
                 // Ignore GPR $zero
-                if (wdependency.type == RegType::GPR && wdependency.reg == EE_NormalReg::zero)
+                if (wdependency.type == RegType::GPR && wdependency.reg == Registers::ZERO)
                     continue;
 
                 // If a write dependency from instr_info[i] is found in the read dependencies for instr_info[i + 1], we can't dual issue
@@ -418,7 +418,7 @@ namespace ee
 
         void EE_JitTranslator::data_dependency_analysis(std::vector<EE_InstrInfo>& instr_info)
         {
-            int data_dependencies[(int)RegType::MAX_VALUE][(int)EE_SpecialReg::MAX_VALUE] = {};
+            int data_dependencies[(int)RegType::MAX_VALUE][(int)Registers::MAX_VALUE] = {};
             int throughputs[(int)EE_InstrInfo::InstructionType::MAX_VALUE] = {};
             int total_penalty = 0;
             bool dual_issue = false;
@@ -429,7 +429,7 @@ namespace ee
                 int difference = instr_info[i].cycles_before - (i > 0 ? instr_info[i - 1].cycles_before : 0);
 
                 for (int i = 0; i < (int)RegType::MAX_VALUE; ++i)
-                    for (int j = 0; j < (int)EE_SpecialReg::MAX_VALUE; ++j)
+                    for (int j = 0; j < (int)Registers::MAX_VALUE; ++j)
                         data_dependencies[i][j] = std::max(0, data_dependencies[i][j] - difference);
 
                 for (int i = 0; i < (int)EE_InstrInfo::InstructionType::MAX_VALUE; ++i)
@@ -442,7 +442,7 @@ namespace ee
                     instr_info[i].get_dependency(dependency_info, j, DependencyType::Read);
 
                     // Ignore data dependencies on GPR $zero, everything else is fine
-                    if (dependency_info.type != RegType::GPR || dependency_info.reg != (int)EE_NormalReg::zero)
+                    if (dependency_info.type != RegType::GPR || dependency_info.reg != (int)Registers::ZERO)
                         cycles_penalty = std::max(cycles_penalty, data_dependencies[(int)dependency_info.type][(int)dependency_info.reg]);
                 }
 
@@ -1435,7 +1435,7 @@ namespace ee
                 {
                     uint8_t dest = (opcode >> 11) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
-                    instr.set_source((int)EE_SpecialReg::HI);
+                    instr.set_source((int)Registers::HI0);
                     instr.set_dest(dest);
                     instrs.push_back(instr);
                     break;
@@ -1446,7 +1446,7 @@ namespace ee
                     uint8_t source = (opcode >> 21) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
                     instr.set_source(source);
-                    instr.set_dest((int)EE_SpecialReg::HI);
+                    instr.set_dest((int)Registers::HI0);
                     instrs.push_back(instr);
                     break;
                 }
@@ -1455,7 +1455,7 @@ namespace ee
                 {
                     uint8_t dest = (opcode >> 11) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
-                    instr.set_source((int)EE_SpecialReg::LO);
+                    instr.set_source((int)Registers::LO0);
                     instr.set_dest(dest);
                     instrs.push_back(instr);
                     break;
@@ -1466,7 +1466,7 @@ namespace ee
                     uint8_t source = (opcode >> 21) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
                     instr.set_source(source);
-                    instr.set_dest((int)EE_SpecialReg::LO);
+                    instr.set_dest((int)Registers::LO0);
                     instrs.push_back(instr);
                     break;
                 }
@@ -1737,13 +1737,13 @@ namespace ee
                     // MFSA
                     instr.op = IR::Opcode::MoveDoublewordReg;
                     instr.set_dest((opcode >> 11) & 0x1F);
-                    instr.set_source((int)EE_SpecialReg::SA);
+                    instr.set_source((int)Registers::SA);
                     instrs.push_back(instr);
                     break;
                 case 0x29:
                     // MTSA
                     instr.op = IR::Opcode::MoveDoublewordReg;
-                    instr.set_dest((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
                     instr.set_source((opcode >> 21) & 0x1F);
                     instrs.push_back(instr);
                     break;
@@ -2055,20 +2055,20 @@ namespace ee
                 case 0x18:
                     // MTSAB
                     instr.op = IR::Opcode::MoveDoublewordReg;
-                    instr.set_dest((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
                     instr.set_source((opcode >> 21) & 0x1F);
                     instrs.push_back(instr);
 
                     instr.set_opcode(0);
                     instr.op = IR::Opcode::XorImm;
-                    instr.set_dest((int)EE_SpecialReg::SA);
-                    instr.set_source((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
+                    instr.set_source((int)Registers::SA);
                     instr.set_source2(opcode & 0xF);
                     instrs.push_back(instr);
 
                     instr.op = IR::Opcode::AndImm;
-                    instr.set_dest((int)EE_SpecialReg::SA);
-                    instr.set_source((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
+                    instr.set_source((int)Registers::SA);
                     instr.set_source2(0xF);
                     instrs.push_back(instr);
 
@@ -2076,26 +2076,26 @@ namespace ee
                 case 0x19:
                     // MTSAH
                     instr.op = IR::Opcode::MoveDoublewordReg;
-                    instr.set_dest((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
                     instr.set_source((opcode >> 21) & 0x1F);
                     instrs.push_back(instr);
 
                     instr.set_opcode(0);
                     instr.op = IR::Opcode::XorImm;
-                    instr.set_dest((int)EE_SpecialReg::SA);
-                    instr.set_source((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
+                    instr.set_source((int)Registers::SA);
                     instr.set_source2(opcode & 0x7);
                     instrs.push_back(instr);
 
                     instr.op = IR::Opcode::AndImm;
-                    instr.set_dest((int)EE_SpecialReg::SA);
-                    instr.set_source((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
+                    instr.set_source((int)Registers::SA);
                     instr.set_source2(0x7);
                     instrs.push_back(instr);
 
                     instr.op = IR::Opcode::DoublewordShiftLeftLogical;
-                    instr.set_dest((int)EE_SpecialReg::SA);
-                    instr.set_source((int)EE_SpecialReg::SA);
+                    instr.set_dest((int)Registers::SA);
+                    instr.set_source((int)Registers::SA);
                     instr.set_source2(0x1);
                     instrs.push_back(instr);
                     break;
@@ -2148,7 +2148,7 @@ namespace ee
                 {
                     uint8_t dest = (opcode >> 11) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
-                    instr.set_source((int)EE_SpecialReg::HI1);
+                    instr.set_source((int)Registers::HI1);
                     instr.set_dest(dest);
                     instrs.push_back(instr);
                     break;
@@ -2159,7 +2159,7 @@ namespace ee
                     uint8_t source = (opcode >> 21) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
                     instr.set_source(source);
-                    instr.set_dest((int)EE_SpecialReg::HI1);
+                    instr.set_dest((int)Registers::HI1);
                     instrs.push_back(instr);
                     break;
                 }
@@ -2168,7 +2168,7 @@ namespace ee
                 {
                     uint8_t dest = (opcode >> 11) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
-                    instr.set_source((int)EE_SpecialReg::LO1);
+                    instr.set_source((int)Registers::LO1);
                     instr.set_dest(dest);
                     instrs.push_back(instr);
                     break;
@@ -2179,7 +2179,7 @@ namespace ee
                     uint8_t source = (opcode >> 21) & 0x1F;
                     instr.op = IR::Opcode::MoveDoublewordReg;
                     instr.set_source(source);
-                    instr.set_dest((int)EE_SpecialReg::LO1);
+                    instr.set_dest((int)Registers::LO1);
                     instrs.push_back(instr);
                     break;
                 }
@@ -3047,7 +3047,7 @@ namespace ee
                 {
                     uint8_t dest = (opcode >> 11) & 0x1F;
                     instr.op = IR::Opcode::MoveQuadwordReg;
-                    instr.set_source((int)EE_SpecialReg::HI);
+                    instr.set_source((int)Registers::HI0);
                     instr.set_dest(dest);
                     instrs.push_back(instr);
                     break;
@@ -3057,7 +3057,7 @@ namespace ee
                 {
                     uint8_t dest = (opcode >> 11) & 0x1F;
                     instr.op = IR::Opcode::MoveQuadwordReg;
-                    instr.set_source((int)EE_SpecialReg::LO);
+                    instr.set_source((int)Registers::LO0);
                     instr.set_dest(dest);
                     instrs.push_back(instr);
                     break;
@@ -3249,7 +3249,7 @@ namespace ee
                     uint8_t source = (opcode >> 21) & 0x1F;
                     instr.op = IR::Opcode::MoveQuadwordReg;
                     instr.set_source(source);
-                    instr.set_dest((int)EE_SpecialReg::HI);
+                    instr.set_dest((int)Registers::HI0);
                     instrs.push_back(instr);
                     break;
                 }
@@ -3259,7 +3259,7 @@ namespace ee
                     uint8_t source = (opcode >> 21) & 0x1F;
                     instr.op = IR::Opcode::MoveQuadwordReg;
                     instr.set_source(source);
-                    instr.set_dest((int)EE_SpecialReg::LO);
+                    instr.set_dest((int)Registers::LO0);
                     instrs.push_back(instr);
                     break;
                 }
