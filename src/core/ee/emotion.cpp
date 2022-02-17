@@ -1,14 +1,12 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <ee/emotion.hpp>
 #include <ee/jit/ee_jit.hpp>
-#include "emotion.hpp"
 #include <ee/interpreter/emotiondisasm.hpp>
 #include <ee/interpreter/emotioninterpreter.hpp>
 #include <ee/vu/vu.hpp>
 #include <util/errors.hpp>
 #include <emulator.hpp>
 #include <sif.hpp>
+#include <fmt/core.h>
 
 namespace ee
 {
@@ -124,7 +122,7 @@ namespace ee
         osd_config_param.language = 1; //English
         osd_config_param.version = 1; //Indicates normal kernel without extended language settings
 
-        //Reset the cache
+        /* Reset the cache */
         for (int i = 0; i < 128; i++)
         {
             icache[i].tag[0] = 1 << 31;
@@ -133,7 +131,7 @@ namespace ee
             icache[i].lfu[1] = false;
         }
 
-        //Clear out $zero
+        /* Clear out $zero */
         for (int i = 0; i < 16; i++)
             gpr[i] = 0;
 
@@ -189,14 +187,13 @@ namespace ee
             if (can_disassemble)
             {
                 std::string disasm = ee::interpreter::disasm_instr(instruction, PC);
-                printf("[$%08X] $%08X - %s\n", PC, instruction, disasm.c_str());
-                //print_state();
+                fmt::print("[{:#X}] {:#X} - {}\n", PC, instruction, disasm.c_str());
             }
 
             ee::interpreter::interpret(*this, instruction);
             set_PC(get_PC() + 4);
 
-            //Simulate dual-issue if both instructions are NOPs
+            /* Simulate dual - issue if both instructions are NOPs */
             if (!instruction && !read32(PC))
                 set_PC(get_PC() + 4);
 
@@ -204,7 +201,6 @@ namespace ee
             {
                 if (!delay_slot)
                 {
-                    //If the PC == LastPC it means we've reversed it to handle COP2 sync, so don't branch yet
                     if (PC != lastPC)
                     {
                         branch_on = false;
@@ -223,8 +219,8 @@ namespace ee
 
     void EmotionEngine::run_jit()
     {
-        //If FlushCache(2) has been executed, reset the JIT.
-        //This represents an icache flush.
+        /* If FlushCache(2) has been executed, reset the JIT.
+           This represents an icache flush. */
         if (flush_jit_cache)
         {
             jit::reset(true);
@@ -246,14 +242,14 @@ namespace ee
         {
             if (check_interlock())
             {
-                cycle_count += 1; //Only run for 1 cycle, gotta keep VU0 and EE timing tight
+                cycle_count += 1; // Only run for 1 cycle, gotta keep VU0 and EE timing tight
                 cycles_to_run = 0;
                 return;
             }
             wait_for_interlock = false;
         }
 
-        //cycles_to_run is handled in the dispatcher, so no need to check it here
+        /* cycles_to_run is handled in the dispatcher, so no need to check it here */
         jit::run(this);
         branch_on = false;
     }
@@ -265,35 +261,37 @@ namespace ee
 
     void EmotionEngine::print_state()
     {
-        printf("pc:$%08X\n", PC);
+        fmt::print("PC:{:#X}\n", PC);
+        for (int i = 0; i < 32; i += 2)
+        {
+            auto reg1 = get_gpr<uint128_t>(i);
+            auto reg2 = get_gpr<uint128_t>(i + 1);
+            fmt::print("{}:{:#X}{:016X}\t{}:{:#X}{:016X}\n", REG[i], reg1._u64[1], reg1._u64[0], REG[i + 1], reg2._u64[1], reg2._u64[0]);
+        }
+
+        fmt::print("LO:{:#X}{:016X}\t", LO._u64[1], LO._u64[0]);
+        fmt::print("HI:{:#X}{:016X}\t\n", HI._u64[1], HI._u64[0]);
+        fmt::print("KSU: {:d}\n", cp0->status.mode);
+        for (int i = 0; i < 32; i += 2)
+        {
+            auto reg1 = fpu->get_gpr(i);
+            auto reg2 = fpu->get_gpr(i + 1);
+            fmt::print("FPR{:d}:{:#X}\tFPR{:d}:{:#X}\n", i, reg1, i + 1, reg2);
+        }
+        
         for (int i = 0; i < 32; i++)
         {
-            printf("%s:$%08X_%08X_%08X_%08X", REG[i], get_gpr<uint32_t>(i, 3), get_gpr<uint32_t>(i, 2), get_gpr<uint32_t>(i, 1), get_gpr<uint32_t>(i));
-            if ((i & 1) == 1)
-                printf("\n");
-            else
-                printf("\t");
+            uint128_t reg1, reg2;
+            for (int k = 0; k < 4; k++)
+            {
+                reg1._u32[k] = e->vu0->get_gpr_u(i, k);
+                reg2._u32[k] = e->vu0->get_gpr_u(i + 1, k);
+            }
+
+            fmt::print("VF{:d}:{:#X}{:016X}\tVF{:d}:{:#X}{:016X}\n", i, reg1._u64[1], reg1._u64[0], i + 1, reg2._u64[1], reg2._u64[0]);
         }
-        printf("lo:$%08X_%08X_%08X_%08X\t", LO._u32[3], LO._u32[2], LO._u32[1], LO._u32[0]);
-        printf("hi:$%08X_%08X_%08X_%08X\t\n", HI._u32[3], HI._u32[2], HI._u32[1], HI._u32[0]);
-        printf("KSU: %d\n", cp0->status.mode);
-        for (int i = 0; i < 32; i++)
-        {
-            printf("f%02d:$%08X", i, fpu->get_gpr(i));
-            if ((i & 1) == 1)
-                printf("\n");
-            else
-                printf("\t");
-        }
-        for (int i = 0; i < 32; i++)
-        {
-            printf("vf%02d:$%08X_%08X_%08X_%08X", i, e->vu0->get_gpr_u(i, 3), e->vu0->get_gpr_u(i, 2), e->vu0->get_gpr_u(i, 1), e->vu0->get_gpr_u(i, 0));
-            if ((i & 1) == 1)
-                printf("\n");
-            else
-                printf("\t");
-        }
-        printf("\n");
+        
+        fmt::print("\n");
     }
 
     void EmotionEngine::set_disassembly(bool dis)
@@ -372,20 +370,18 @@ namespace ee
             uint16_t tag = address >> 13;
 
             EE_ICacheLine* line = &icache[index];
-            //Check if there's no entry in icache
+            /* Check if there's no entry in icache */
             if (line->tag[0] != tag)
             {
                 if (line->tag[1] != tag)
                 {
-                    //Load 4 quadwords.
-                    //Based upon gamedev tests, an uncached data load takes 35 cycles, and a dcache miss takes 43.
-                    //Another test we've run has determined that it takes 40 cycles for an icache miss.
-                    //Current theory is a 32 cycle nonsequential penalty + (2 * 4) sequential penalty.
-                    //printf("[EE] I$ miss at $%08X\n", address);
+                    /*Based upon gamedev tests, an uncached data load takes 35 cycles, and a dcache miss takes 43.
+                      Another test we've run has determined that it takes 40 cycles for an icache miss.
+                      Current theory is a 32 cycle nonsequential penalty + (2 * 4) sequential penalty. */
                     cycles_to_run -= 40;
 
-                    //If there's an invalid entry, fill it.
-                    //The `LFU` bit for the filled row gets flipped.
+                    /* If there's an invalid entry, fill it.
+                       The `LFU` bit for the filled row gets flipped. */
                     if (line->tag[0] & (1 << 31))
                     {
                         line->lfu[0] ^= true;
@@ -398,7 +394,7 @@ namespace ee
                     }
                     else
                     {
-                        //The row to fill is the XOR of the LFU bits.
+                        /* The row to fill is the XOR of the LFU bits. */
                         int row_to_fill = line->lfu[0] ^ line->lfu[1];
                         line->lfu[row_to_fill] ^= true;
                         line->tag[row_to_fill] = tag;
@@ -408,9 +404,9 @@ namespace ee
         }
         else
         {
-            //Simulate reading from RDRAM
-            //The nonsequential penalty (mentioned above) is 32 cycles for all data types, up to a quadword (128 bits).
-            //However, the EE loads two instructions at once. Since we only load a word, we divide the cycles in half.
+            /* Simulate reading from RDRAM
+               The nonsequential penalty (mentioned above) is 32 cycles for all data types, up to a quadword (128 bits).
+               However, the EE loads two instructions at once. Since we only load a word, we divide the cycles in half. */
             cycles_to_run -= 16;
         }
         uint8_t* mem = tlb_map[address / 4096];
@@ -490,12 +486,6 @@ namespace ee
             Errors::die("[EE] Read128 from invalid address $%08X, PC: $%08X", address, PC);
         }
     }
-
-    /*void EmotionEngine::set_gpr_lo(int index, uint64_t value)
-    {
-        if (index)
-            gpr_lo[index] = value;
-    }*/
 
     void EmotionEngine::set_PC(uint32_t addr)
     {
@@ -586,10 +576,10 @@ namespace ee
         delay_slot = 1;
 
     #ifdef SKIPMPEG_ON
-        //skipmpeg - many thanks to PCSX2 for the code :)
-        //We want to search for this pattern:
-        //lw reg, 0x40(a0); jr ra; lw v0, 0(reg)
-        //The idea is that if the function returns 1, the movie is over.
+        /* skipmpeg - many thanks to PCSX2 for the code : )
+           We want to search for this pattern:
+           lw reg, 0x40(a0); jr ra; lw v0, 0(reg)
+           The idea is that if the function returns 1, the movie is over. */
         if (read32(new_PC + 4) == 0x03E00008)
         {
             uint32_t code = read32(new_PC);
@@ -814,14 +804,11 @@ namespace ee
     void EmotionEngine::lqc2(uint32_t addr, int index)
     {
         cop2_updatevu0();
-        //printf("LQC2 $%08X: ", addr);
         for (int i = 0; i < 4; i++)
         {
             uint32_t bark = read32(addr + (i << 2));
-            //printf("$%08X ", bark);
             e->vu0->set_gpr_u(index, i, bark);
         }
-        //printf("\n");
     }
 
     void EmotionEngine::swc1(uint32_t addr, int index)
@@ -897,25 +884,22 @@ namespace ee
     void EmotionEngine::syscall_exception()
     {
         int op = abs(get_gpr<int>(3));
-        //if (op != 0x7A)
-            //printf("[EE] SYSCALL: %s (id: $%02X) called at $%08X\n", SYSCALL(op), op, PC);
-
         switch (op)
         {
             case 0x4:
             {
-                //On a real PS2, Exit returns to OSDSYS.
+                /* On a real PS2, Exit returns to OSDSYS. */
                 Errors::die("[EE] Exit syscall called!\n");
                 return;
             }
             case 0x6: // LoadExecPS2
             case 0x7: // ExecPS2
             {
-                // Flush the cache when executing a new ELF
+                /* Flush the cache when executing a new ELF */
                 flush_jit_cache = true;
                 break;
             }
-            case 0x4A: //SetOsdConfigParam
+            case 0x4A: // SetOsdConfigParam
             {
                 uint32_t ptr = get_gpr<uint32_t>(4);
                 uint32_t value = read32(ptr);
@@ -923,12 +907,10 @@ namespace ee
                 memcpy(&osd_config_param, &value, 4);
                 break;
             }
-            case 0x4B: //GetOsdConfigParam
+            case 0x4B: // GetOsdConfigParam
             {
-                uint32_t ptr = get_gpr<uint32_t>(4);
-
-                uint32_t value;
-                memcpy(&value, &osd_config_param, 4);
+                auto ptr = get_gpr<uint32_t>(4);
+                auto value = *(uint32_t*)&osd_config_param;
 
                 write32(ptr, value);
                 return;
@@ -937,8 +919,8 @@ namespace ee
             {
                 int a0 = get_gpr<uint32_t>(4);
 
-                //We can't flush the EE JIT cache immediately as we're still executing in a block.
-                //We have to wait until after we've left the block before we can erase blocks.
+                /* We can't flush the EE JIT cache immediately as we're still executing in a block.
+                   We have to wait until after we've left the block before we can erase blocks. */
                 if (a0 != 0 && a0 != 1)
                     flush_jit_cache = true;
                 break;
@@ -973,7 +955,7 @@ namespace ee
         {
             case 0x01:
             {
-                printf("Deci2Open\n");
+                fmt::print("Deci2Open\n");
                 int id = deci2size;
                 deci2size++;
                 deci2handlers[id].active = true;
@@ -984,7 +966,7 @@ namespace ee
                 break;
             case 0x03:
             {
-                printf("Deci2Send\n");
+                fmt::print("Deci2Send\n");
                 int id = read32(param);
                 if (deci2handlers[id].active)
                 {
@@ -1000,7 +982,7 @@ namespace ee
                 break;
             case 0x04:
             {
-                printf("Deci2Poll\n");
+                fmt::print("Deci2Poll\n");
                 int id = read32(param);
                 if (deci2handlers[id].active)
                     write32(deci2handlers[id].addr + 0x0C, 0);
@@ -1008,7 +990,7 @@ namespace ee
             }
                 break;
             case 0x10:
-                printf("kputs\n");
+                fmt::print("kputs\n");
                 e->ee_kputs(param);
                 break;
         }
@@ -1018,7 +1000,7 @@ namespace ee
     {
         if (cp0->status.int0_mask)
         {
-            printf("[EE] INT0!\n");
+            fmt::print("[EE] INT0!\n");
             handle_exception(0x80000200, 0);
         }
     }
@@ -1027,8 +1009,7 @@ namespace ee
     {
         if (cp0->status.int1_mask)
         {
-            printf("[EE] INT1!\n");
-            //can_disassemble = true;
+            fmt::print("[EE] INT1!\n");
             handle_exception(0x80000200, 0);
         }
     }
@@ -1037,8 +1018,7 @@ namespace ee
     {
         if (cp0->status.timer_int_mask)
         {
-            printf("[EE] INT TIMER!\n");
-            //can_disassemble = true;
+            fmt::print("[EE] INT TIMER!\n");
             handle_exception(0x80000200, 0);
         }
     }
@@ -1048,7 +1028,7 @@ namespace ee
         cp0->cause.int0_pending = value;
         if (value)
         {
-            printf("[EE] Set INT0\n");
+            fmt::print("[EE] Set INT0\n");
             if (cp0->int_enabled())
                 int0();
         }
@@ -1058,7 +1038,7 @@ namespace ee
     {
         cp0->cause.int1_pending = value;
         if (value)
-            printf("[EE] Set INT1\n");
+            fmt::print("[EE] Set INT1\n");
     }
 
     void EmotionEngine::tlbr()
@@ -1075,8 +1055,8 @@ namespace ee
 
     void EmotionEngine::tlbp()
     {
-        //Search for a TLB entry whose "EntryHi" matches the EntryHi register in COP0.
-        //Place the index of the entry in Index, or place 1 << 31 in Index if no entry is found.
+        /* Search for a TLB entry whose "EntryHi" matches the EntryHi register in COP0.
+           Place the index of the entry in Index, or place 1 << 31 in Index if no entry is found. */
         uint32_t entry_hi = cp0->gpr[10];
 
         for (int i = 0; i < 48; i++)
@@ -1099,7 +1079,6 @@ namespace ee
 
     void EmotionEngine::eret()
     {
-        //printf("[EE] Return from exception\n");
         if (cp0->status.error)
         {
             set_PC(cp0->ErrorEPC);
@@ -1110,21 +1089,21 @@ namespace ee
             set_PC(cp0->EPC);
             cp0->status.exception = false;
         }
-        //This hack is used for ISOs.
+        
+        /* This hack is used for ISOs. */
         if (PC == 0x82000)
         {
             e->fast_boot();
-            //can_disassemble = true;
         }
 
-        //BIFC0 speedhack
+        /* BIFC0 speedhack */
         if (PC >= 0x81FC0 && PC < 0x81FE0)
         {
-            printf("[EE] Entering BIFCO loop\n");
+            fmt::print("[EE] Entering BIFCO loop\n");
             halt();
         }
         
-        //And this is for ELFs.
+        /* And this is for ELFs. */
         if (PC >= 0x00100000 && PC < 0x80000000)
             e->skip_BIOS();
         
@@ -1134,14 +1113,16 @@ namespace ee
 
     void EmotionEngine::ei()
     {
-        if (cp0->status.edi || cp0->status.mode == 0 || cp0->status.exception || cp0->status.error)
-            cp0->status.master_int_enable = true;
+        auto& status = cp0->status;
+        if (status.edi || status.mode == 0 || status.exception || status.error)
+            status.master_int_enable = true;
     }
 
     void EmotionEngine::di()
     {
-        if (cp0->status.edi || cp0->status.mode == 0 || cp0->status.exception || cp0->status.error)
-            cp0->status.master_int_enable = false;
+        auto& status = cp0->status;
+        if (status.edi || status.mode == 0 || status.exception || status.error)
+            status.master_int_enable = false;
     }
 
     void EmotionEngine::cp0_bc0(int32_t offset, bool test_true, bool likely)
@@ -1183,7 +1164,7 @@ namespace ee
             pcr = (int32_t)cp0->PCR1;
         else
             pcr = (int32_t)cp0->PCR0;
-        //printf("[EE] MFPC %d: $%08X\n", pc_reg, pcr);
+        
         set_gpr<int64_t>(reg, pcr);
     }
 
@@ -1240,7 +1221,7 @@ namespace ee
             uint32_t upper_instr = (last_instr >> 26);
             uint32_t cop2_instr = (last_instr >> 21) & 0x1F;
 
-            //Always stall 1 VU cycle if the last op was LQC2, CTC2 or QMTC2
+            /* Always stall 1 VU cycle if the last op was LQC2, CTC2 or QMTC2 */
             if (upper_instr == 0x36 || (upper_instr == 0x12 && (cop2_instr == 0x5 || cop2_instr == 0x6)))
             {
                 set_cycle_count(get_cycle_count() + 1);
