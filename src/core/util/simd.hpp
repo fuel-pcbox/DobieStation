@@ -1115,7 +1115,7 @@ namespace simd
     constexpr Vec256<T> inline min(const Vec256<T>& a, const Vec256<T>& b)
     {
         auto vec = Vec256<T>();
-        vec._impl = priv::min_impl<T>(a, b);
+        vec._impl = priv::min_impl<T>(a._impl, b._impl);
         return vec;
     }
 

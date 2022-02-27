@@ -2,17 +2,18 @@
 #ifdef _WIN32
 #include <intrin.h>
 #endif
+#include <cstdint>
 
 namespace util
 {
-	inline int count_leading_zeros(uint32_t value)
-	{
-#ifdef _WIN32
-        unsigned long leading_zero = 0;
-        bool zero = _BitScanReverse(&leading_zero, value);
-        return 31 - (leading_zero + zero);
+    inline uint32_t count_leading_zeros_u32(uint32_t word) 
+    {
+#if defined(__GNUC__) || defined(__clang__)
+        return __builtin_clz(word);
 #else
-        return (value != 0 ? __builtin_clz(value) - 1 : 0x1f);
+        unsigned long result;
+        _BitScanReverse(&result, word);
+        return 31 - result;
 #endif
-	}
+    }
 }

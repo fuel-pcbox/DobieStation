@@ -87,7 +87,7 @@ set(SOURCES
 )
 
 add_library(${TARGET} ${SOURCES})
-set_source_files_properties(${SOURCES} PROPERTIES COMPILE_FLAGS "-g -O0")
+set_source_files_properties(ee/interpreter/emotion_mmi.cpp PROPERTIES COMPILE_FLAGS "/Od /Zi")
 
 # Link all the sources
 target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
