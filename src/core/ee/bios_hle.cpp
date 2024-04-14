@@ -131,9 +131,9 @@ void BIOS_HLE::reset_EE(EmotionEngine &cpu)
 void BIOS_HLE::set_GS_CRT(EmotionEngine &cpu)
 {
     printf("\nSYSCALL: set_GS_CRT");
-    bool interlaced = cpu.get_gpr<uint64_t>(PARAM0);
-    int mode = cpu.get_gpr<uint64_t>(PARAM1);
-    bool frame_mode = cpu.get_gpr<uint64_t>(PARAM2);
+    bool interlaced = cpu.get_gpr<uint64_t>(PARAM0) != 0;
+    uint8_t mode = (uint8_t)cpu.get_gpr<uint64_t>(PARAM1);
+    bool frame_mode = cpu.get_gpr<uint64_t>(PARAM2) != 0;
     gs->set_CRT(interlaced, mode, frame_mode);
 }
 

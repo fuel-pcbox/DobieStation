@@ -42,7 +42,7 @@ void GSContext::set_tex0(uint64_t value)
         tex0.CLUT_offset = ((value >> 56) & 0xF) * 16 * 4;
     else
         tex0.CLUT_offset = ((value >> 56) & 0x1F) * 16 * 2;
-    tex0.CLUT_control = (value >> 61) & 0x7;
+    tex0.CLUT_control = (uint8_t)((value >> 61) & 0x7);
 
     printf("TEX0: $%08X_%08X\n", value >> 32, value & 0xFFFFFFFF);
     printf("Tex base: $%08X\n", tex0.texture_base);
@@ -66,9 +66,9 @@ void GSContext::set_tex1(uint64_t value)
     tex1.MTBA = (value>>9) & 0x1;
     tex1.L = (value>>19) & 0x3;
 
-    int16_t k_amount = ((value >> 32) & 0xFFF) << 4;
+    int16_t k_amount = (uint16_t)((value >> 32) & 0xFFF) << 4;
     k_amount >>= 4;
-    tex1.K = ((float)k_amount * 1.0 / 16.0);
+    tex1.K = ((float)k_amount * 1.0f / 16.0f);
 }
 
 void GSContext::set_tex2(uint64_t value)
@@ -81,7 +81,7 @@ void GSContext::set_tex2(uint64_t value)
         tex0.CLUT_offset = ((value >> 56) & 0xF) * 16 * 4;
     else
         tex0.CLUT_offset = ((value >> 56) & 0x1F) * 16 * 2;
-    tex0.CLUT_control = (value >> 61) & 0x7;
+    tex0.CLUT_control = (uint8_t)((value >> 61) & 0x7);
 
     printf("TEX2: $%08X_%08X\n", value >> 32, value);
     printf("CLUT base: $%08X\n", tex0.CLUT_base);
@@ -169,7 +169,7 @@ void GSContext::set_frame(uint64_t value)
     frame.base_pointer = (value & 0x1FF) * 2048 * 4;
     frame.width = ((value >> 16) & 0x3F) * 64;
     frame.format = (value >> 24) & 0x3F;
-    frame.mask = value >> 32;
+    frame.mask = (uint32_t)(value >> 32);
     printf("FRAME: $%08X_%08X\n", value >> 32, value & 0xFFFFFFFF);
     printf("Width: %d\n", frame.width);
     printf("Format: %d\n", frame.format);

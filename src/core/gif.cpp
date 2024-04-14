@@ -62,7 +62,7 @@ uint32_t GraphicsInterface::read_STAT()
 
     //Quadword count - since we don't always emulate the FIFO, hack it to 16 if there's a transfer happening
     if (FIFO.size())
-        reg |= FIFO.size() << 24;
+        reg |= (uint32_t)(FIFO.size() << 24);
     else if(path3_dma_running)
         reg |= 16 << 24;
     //printf("[GIF] Read GIF_STAT: $%08X\n", reg);
@@ -222,7 +222,7 @@ void GraphicsInterface::feed_GIF(uint128_t data)
         path[active_path].current_tag.output_PRIM = (data1 >> 46) & 0x1;
         path[active_path].current_tag.PRIM = (data1 >> 47) & 0x7FF;
         path[active_path].current_tag.format = (data1 >> 58) & 0x3;
-        path[active_path].current_tag.reg_count = data1 >> 60;
+        path[active_path].current_tag.reg_count = (uint8_t)(data1 >> 60);
         if (!path[active_path].current_tag.reg_count)
             path[active_path].current_tag.reg_count = 16;
         path[active_path].current_tag.regs = data2;
@@ -370,7 +370,7 @@ void GraphicsInterface::request_PATH(int index, bool canInterruptPath3)
     //printf("[GIF] PATH%d requested active path %d\n", index, active_path);
     if (!active_path || active_path == index)
     {
-        active_path = index;
+        active_path = (uint8_t)index;
 
         if (active_path == 3 && (!path3_masked(3) || FIFO.size() <= 15))
             dmac->set_DMA_request(GIF);
@@ -392,7 +392,7 @@ void GraphicsInterface::deactivate_PATH(int index)
     //printf("[GIF] PATH%d deactivated\n", index);
     if (path_status[index] == 4)
     {
-        path_queue &= ~(1 << index);
+        path_queue &= ~(1 << (uint8_t)index);
 
         //If for some reason the current path is still active (can happen with PATH3) kill it and check other paths
         if (active_path == index)
@@ -416,9 +416,9 @@ void GraphicsInterface::deactivate_PATH(int index)
 
 void GraphicsInterface::arbitrate_paths()
 {
-    for (int new_path = 1; new_path <= 3; new_path++)
+    for (uint8_t new_path = 1; new_path <= 3; new_path++)
     {
-        int bit = 1 << new_path;
+        uint8_t bit = 1 << new_path;
         if (path_queue & bit)
         {
 

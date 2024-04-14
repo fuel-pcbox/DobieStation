@@ -533,9 +533,9 @@ uint8_t Emulator::read8(uint32_t address)
     if (address >= 0x1C000000 && address < 0x1C200000)
         return IOP_RAM[address & 0x1FFFFF];
     if (address >= 0x10000000 && address < 0x10002000)
-        return (timers.read32(address & ~0xF) >> (8 * (address & 0x3)));
+        return (uint8_t)(timers.read32(address & ~0xF) >> (8 * (address & 0x3)));
     if ((address & (0xFF000000)) == 0x12000000)
-        return (gs.read32_privileged(address & ~0x3) >> (8 * (address & 0x3)));
+        return (uint8_t)(gs.read32_privileged(address & ~0x3) >> (8 * (address & 0x3)));
     if (address >= 0x10008000 && address < 0x1000F000)
         return dmac.read8(address);
     if (address >= 0x11000000 && address < 0x11004000)
@@ -566,7 +566,7 @@ uint16_t Emulator::read16(uint32_t address)
     if (address >= 0x10008000 && address < 0x1000F000)
         return dmac.read16(address);
     if ((address & (0xFF000000)) == 0x12000000)
-        return (gs.read32_privileged(address & ~0x3) >> (8 * (address & 0x2)));
+        return (uint16_t)(gs.read32_privileged(address & ~0x3) >> (8 * (address & 0x2)));
     if (address >= 0x1C000000 && address < 0x1C200000)
         return *(uint16_t*)&IOP_RAM[address & 0x1FFFFF];
     if (address >= 0x11000000 && address < 0x11004000)
@@ -609,13 +609,13 @@ uint32_t Emulator::read32(uint32_t address)
     switch (address)
     {
         case 0x10002000:
-            return ipu.read_command();
+            return (uint32_t)ipu.read_command();
         case 0x10002010:
             return ipu.read_control();
         case 0x10002020:
             return ipu.read_BP();
         case 0x10002030:
-            return ipu.read_top();
+            return (uint32_t)ipu.read_top();
         case 0x10003020:
             return gif.read_STAT();
         case 0x10003800:
@@ -974,12 +974,12 @@ void Emulator::write64(uint32_t address, uint64_t value)
     }
     if (address >= 0x10000000 && address < 0x10002000)
     {
-        timers.write32(address, value);
+        timers.write32(address, (uint32_t)value);
         return;
     }
     if (address >= 0x10008000 && address < 0x1000F000)
     {
-        dmac.write32(address, value);
+        dmac.write32(address, (uint32_t)value);
         return;
     }
     if ((address & (0xFF000000)) == 0x12000000)
@@ -1158,23 +1158,35 @@ uint16_t Emulator::iop_read16(uint32_t address)
     switch (address)
     {
         case 0x1F801100:
-            return iop_timers.read_counter(0);
+            return iop_timers.read_counter(0) & 0xFFFF;
+        case 0x1F801402:
+            return iop_timers.read_counter(0) >> 16;
         case 0x1F801104:
             return iop_timers.read_control(0);
         case 0x1F801108:
-            return iop_timers.read_target(0);
+            return iop_timers.read_target(0) & 0xFFFF;
+        case 0x1F80140A:
+            return iop_timers.read_target(0) >> 16;
         case 0x1F801110:
-            return iop_timers.read_counter(1);
+            return iop_timers.read_counter(1) & 0xFFFF;
+        case 0x1F801412:
+            return iop_timers.read_counter(1) >> 16;
         case 0x1F801114:
             return iop_timers.read_control(1);
         case 0x1F801118:
-            return iop_timers.read_target(1);
+            return iop_timers.read_target(1) & 0xFFFF;
+        case 0x1F80141A:
+            return iop_timers.read_target(1) >> 16;
         case 0x1F801120:
-            return iop_timers.read_counter(2);
+            return iop_timers.read_counter(2) & 0xFFFF;
+        case 0x1F801422:
+            return iop_timers.read_counter(2) >> 16;
         case 0x1F801124:
             return iop_timers.read_control(2);
         case 0x1F801128:
-            return iop_timers.read_target(2);
+            return iop_timers.read_target(2) & 0xFFFF;
+        case 0x1F80142A:
+            return iop_timers.read_target(2) >> 16;
         case 0x1F801480:
             return iop_timers.read_counter(3) & 0xFFFF;
         case 0x1F801482:
@@ -1598,7 +1610,7 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
             iop_timers.write_counter(0, value);
             return;
         case 0x1F801104:
-            iop_timers.write_control(0, value);
+            iop_timers.write_control(0, (uint16_t)value);
             return;
         case 0x1F801108:
             iop_timers.write_target(0, value);
@@ -1607,7 +1619,7 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
             iop_timers.write_counter(1, value);
             return;
         case 0x1F801114:
-            iop_timers.write_control(1, value);
+            iop_timers.write_control(1, (uint16_t)value);
             return;
         case 0x1F801118:
             iop_timers.write_target(1, value);
@@ -1616,7 +1628,7 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
             iop_timers.write_counter(2, value);
             return;
         case 0x1F801124:
-            iop_timers.write_control(2, value);
+            iop_timers.write_control(2, (uint16_t)value);
             return;
         case 0x1F801128:
             iop_timers.write_target(2, value);
@@ -1630,7 +1642,7 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
             iop_timers.write_counter(3, value);
             return;
         case 0x1F801484:
-            iop_timers.write_control(3, value);
+            iop_timers.write_control(3, (uint16_t)value);
             return;
         case 0x1F801488:
             iop_timers.write_target(3, value);
@@ -1639,7 +1651,7 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
             iop_timers.write_counter(4, value);
             return;
         case 0x1F801494:
-            iop_timers.write_control(4, value);
+            iop_timers.write_control(4, (uint16_t)value);
             return;
         case 0x1F801498:
             iop_timers.write_target(4, value);
@@ -1648,7 +1660,7 @@ void Emulator::iop_write32(uint32_t address, uint32_t value)
             iop_timers.write_counter(5, value);
             return;
         case 0x1F8014A4:
-            iop_timers.write_control(5, value);
+            iop_timers.write_control(5, (uint16_t)value);
             return;
         case 0x1F8014A8:
             iop_timers.write_target(5, value);

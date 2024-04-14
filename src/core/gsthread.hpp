@@ -77,7 +77,7 @@ union GSMessagePayload
     struct 
     {
         bool interlaced;
-        int mode;
+        uint8_t mode;
         bool frame_mode;
     } crt_payload;
     struct 

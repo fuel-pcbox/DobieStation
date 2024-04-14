@@ -65,11 +65,11 @@ T stepsize(T u1, int32_t x1, T u2, int32_t x2, int64_t mult)
 
 float interpolate_f(int32_t x, float u1, int32_t x1, float u2, int32_t x2)
 {
-    float bark = u1 * (x2 - x);
-    bark += u2 * (x - x1);
+    float bark = u1 * (float)(x2 - x);
+    bark += u2 * (float)(x - x1);
     if (!(x2 - x1))
         return u1;
-    return bark / (x2 - x1);
+    return bark / (float)(x2 - x1);
 }
 
 const unsigned int GraphicsSynthesizerThread::max_vertices[8] = {1, 2, 2, 3, 3, 3, 2, 0};
@@ -540,7 +540,7 @@ uint16_t convert_color_down(uint32_t col)
     uint32_t g = ((col >> 8) & 0xFF) >> 3;
     uint32_t b = ((col >> 16) & 0xFF) >> 3;
     uint32_t a = ((col >> 24) & 0xFF) >> 7;
-    return (r | (g << 5) | (b << 10) | (a << 15));
+    return (uint16_t)(r | (g << 5) | (b << 10) | (a << 15));
 }
 
 //Calculates DISPLAY bounding box
@@ -566,7 +566,7 @@ uint32_t GraphicsSynthesizerThread::get_CRT_color(DISPFB &dispfb, int32_t x, int
         case 0x0:
             return read_PSMCT32_block(dispfb.frame_base * 4, dispfb.width, x, y);
         case 0x1://PSMCT24
-            return (read_PSMCT32_block(dispfb.frame_base * 4, dispfb.width, x, y) & 0xFFFFFF) | (1 << 31);
+            return (read_PSMCT32_block(dispfb.frame_base * 4, dispfb.width, x, y) & 0xFFFFFF) | (0xff << 24);
         case 0x2:
             return convert_color_up(read_PSMCT16_block(dispfb.frame_base * 4, dispfb.width, x, y));
         case 0xA:
@@ -812,9 +812,9 @@ void GraphicsSynthesizerThread::write64(uint32_t addr, uint64_t value)
             RGBAQ.b = (value >> 16) & 0xFF;
             RGBAQ.a = (value >> 24) & 0xFF;
 
-            uint32_t q = (value >> 32) & ~0xFF;
+            uint32_t q = (uint32_t)(value >> 32) & ~0xFF;
             RGBAQ.q = *(float*)&q;
-            printf("[GS_t] RGBAQ: $%08X_%08X\n", value >> 32, value);
+            printf("[GS_t] RGBAQ: $%08X_%08X\n", (uint32_t)(value >> 32), (uint32_t)value);
         }
             break;
         case 0x0002:
@@ -828,23 +828,23 @@ void GraphicsSynthesizerThread::write64(uint32_t addr, uint64_t value)
             printf("ST: (%f, %f)\n", ST.s, ST.t);
             break;
         case 0x0003:
-            UV.u = value & 0x3FFF;
-            UV.v = (value >> 16) & 0x3FFF;
+            UV.u = (uint16_t)value & 0x3FFF;
+            UV.v = (uint16_t)(value >> 16) & 0x3FFF;
             printf("UV: ($%04X, $%04X)\n", UV.u, UV.v);
             break;
         case 0x0004:
             //XYZF2
-            current_vtx.x = value & 0xFFFF;
-            current_vtx.y = (value >> 16) & 0xFFFF;
-            current_vtx.z = (value >> 32) & 0xFFFFFF;
-            FOG = (value >> 56) & 0xFF;
+            current_vtx.x = (uint16_t)value & 0xFFFF;
+            current_vtx.y = (uint16_t)(value >> 16) & 0xFFFF;
+            current_vtx.z = (uint32_t)(value >> 32) & 0xFFFFFF;
+            FOG = (uint8_t)(value >> 56) & 0xFF;
             vertex_kick(true);
             break;
         case 0x0005:
             //XYZ2
-            current_vtx.x = value & 0xFFFF;
-            current_vtx.y = (value >> 16) & 0xFFFF;
-            current_vtx.z = value >> 32;
+            current_vtx.x = (uint16_t)value & 0xFFFF;
+            current_vtx.y = (uint16_t)(value >> 16) & 0xFFFF;
+            current_vtx.z = (uint32_t)(value >> 32);
             vertex_kick(true);
             break;
         case 0x0006:
@@ -874,17 +874,17 @@ void GraphicsSynthesizerThread::write64(uint32_t addr, uint64_t value)
             break;
         case 0x000C:
             //XYZ3F
-            current_vtx.x = value & 0xFFFF;
-            current_vtx.y = (value >> 16) & 0xFFFF;
-            current_vtx.z = (value >> 32) & 0xFFFFFF;
-            FOG = (value >> 56) & 0xFF;
+            current_vtx.x = (uint16_t)value & 0xFFFF;
+            current_vtx.y = (uint16_t)(value >> 16) & 0xFFFF;
+            current_vtx.z = (uint32_t)(value >> 32) & 0xFFFFFF;
+            FOG = (uint8_t)(value >> 56) & 0xFF;
             vertex_kick(false);
             break;
         case 0x000D:
             //XYZ3
-            current_vtx.x = value & 0xFFFF;
-            current_vtx.y = (value >> 16) & 0xFFFF;
-            current_vtx.z = value >> 32;
+            current_vtx.x = (uint16_t)value & 0xFFFF;
+            current_vtx.y = (uint16_t)(value >> 16) & 0xFFFF;
+            current_vtx.z = (uint32_t)(value >> 32);
             vertex_kick(false);
             break;
         case 0x000F:
@@ -1017,7 +1017,7 @@ void GraphicsSynthesizerThread::write64(uint32_t addr, uint64_t value)
             {
                 for (int x = 0; x < 4; x++)
                 {
-                    uint8_t element = value >> ((x + (y * 4)) * 4);
+                    uint8_t element = (uint8_t)(value >> ((x + (y * 4)) * 4));
                     element &= 0x7;
                     dither_mtx[y][x] = element;
                 }
@@ -1401,7 +1401,7 @@ void GraphicsSynthesizerThread::vertex_kick(bool drawing_kick)
     current_vtx.uv = UV;
     current_vtx.s = ST.s;
     current_vtx.t = ST.t;
-    current_vtx.fog = FOG;
+    current_vtx.fog = (uint8_t)FOG;
     vtx_queue[0] = current_vtx;
     //printf("Vkick: (%d, %d, %d)\n", current_vtx.x, current_vtx.y, current_vtx.z);
 
@@ -2019,8 +2019,8 @@ void GraphicsSynthesizerThread::render_point()
         calculate_LOD(tex_info);
         if (!current_PRMODE->use_UV)
         {
-            u = (v1.s * tex_info.tex_width) / v1.rgbaq.q;
-            v = (v1.t * tex_info.tex_height) / v1.rgbaq.q;
+            u = (int32_t)((v1.s * tex_info.tex_width) / v1.rgbaq.q);
+            v = (int32_t)((v1.t * tex_info.tex_height) / v1.rgbaq.q);
             u <<= 4;
             v <<= 4;
         }
@@ -2030,7 +2030,7 @@ void GraphicsSynthesizerThread::render_point()
             v = (uint32_t) v1.uv.v;
         }
 #ifdef GS_JIT
-        jit_tex_lookup_prologue(u, v, &tex_info);
+        jit_tex_lookup_prologue((int16_t)u, (int16_t)v, &tex_info);
 #else
         tex_lookup(u, v, tex_info);
 #endif
@@ -2126,8 +2126,8 @@ void GraphicsSynthesizerThread::render_line()
                 }
                 tex_s /= q;
                 tex_t /= q;
-                u = (tex_s * tex_info.tex_width) * 16.0;
-                v = (tex_t * tex_info.tex_height) * 16.0;
+                u = (int32_t)((tex_s * tex_info.tex_width) * 16.0f);
+                v = (int32_t)((tex_t * tex_info.tex_height) * 16.0f);
             }
             else
             {
@@ -2143,7 +2143,7 @@ void GraphicsSynthesizerThread::render_line()
                 }
             }
 #ifdef GS_JIT
-            jit_tex_lookup_prologue(u, v, &tex_info);
+            jit_tex_lookup_prologue((int16_t)u, (int16_t)v, &tex_info);
 #else
             tex_lookup(u, v, tex_info);
 #endif
@@ -2413,8 +2413,8 @@ void GraphicsSynthesizerThread::render_triangle2() {
                                  left_vertex,      // one point to interpolate from
                                  lowerLeftEdgeStep, // slope of left edge
                                  lowerRightEdgeStep,  // slope of right edge
-                                 scissorX1,        // x scissor (integer pixels, do draw this px)
-                                 scissorX2,        // x scissor (integer pixels, don't draw this px)
+                                 (float)scissorX1,        // x scissor (integer pixels, do draw this px)
+                                 (float)scissorX2,        // x scissor (integer pixels, don't draw this px)
                                  tex_info);        // texture
         }
     }
@@ -2432,7 +2432,7 @@ void GraphicsSynthesizerThread::render_triangle2() {
                                  dvdx, dvdy,          // derivatives of values
                                  v0,                  // interpolate from this vertex
                                  upperLeftEdgeStep, upperRightEdgeStep, // slopes
-                                 scissorX1, scissorX2,  // integer x scissor
+                                 (float)scissorX1, (float)scissorX2,  // integer x scissor
                                  tex_info);
         }
 
@@ -2447,7 +2447,7 @@ void GraphicsSynthesizerThread::render_triangle2() {
             render_half_triangle(v0.x + upperLeftEdgeStep * e10.y, // one of our upper edge vertices isn't v0,v1,v2, but we don't know which. todo is this faster than branch?
                                  v0.x + upperRightEdgeStep * e10.y,
                                  lowerTop, lowerBot, dvdx, dvdy, v1,
-                                 lowerLeftEdgeStep, lowerRightEdgeStep, scissorX1, scissorX2, tex_info);
+                                 lowerLeftEdgeStep, lowerRightEdgeStep, (float)scissorX1, (float)scissorX2, tex_info);
         }
 
     }
@@ -2478,14 +2478,14 @@ void GraphicsSynthesizerThread::render_half_triangle(float x0, float x1, int y0,
 
     for(int y = y0; y < y1; y++) // loop over scanlines of triangle
     {
-        float height = y - init.y; // how far down we've made it
+        float height = (float)y - init.y; // how far down we've made it
         VertexF vtx = init + y_step * height;       // interpolate to point (x_init, y)
         float x0l = x0 + step_x0 * height;          // start x coordinates of scanline from interpolation
         float x1l = x1 + step_x1 * height;          // end   x coordinate of scanline from interpolation
         x0l = std::max(scx1, std::ceil(x0l));       // round and scissor
         x1l = std::min(scx2, std::ceil(x1l));       // round and scissor
-        int xStop = x1l;                            // integer start/stop pixels
-        int xStart = x0l;
+        int xStop = (int)x1l;                            // integer start/stop pixels
+        int xStart = (int)x0l;
 
         if(xStop == xStart) continue;               // skip rows of zero length
 
@@ -2494,12 +2494,12 @@ void GraphicsSynthesizerThread::render_half_triangle(float x0, float x1, int y0,
         for(int x = x0l; x < xStop; x++)            // loop over x pixels of scanline
         {
             //vtx = init + y_step * height + (x_step * (x - init.x));
-            tex_info.vtx_color.r = vtx.r;           // set most recently interpolated stuff
-            tex_info.vtx_color.g = vtx.g;
-            tex_info.vtx_color.b = vtx.b;
-            tex_info.vtx_color.a = vtx.a;
+            tex_info.vtx_color.r = (int16_t)vtx.r;           // set most recently interpolated stuff
+            tex_info.vtx_color.g = (int16_t)vtx.g;
+            tex_info.vtx_color.b = (int16_t)vtx.b;
+            tex_info.vtx_color.a = (int16_t)vtx.a;
             tex_info.vtx_color.q = vtx.q;
-            tex_info.fog = vtx.fog;
+            tex_info.fog = (uint8_t)vtx.fog;
             if (tmp_tex)
             {
                 int32_t u, v;
@@ -2513,8 +2513,8 @@ void GraphicsSynthesizerThread::render_half_triangle(float x0, float x1, int y0,
 
                     s /= q;
                     t /= q;
-                    u = (s * tex_info.tex_width) * 16.f;
-                    v = (t * tex_info.tex_height) * 16.f;
+                    u = (int32_t)((s * tex_info.tex_width) * 16.f);
+                    v = (int32_t)((t * tex_info.tex_height) * 16.f);
                     //fprintf(stderr, "q: %f, u: %d, v: %d, a: %d\n", vtx.q, u,v, tex_info.vtx_color.a);
                 }
                 else
@@ -2523,7 +2523,7 @@ void GraphicsSynthesizerThread::render_half_triangle(float x0, float x1, int y0,
                     v = (uint32_t) vtx.v;
                 }
 #ifdef GS_JIT
-                jit_tex_lookup_prologue(u, v, &tex_info);
+                jit_tex_lookup_prologue((int16_t)u, (int16_t)v, &tex_info);
                 jit_draw_pixel_prologue(x * 16, y * 16, (uint32_t)vtx.z, tex_info.tex_color);
 #else
                 tex_lookup(u, v, tex_info);
@@ -2709,18 +2709,18 @@ void GraphicsSynthesizerThread::render_triangle()
                             z /= divider;
 
                             //Gourand shading calculations
-                            float r = (float) v1.rgbaq.r * w1 + (float) v2.rgbaq.r * w2 + (float) v3.rgbaq.r * w3;
-                            float g = (float) v1.rgbaq.g * w1 + (float) v2.rgbaq.g * w2 + (float) v3.rgbaq.g * w3;
-                            float b = (float) v1.rgbaq.b * w1 + (float) v2.rgbaq.b * w2 + (float) v3.rgbaq.b * w3;
-                            float a = (float) v1.rgbaq.a * w1 + (float) v2.rgbaq.a * w2 + (float) v3.rgbaq.a * w3;
-                            float q = v1.rgbaq.q * w1 + v2.rgbaq.q * w2 + v3.rgbaq.q * w3;
-                            float fog = (float) v1.fog * w1 + (float) v2.fog * w2 + (float) v3.fog * w3;
-                            tex_info.vtx_color.r = r / divider;
-                            tex_info.vtx_color.g = g / divider;
-                            tex_info.vtx_color.b = b / divider;
-                            tex_info.vtx_color.a = a / divider;
-                            tex_info.vtx_color.q = q / divider;
-                            tex_info.fog = fog / divider;
+                            float r = (float) v1.rgbaq.r * (float)w1 + (float) v2.rgbaq.r * (float)w2 + (float) v3.rgbaq.r * (float)w3;
+                            float g = (float) v1.rgbaq.g * (float)w1 + (float) v2.rgbaq.g * (float)w2 + (float) v3.rgbaq.g * (float)w3;
+                            float b = (float) v1.rgbaq.b * (float)w1 + (float) v2.rgbaq.b * (float)w2 + (float) v3.rgbaq.b * (float)w3;
+                            float a = (float) v1.rgbaq.a * (float)w1 + (float) v2.rgbaq.a * (float)w2 + (float) v3.rgbaq.a * (float)w3;
+                            float q = v1.rgbaq.q * (float)w1 + v2.rgbaq.q * (float)w2 + v3.rgbaq.q * (float)w3;
+                            float fog = (float) v1.fog * (float)w1 + (float) v2.fog * (float)w2 + (float) v3.fog * (float)w3;
+                            tex_info.vtx_color.r = (int16_t)(r / (float)divider);
+                            tex_info.vtx_color.g = (int16_t)(g / (float)divider);
+                            tex_info.vtx_color.b = (int16_t)(b / (float)divider);
+                            tex_info.vtx_color.a = (int16_t)(a / (float)divider);
+                            tex_info.vtx_color.q = (q / (float)divider);
+                            tex_info.fog = (uint8_t)(fog / (float)divider);
 
                             if (tmp_tex)
                             {
@@ -2729,28 +2729,28 @@ void GraphicsSynthesizerThread::render_triangle()
                                 if (tmp_uv)
                                 {
                                     float s, t, q;
-                                    s = v1.s * w1 + v2.s * w2 + v3.s * w3;
-                                    t = v1.t * w1 + v2.t * w2 + v3.t * w3;
-                                    q = v1.rgbaq.q * w1 + v2.rgbaq.q * w2 + v3.rgbaq.q * w3;
+                                    s = v1.s * (float)w1 + v2.s * (float)w2 + v3.s * (float)w3;
+                                    t = v1.t * (float)w1 + v2.t * (float)w2 + v3.t * (float)w3;
+                                    q = v1.rgbaq.q * (float)w1 + v2.rgbaq.q * (float)w2 + v3.rgbaq.q * (float)w3;
 
                                     //We don't divide s and t by "divider" because dividing by Q effectively
                                     //cancels that out
                                     s /= q;
                                     t /= q;
-                                    u = (s * tex_info.tex_width) * 16.0;
-                                    v = (t * tex_info.tex_height) * 16.0;
+                                    u = (uint32_t)((s * tex_info.tex_width) * 16.0f);
+                                    v = (uint32_t)((t * tex_info.tex_height) * 16.0f);
                                 }
                                 else
                                 {
-                                    float temp_u = (float) v1.uv.u * w1 + (float) v2.uv.u * w2 + (float) v3.uv.u * w3;
-                                    float temp_v = (float) v1.uv.v * w1 + (float) v2.uv.v * w2 + (float) v3.uv.v * w3;
+                                    float temp_u = (float) v1.uv.u * (float)w1 + (float) v2.uv.u * (float)w2 + (float) v3.uv.u * (float)w3;
+                                    float temp_v = (float) v1.uv.v * (float)w1 + (float) v2.uv.v * (float)w2 + (float) v3.uv.v * (float)w3;
                                     temp_u /= divider;
                                     temp_v /= divider;
                                     u = (uint32_t) temp_u;
                                     v = (uint32_t) temp_v;
                                 }
 #ifdef GS_JIT
-                                jit_tex_lookup_prologue(u, v, &tex_info);
+                                jit_tex_lookup_prologue((int16_t)u, (int16_t)v, &tex_info);
                                 jit_draw_pixel_prologue(x, y, (uint32_t)z, tex_info.tex_color);
 #else
                                 tex_lookup(u, v, tex_info);
@@ -2832,7 +2832,7 @@ void GraphicsSynthesizerThread::render_sprite()
     for (int32_t y = min_y; y < max_y; y += 0x10)
     {
         float pix_s = pix_s_init;
-        uint32_t pix_u = pix_u_init;
+        int32_t pix_u = pix_u_init;
         for (int32_t x = min_x; x < max_x; x += 0x10)
         {
             if (tmp_tex)
@@ -2840,10 +2840,10 @@ void GraphicsSynthesizerThread::render_sprite()
                 tex_info.fog = v2.fog;
                 if (tmp_st)
                 {
-                    pix_v = ((pix_t / v2.rgbaq.q) * tex_info.tex_height) * 16.0;
-                    pix_u = ((pix_s / v2.rgbaq.q) * tex_info.tex_width) * 16.0;
+                    pix_v = (uint32_t)(((pix_t / v2.rgbaq.q) * tex_info.tex_height) * 16.0);
+                    pix_u = (uint32_t)(((pix_s / v2.rgbaq.q) * tex_info.tex_width) * 16.0);
 #ifdef GS_JIT
-                    jit_tex_lookup_prologue(pix_u, pix_v, &tex_info);
+                    jit_tex_lookup_prologue((int16_t)pix_u, (int16_t)pix_v, &tex_info);
 #else
                     tex_lookup(pix_u, pix_v, tex_info);
 #endif
@@ -2851,7 +2851,7 @@ void GraphicsSynthesizerThread::render_sprite()
                 else
                 {
 #ifdef GS_JIT
-                    jit_tex_lookup_prologue(pix_u >> 16, pix_v >> 16, &tex_info);
+                    jit_tex_lookup_prologue((int16_t)(pix_u >> 16), (int16_t)(pix_v >> 16), &tex_info);
 #else
                     tex_lookup(pix_u >> 16, pix_v >> 16, tex_info);
 #endif
@@ -2971,7 +2971,7 @@ void GraphicsSynthesizerThread::write_HWREG(uint64_t data)
                 break;
             case 0x14:
             {
-                uint8_t value = (data >> ((i >> 1) << 3));
+                uint8_t value = (uint8_t)(data >> ((i >> 1) << 3));
                 if (TRXPOS.int_dest_x & 0x1)
                     value >>= 4;
                 else

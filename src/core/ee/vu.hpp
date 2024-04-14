@@ -233,7 +233,7 @@ class VectorUnit
         bool is_dirty();
         void clear_dirty();
         uint16_t get_PC();
-        void set_PC(uint32_t newPC);
+        void set_PC(uint16_t newPC);
         uint32_t get_gpr_u(int index, int field);
         uint16_t get_int(int index);
         int get_id();
@@ -476,7 +476,7 @@ inline uint16_t VectorUnit::get_PC()
     return PC;
 }
 
-inline void VectorUnit::set_PC(uint32_t newPC)
+inline void VectorUnit::set_PC(uint16_t newPC)
 {
     PC = newPC;
 }

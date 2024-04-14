@@ -61,7 +61,7 @@ bool GraphicsSynthesizer::is_frame_complete() const
     return frame_complete;
 }
 
-void GraphicsSynthesizer::set_CRT(bool interlaced, int mode, bool frame_mode)
+void GraphicsSynthesizer::set_CRT(bool interlaced, uint8_t mode, bool frame_mode)
 {
     reg.set_CRT(interlaced, mode, frame_mode);
 

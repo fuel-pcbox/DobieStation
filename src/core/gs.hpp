@@ -48,7 +48,7 @@ class GraphicsSynthesizer
         void assert_HBLANK();
         void assert_VSYNC();
 
-        void set_CRT(bool interlaced, int mode, bool frame_mode);
+        void set_CRT(bool interlaced, uint8_t mode, bool frame_mode);
 
         uint32_t get_busdir();
         uint32_t read32_privileged(uint32_t addr);

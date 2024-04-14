@@ -181,7 +181,7 @@ struct GS_REGISTERS
 
     void reset(bool soft_reset);
 
-    void set_CRT(bool interlaced, int mode, bool frame_mode);
+    void set_CRT(bool interlaced, uint8_t mode, bool frame_mode);
     void get_resolution(int &w, int &h);
     void get_inner_resolution(int &w, int &h);
     void swap_FIELD();

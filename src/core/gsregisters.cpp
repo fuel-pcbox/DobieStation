@@ -9,7 +9,7 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
     switch (addr)
     {
         case 0x0000:
-            printf("[GS_r] Write PMODE: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write PMODE: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             PMODE.circuit1 = value & 0x1;
             PMODE.circuit2 = value & 0x2;
             PMODE.output_switching = (value >> 2) & 0x7;
@@ -31,7 +31,7 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
                 // no divide by zero
                 if (SPML && SMODE1.PLL_loop_divider)
                 {
-                    float VCK = (13500000 * SMODE1.PLL_loop_divider) / ((SMODE1.PLL_output_divider + 1) * SMODE1.PLL_reference_divider);
+                    float VCK = (13500000.0f * SMODE1.PLL_loop_divider) / ((SMODE1.PLL_output_divider + 1) * SMODE1.PLL_reference_divider);
                     float PCK = VCK / SPML;
 
                     printf("[GS_r] Unimplemented privileged write64 to SMODE1: $%08lX_%08lX\n"
@@ -44,17 +44,17 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
                         "\tSPML: %d\n"
                         "\tCalculated VCK: %4.6lf MHz\n"
                         "\tCalculated PCK: %4.6lf MHz\n",
-                        value >> 32, value & 0xFFFFFFFF,
+                        (uint32_t)(value >> 32), value & 0xFFFFFFFF,
                         SMODE1.PLL_reference_divider, SMODE1.PLL_loop_divider,
                         SMODE1.PLL_output_divider, SMODE1.PLL_reset,
                         SMODE1.color_system, SMODE1.YCBCR_color,
-                        SPML, VCK / 1000000, PCK / 1000000
+                        SPML, VCK / 1000000.0f, PCK / 1000000.0f
                     );
                 }
             }
             break;
         case 0x0020:
-            printf("[GS_r] Write SMODE2: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write SMODE2: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             SMODE2.interlaced = value & 0x1;
             SMODE2.frame_mode = value & 0x2;
             SMODE2.power_mode = (value >> 2) & 0x3;
@@ -64,7 +64,7 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
                 deinterlace_method = BOB_DEINTERLACE;
             break;
         case 0x0030: // this register is undocumented, it's fields are unknown
-            printf("[GS_r] Unimplemented privileged write64 to SRFSH: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Unimplemented privileged write64 to SRFSH: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             break;
         case 0x0040:
             SYNCH1.horizontal_front_porch = value & 0x7FF;
@@ -73,12 +73,12 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
             printf("[GS_r] Unimplemented privileged write64 to SYNCH1: $%08lX_%08lX\n"
                 "\tHorizontal Front Porch: %d\n"
                 "\tHorizontal Back Porch: %d\n",
-                value >> 32, value & 0xFFFFFFFF,
+                (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF,
                 SYNCH1.horizontal_front_porch, SYNCH1.horizontal_back_porch
             );
             break;
         case 0x0050:
-            printf("[GS_r] Unimplemented privileged write64 to SYNCH2: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Unimplemented privileged write64 to SYNCH2: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             break;
         case 0x0060:
             SYNCV.vertical_front_porch = value & 0x3FF;
@@ -95,14 +95,14 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
                 "\tHalflines After Back Porch: %d\n"
                 "\tHalflines with Video: %d\n"
                 "\tHalflines with VSYNC: %d\n",
-                value >> 32, value & 0xFFFFFFFF,
+                (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF,
                 SYNCV.vertical_front_porch, SYNCV.halflines_after_front_porch,
                 SYNCV.halflines_after_back_porch, SYNCV.halflines_after_back_porch,
                 SYNCV.halflines_with_video, SYNCV.halflines_with_vsync
             );
             break;
         case 0x0070:
-            printf("[GS_r] Write DISPFB1: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write DISPFB1: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             DISPFB1.frame_base = (value & 0x1FF) * 2048;
             DISPFB1.width = ((value >> 9) & 0x3F) * 64;
             DISPFB1.format = (value >> 15) & 0x1F;
@@ -110,7 +110,7 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
             DISPFB1.y = (value >> 43) & 0x7FF;
             break;
         case 0x0080:
-            printf("[GS_r] Write DISPLAY1: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write DISPLAY1: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             DISPLAY1.x = value & 0xFFF;
             DISPLAY1.y = (value >> 12) & 0x7FF;
             DISPLAY1.magnify_x = ((value >> 23) & 0xF) + 1;
@@ -127,7 +127,7 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
             printf("MAGV: %d\n", DISPLAY1.magnify_y);
             break;
         case 0x0090:
-            printf("[GS_r] Write DISPFB2: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write DISPFB2: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             DISPFB2.frame_base = (value & 0x1FF) * 2048;
             DISPFB2.width = ((value >> 9) & 0x3F) * 64;
             DISPFB2.format = (value >> 15) & 0x1F;
@@ -135,7 +135,7 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
             DISPFB2.y = (value >> 43) & 0x7FF;
             break;
         case 0x00A0:
-            printf("[GS_r] Write DISPLAY2: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write DISPLAY2: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             DISPLAY2.x = value & 0xFFF;
             DISPLAY2.y = (value >> 12) & 0x7FF;
             DISPLAY2.magnify_x = ((value >> 23) & 0xF) + 1;
@@ -152,21 +152,21 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
             printf("MAGV: %d\n", DISPLAY2.magnify_y);
             break;
         case 0x00B0:
-            printf("[GS_r] Unimplemented privileged write64 to EXTBUF: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Unimplemented privileged write64 to EXTBUF: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             break;
         case 0x00C0:
-            printf("[GS_r] Unimplemented privileged write64 to EXTDATA: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Unimplemented privileged write64 to EXTDATA: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             break;
         case 0x00D0:
             if (value & 0x1)
                 Errors::die("[GS_r] Feedback Write activated but not implemented");
             break;
         case 0x00E0:
-            printf("[GS_r] Write BGCOLOR: $%08lX\n", value);
+            printf("[GS_r] Write BGCOLOR: $%08lX\n", (uint32_t)value);
             BGCOLOR = value & 0xFFFFFF;
             break;
         case 0x1000:
-            printf("[GS_r] Write64 to GS_CSR: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write64 to GS_CSR: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             CSR.SIGNAL_generated &= ~(value & 1);
             if (value & 1)
             {
@@ -200,7 +200,7 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
             }
             break;
         case 0x1010:
-            printf("[GS_r] Write64 GS_IMR: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write64 GS_IMR: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             IMR.signal = value & (1 << 8);
             IMR.finish = value & (1 << 9);
             IMR.hsync = value & (1 << 10);
@@ -208,15 +208,15 @@ void GS_REGISTERS::write64_privileged(uint32_t addr, uint64_t value)
             IMR.rawt = value & (1 << 12);
             break;
         case 0x1040:
-            printf("[GS_r] Write64 to GS_BUSDIR: $%08lX_%08lX\n", value >> 32, value & 0xFFFFFFFF);
+            printf("[GS_r] Write64 to GS_BUSDIR: $%08lX_%08lX\n", (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
             BUSDIR = (uint8_t)value;
             break;
         case 0x1080:
-            SIGLBLID.sig_id = value & 0xFFFFFFFF;
-            SIGLBLID.lbl_id = value >> 32;
+            SIGLBLID.sig_id = (uint32_t)value & 0xFFFFFFFF;
+            SIGLBLID.lbl_id = (uint32_t)(value >> 32);
             break;
         default:
-            Errors::die("[GS_r] Unrecognized privileged write64\nAddr: $%04X\nValue: $%08lX_%08lX\n", addr, value >> 32, value & 0xFFFFFFFF);
+            Errors::die("[GS_r] Unrecognized privileged write64\nAddr: $%04X\nValue: $%08lX_%08lX\n", addr, (uint32_t)(value >> 32), (uint32_t)value & 0xFFFFFFFF);
     }
 }
 
@@ -294,7 +294,7 @@ void GS_REGISTERS::write32_privileged(uint32_t addr, uint32_t value)
 //reads from local copies only
 uint32_t GS_REGISTERS::read32_privileged(uint32_t addr)
 {
-    return read64_privileged(addr & ~0x4) >> (32 * ((addr & 0x4) != 0));
+    return (uint32_t)read64_privileged(addr & ~0x4) >> (32 * ((addr & 0x4) != 0));
 }
 
 uint64_t GS_REGISTERS::read64_privileged(uint32_t addr)
@@ -335,8 +335,8 @@ bool GS_REGISTERS::write64(uint32_t addr, uint64_t value)
         case 0x0060:
             
         {
-            uint32_t mask = value >> 32;
-            uint32_t new_signal = value & mask;
+            uint32_t mask = (uint32_t)(value >> 32);
+            uint32_t new_signal = (uint32_t)value & mask;
             if (CSR.SIGNAL_generated)
             {
                 printf("[GS] Second SIGNAL requested before acknowledged!\n");
@@ -446,7 +446,7 @@ void GS_REGISTERS::reset(bool soft_reset)
     set_CRT(false, 0x2, false);
 }
 
-void GS_REGISTERS::set_CRT(bool interlaced, int mode, bool frame_mode)
+void GS_REGISTERS::set_CRT(bool interlaced, uint8_t mode, bool frame_mode)
 {
     SMODE2.interlaced = interlaced;
     CRT_mode = mode;
