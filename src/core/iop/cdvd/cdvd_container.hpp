@@ -1,6 +1,7 @@
 #ifndef CDVD_CONTAINER_HPP
 #define CDVD_CONTAINER_HPP
 #include <fstream>
+#include <cstdint>
 
 class CDVD_Container
 {

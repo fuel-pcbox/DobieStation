@@ -1,6 +1,7 @@
 #ifndef VU_DISASM_HPP
 #define VU_DISASM_HPP
 #include <string>
+#include <cstdint>
 
 namespace VU_Disasm
 {
