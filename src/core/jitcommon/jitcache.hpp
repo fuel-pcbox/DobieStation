@@ -1,12 +1,10 @@
-#ifndef JITCACHE_HPP
-#define JITCACHE_HPP
-
+#pragma once
 #include <unordered_map>
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
 #include <string>
-#include "../errors.hpp"
+#include <util/errors.hpp>
 
 /*!
  * A record to keep track of a JIT block in a JIT heap. Points to the x86 code/literals, as well as some block_data
@@ -373,7 +371,3 @@ public:
     void invalidate_ee_page(uint32_t page);
     EEJitBlockRecord *find_block(uint32_t PC);
 };
-
-
-#endif // JITCACHE_HPP
-

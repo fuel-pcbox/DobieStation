@@ -74,9 +74,9 @@ class EmuWindow : public QMainWindow
     
     signals:
         void shutdown();
-        void press_key(PAD_BUTTON button);
-        void release_key(PAD_BUTTON button);
-        void update_joystick(JOYSTICK joystick, JOYSTICK_AXIS axis, uint8_t val);
+        void press_key(sio2::PAD_BUTTON button);
+        void release_key(sio2::PAD_BUTTON button);
+        void update_joystick(sio2::JOYSTICK joystick, sio2::JOYSTICK_AXIS axis, uint8_t val);
     public slots:
         void update_FPS(double FPS);
         void open_file_no_skip();

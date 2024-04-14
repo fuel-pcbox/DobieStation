@@ -1,6 +1,6 @@
 #include "emitter64.hpp"
 
-#define DISP32 0b101
+constexpr uint32_t DISP32 = 0b101;
 
 Emitter64::Emitter64(JitBlock* cache) : block(cache)
 {

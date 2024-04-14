@@ -1,180 +1,189 @@
-#ifndef SPU_HPP
-#define SPU_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include "spu_envelope.hpp"
-#include "../../audio/utils.hpp"
+#include <util/audio.hpp>
 #include "spu_adpcm.hpp"
 #include "spu_utils.hpp"
 
-struct VoiceMix
+namespace iop
 {
-    bool dry_l;
-    bool dry_r;
-    bool wet_l;
-    bool wet_r;
+    class INTC;
+    class DMA;
+}
 
-};
-
-struct Voice
+namespace spu
 {
-    Volume left_vol, right_vol;
-    uint16_t pitch;
-    uint32_t start_addr;
-    uint32_t current_addr;
-    uint32_t loop_addr;
-    bool loop_addr_specified;
+    /* SPU constants */
+    constexpr uint32_t SPU_CORE0_MEMIN = 0x2000;
+    constexpr uint32_t SPU_CORE1_MEMIN = 0x2400;
+    constexpr uint32_t REVERB_REG_BASE = 0x2E4;
 
-    VoiceMix mix_state;
-
-    ADSR adsr;
-
-    uint32_t counter;
-    unsigned sample_idx;
-    int loop_code;
-    bool new_block;
-
-    ADPCM_Decoder adpcm;
-
-    int16_t old1 = 0;
-    int16_t old2 = 0;
-    int16_t old3 = 0;
-    int16_t next_sample = 0;
-    int16_t outx = 0;
-
-    std::array<int16_t, 28> pcm;
-
-
-    void set_envelope_stage(ADSR::Stage stage );
-    void read_sweep(Envelope envelope, uint16_t val);
-
-    void reset()
+    struct VoiceMix
     {
-        adsr = {};
-        left_vol = {};
-        right_vol = {};
-        mix_state = {};
-        adpcm = {};
-        pitch = 0;
-        start_addr = 0;
-        current_addr = 0;
-        loop_addr = 0;
-        loop_addr_specified = false;
-        counter = 0;
-        sample_idx = 0;
-        loop_code = 0;
-        new_block = true;
-    }
-};
+        bool dry_l;
+        bool dry_r;
+        bool wet_l;
+        bool wet_r;
 
-struct CoreMix
-{
-    uint16_t reg;
-    bool sin_wet_r;
-    bool sin_wet_l;
-    bool sin_dry_r;
-    bool sin_dry_l;
-    bool memin_wet_r;
-    bool memin_wet_l;
-    bool memin_dry_r;
-    bool memin_dry_l;
-    bool voice_wet_r;
-    bool voice_wet_l;
-    bool voice_dry_r;
-    bool voice_dry_l;
-
-    void read(uint16_t val)
-    {
-        reg = val;
-        sin_wet_r = (val & (1 << 0));
-        sin_wet_l = (val & (1 << 1));
-        sin_dry_r = (val & (1 << 2));
-        sin_dry_l = (val & (1 << 3));
-        memin_wet_r = (val & (1 << 4));
-        memin_wet_l = (val & (1 << 5));
-        memin_dry_r = (val & (1 << 6));
-        memin_dry_l = (val & (1 << 7));
-        voice_wet_r = (val & (1 << 8));
-        voice_wet_l = (val & (1 << 9));
-        voice_dry_r = (val & (1 << 10));
-        voice_dry_l = (val & (1 << 11));
-    }
-
-};
-
-struct Reverb
-{
-    uint32_t effect_area_start;
-    uint32_t effect_area_end;
-    uint32_t effect_pos;
-    uint8_t cycle;
-    stereo_sample Eout;
-
-    union
-    {
-        uint32_t regs[22];
-        struct
-        {
-            uint32_t dAFP1;
-            uint32_t dAFP2;
-            uint32_t mLSAME;
-            uint32_t mRSAME;
-            uint32_t mLCOMB1;
-            uint32_t mRCOMB1;
-            uint32_t mLCOMB2;
-            uint32_t mRCOMB2;
-            uint32_t dLSAME;
-            uint32_t dRSAME;
-            uint32_t mLDIFF;
-            uint32_t mRDIFF;
-            uint32_t mLCOMB3;
-            uint32_t mRCOMB3;
-            uint32_t mLCOMB4;
-            uint32_t mRCOMB4;
-            uint32_t dLDIFF;
-            uint32_t dRDIFF;
-            uint32_t mLAPF1;
-            uint32_t mRAPF1;
-            uint32_t mLAPF2;
-            uint32_t mRAPF2;
-        };
     };
 
-    int16_t vIIR;
-    int16_t vCOMB1;
-    int16_t vCOMB2;
-    int16_t vCOMB3;
-    int16_t vCOMB4;
-    int16_t vWALL;
-    int16_t vAPF1;
-    int16_t vAPF2;
-    int16_t vLIN;
-    int16_t vRIN;
-};
+    struct Voice
+    {
+        Volume left_vol, right_vol;
+        uint16_t pitch;
+        uint32_t start_addr;
+        uint32_t current_addr;
+        uint32_t loop_addr;
+        bool loop_addr_specified;
 
-struct Noise
-{
-    uint8_t clock;
-    int16_t output;
-    uint32_t count;
-    void step();
-};
+        VoiceMix mix_state;
 
-struct SPU_STAT
-{
-    bool DMA_ready;
-    bool DMA_busy;
-};
+        ADSR adsr;
 
-class IOP_INTC;
-class IOP_DMA;
+        uint32_t counter;
+        unsigned sample_idx;
+        int loop_code;
+        bool new_block;
 
-class SPU
-{
+        ADPCM_Decoder adpcm;
+
+        int16_t old1 = 0;
+        int16_t old2 = 0;
+        int16_t old3 = 0;
+        int16_t next_sample = 0;
+        int16_t outx = 0;
+
+        std::array<int16_t, 28> pcm;
+
+
+        void set_envelope_stage(ADSR::Stage stage);
+        void read_sweep(Envelope envelope, uint16_t val);
+
+        void reset()
+        {
+            adsr = {};
+            left_vol = {};
+            right_vol = {};
+            mix_state = {};
+            adpcm = {};
+            pitch = 0;
+            start_addr = 0;
+            current_addr = 0;
+            loop_addr = 0;
+            loop_addr_specified = false;
+            counter = 0;
+            sample_idx = 0;
+            loop_code = 0;
+            new_block = true;
+        }
+    };
+
+    struct CoreMix
+    {
+        uint16_t reg;
+        bool sin_wet_r;
+        bool sin_wet_l;
+        bool sin_dry_r;
+        bool sin_dry_l;
+        bool memin_wet_r;
+        bool memin_wet_l;
+        bool memin_dry_r;
+        bool memin_dry_l;
+        bool voice_wet_r;
+        bool voice_wet_l;
+        bool voice_dry_r;
+        bool voice_dry_l;
+
+        void read(uint16_t val)
+        {
+            reg = val;
+            sin_wet_r = (val & (1 << 0));
+            sin_wet_l = (val & (1 << 1));
+            sin_dry_r = (val & (1 << 2));
+            sin_dry_l = (val & (1 << 3));
+            memin_wet_r = (val & (1 << 4));
+            memin_wet_l = (val & (1 << 5));
+            memin_dry_r = (val & (1 << 6));
+            memin_dry_l = (val & (1 << 7));
+            voice_wet_r = (val & (1 << 8));
+            voice_wet_l = (val & (1 << 9));
+            voice_dry_r = (val & (1 << 10));
+            voice_dry_l = (val & (1 << 11));
+        }
+
+    };
+
+    struct Reverb
+    {
+        uint32_t effect_area_start;
+        uint32_t effect_area_end;
+        uint32_t effect_pos;
+        uint8_t cycle;
+        stereo_sample Eout;
+
+        union
+        {
+            uint32_t regs[22];
+            struct
+            {
+                uint32_t dAFP1;
+                uint32_t dAFP2;
+                uint32_t mLSAME;
+                uint32_t mRSAME;
+                uint32_t mLCOMB1;
+                uint32_t mRCOMB1;
+                uint32_t mLCOMB2;
+                uint32_t mRCOMB2;
+                uint32_t dLSAME;
+                uint32_t dRSAME;
+                uint32_t mLDIFF;
+                uint32_t mRDIFF;
+                uint32_t mLCOMB3;
+                uint32_t mRCOMB3;
+                uint32_t mLCOMB4;
+                uint32_t mRCOMB4;
+                uint32_t dLDIFF;
+                uint32_t dRDIFF;
+                uint32_t mLAPF1;
+                uint32_t mRAPF1;
+                uint32_t mLAPF2;
+                uint32_t mRAPF2;
+            };
+        };
+
+        int16_t vIIR;
+        int16_t vCOMB1;
+        int16_t vCOMB2;
+        int16_t vCOMB3;
+        int16_t vCOMB4;
+        int16_t vWALL;
+        int16_t vAPF1;
+        int16_t vAPF2;
+        int16_t vLIN;
+        int16_t vRIN;
+    };
+
+    struct Noise
+    {
+        uint8_t clock;
+        int16_t output;
+        uint32_t count;
+        void step();
+    };
+
+    struct SPU_STAT
+    {
+        bool DMA_ready;
+        bool DMA_busy;
+    };
+
+    class SPU
+    {
     private:
         unsigned int id;
-        IOP_INTC* intc;
-        IOP_DMA* dma;
+        iop::INTC* intc;
+        iop::DMA* dma;
 
         enum MEMOUT
         {
@@ -268,7 +277,7 @@ class SPU
         void clear_dma_req();
         void set_dma_req();
     public:
-        SPU(int id, IOP_INTC* intc, IOP_DMA* dma);
+        SPU(int id, iop::INTC* intc, iop::DMA* dma);
 
         bool running_ADMA();
         bool wav_output = false;
@@ -295,11 +304,10 @@ class SPU
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
 
-};
+    };
 
-inline bool SPU::running_ADMA()
-{
-    return (autodma_ctrl & (1 << (id - 1)));
+    inline bool SPU::running_ADMA()
+    {
+        return (autodma_ctrl & (1 << (id - 1)));
+    }
 }
-
-#endif // SPU_HPP

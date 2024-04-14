@@ -1,4 +1,5 @@
 #ifdef _WIN32
+#define NOMINMAX
 #include <Windows.h>
 #include <algorithm>
 #else
@@ -8,7 +9,7 @@
 #include <limits>
 #include <cstring>
 
-#include "../errors.hpp"
+#include <util/errors.hpp>
 #include "jitcache.hpp"
 
 //////////////

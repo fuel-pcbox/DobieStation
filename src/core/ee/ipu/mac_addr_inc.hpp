@@ -1,9 +1,10 @@
-#ifndef MAC_ADDR_INC_H
-#define MAC_ADDR_INC_H
+#pragma once
 #include "vlc_table.hpp"
 
-class MacroblockAddrInc : public VLC_Table
+namespace ipu
 {
+    class MacroblockAddrInc : public VLC_Table
+    {
     private:
         static VLC_Entry table[];
         static unsigned int index_table[];
@@ -11,6 +12,5 @@ class MacroblockAddrInc : public VLC_Table
         constexpr static int SIZE = 35;
     public:
         MacroblockAddrInc();
-};
-
-#endif // MAC_ADDR_INC_H
+    };
+}

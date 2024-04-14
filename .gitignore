@@ -10,6 +10,7 @@ demos
 CmakeSettings.json
 cmake-build-*/
 build/
+out/
 /*build/
 build-clang/
 build-DobieStation-*

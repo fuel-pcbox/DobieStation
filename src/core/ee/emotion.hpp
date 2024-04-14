@@ -1,80 +1,119 @@
-#ifndef EMOTION_HPP
-#define EMOTION_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include <functional>
 #include <list>
-#include "cop0.hpp"
-#include "cop1.hpp"
+#include <ee/cop0.hpp>
+#include <ee/cop1.hpp>
+#include <util/int128.hpp>
+#include <memory>
 
-#include "../int128.hpp"
-
-class Emulator;
-class VectorUnit;
-class EE_JIT64;
-class EmotionEngine;
-class SubsystemInterface;
-
-//Handler used for Deci2Call (syscall 0x7C)
-struct Deci2Handler
+namespace core
 {
-    bool active;
-    uint32_t device;
-    uint32_t addr;
-};
+    class Emulator;
+    class SubsystemInterface;
+}
 
-struct EE_ICacheLine
+namespace vu
 {
-    bool lfu[2];
-    uint32_t tag[2];
-};
+    class VectorUnit;
+}
 
-//Taken from PS2SDK
-struct EE_OsdConfigParam
+namespace ee
 {
-    /** 0=enabled, 1=disabled */
-    /*00*/uint32_t spdifMode:1;
-        /** 0=4:3, 1=fullscreen, 2=16:9 */
-    /*01*/uint32_t screenType:2;
-        /** 0=rgb(scart), 1=component */
-    /*03*/uint32_t videoOutput:1;
-        /** 0=japanese, 1=english(non-japanese) */
-    /*04*/uint32_t japLanguage:1;
-        /** Playstation driver settings. */
-    /*05*/uint32_t ps1drvConfig:8;
-        /** 0 = early Japanese OSD, 1 = OSD2, 2 = OSD2 with extended languages.
+    class EmotionEngine;
+    namespace jit
+    {
+        class EE_JIT64;
+    }
+}
+
+extern "C" uint8_t * exec_block_ee(ee::jit::EE_JIT64& jit, ee::EmotionEngine& ee);
+
+namespace ee
+{
+    //Handler used for Deci2Call (syscall 0x7C)
+    struct Deci2Handler
+    {
+        bool active;
+        uint32_t device;
+        uint32_t addr;
+    };
+
+    struct EE_ICacheLine
+    {
+        bool lfu[2];
+        uint32_t tag[2];
+    };
+
+    /* Taken from PS2SDK */
+    struct EE_OsdConfigParam
+    {
+        /* 0 = enabled, 1 = disabled */
+        uint32_t spdifMode : 1;
+        /* 0 = 4:3, 1 = fullscreen, 2 = 16:9 */
+        uint32_t screenType : 2;
+        /* 0 = rgb(scart), 1 = component */
+        uint32_t videoOutput : 1;
+        /* 0 = japanese, 1 = english(non-japanese) */
+        uint32_t japLanguage : 1;
+        /* Playstation driver settings. */
+        uint32_t ps1drvConfig : 8;
+        /* 0 = early Japanese OSD, 1 = OSD2, 2 = OSD2 with extended languages.
          * Early kernels cannot retain the value set in this field (Hence always 0). */
-    /*13*/uint32_t version:3;
-        /** LANGUAGE_??? value */
-    /*16*/uint32_t language:5;
-        /** timezone minutes offset from gmt */
-    /*21*/uint32_t timezoneOffset:11;
-};
+        uint32_t version : 3;
+        /* LANGUAGE_??? value */
+        uint32_t language : 5;
+        /* timezone minutes offset from gmt */
+        uint32_t timezoneOffset : 11;
+    };
 
-extern "C" uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
+    /* EE register */
+    static const char* REG[] =
+    {
+        "zero", "at", "v0", "v1",
+        "a0", "a1", "a2", "a3",
+        "t0", "t1", "t2", "t3",
+        "t4", "t5", "t6", "t7",
+        "s0", "s1", "s2", "s3",
+        "s4", "s5", "s6", "s7",
+        "t8", "t9", "k0", "k1",
+        "gp", "sp", "fp", "ra"
+    };
 
-class EmotionEngine
-{
-    private:
-        Emulator* e;
+    class EmotionEngine
+    {
+    public:
+        core::Emulator* e;
 
         uint64_t cycle_count;
         int32_t cycles_to_run;
         uint64_t run_event;
 
-        Cop0* cp0;
-        Cop1* fpu;
-        SubsystemInterface* sif;
-        VectorUnit* vu0;
-        VectorUnit* vu1;
+        std::unique_ptr<Cop0> cp0;
+        std::unique_ptr<Cop1> fpu;
 
         uint8_t** tlb_map;
 
         EE_OsdConfigParam osd_config_param;
 
+        uint8_t* rdram = nullptr;
+        uint8_t scratchpad[16 * 1024] = {};
+
         //Each register is 128-bit
         alignas(16) uint8_t gpr[32 * sizeof(uint64_t) * 2];
-        alignas(16) uint128_t LO, HI;
+        
+        /* Using this we can load LO and HI in the same AVX register thus
+           improving performance */
+        union
+        {
+            uint128_t LO_HI[2];
+            struct
+            {
+                uint128_t LO, HI;
+            };
+        };
+        
         uint32_t PC, new_PC;
         uint64_t SA;
 
@@ -104,10 +143,13 @@ class EmotionEngine
         void deci2call(uint32_t func, uint32_t param);
 
         void log_sifrpc(uint32_t dma_struct_ptr, int len);
+    
     public:
-        EmotionEngine(Cop0* cp0, Cop1* fpu, Emulator* e, SubsystemInterface* sif, VectorUnit* vu0, VectorUnit* vu1);
-        static const char* REG(int id);
+        EmotionEngine(core::Emulator* e);
+        ~EmotionEngine();
+
         static const char* SYSCALL(int id);
+        
         void reset();
         void init_tlb();
         void run(int cycles);
@@ -126,6 +168,7 @@ class EmotionEngine
         template <typename T> T get_LO(int offset = 0);
         template <typename T> void set_gpr(int id, T value, int offset = 0);
         template <typename T> void set_LO(int id, T value, int offset = 0);
+        
         uint32_t get_PC();
         uint32_t get_PC_now();
         uint64_t get_LO();
@@ -134,7 +177,7 @@ class EmotionEngine
         uint64_t get_HI1();
         uint64_t get_SA();
         Cop1& get_FPU();
-        VectorUnit& get_VU0();
+        vu::VectorUnit& get_VU0();
         bool check_interlock();
         void clear_interlock();
         bool vu0_wait();
@@ -216,56 +259,48 @@ class EmotionEngine
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
+    };
 
-        //Friends needed for JIT convenience
-        friend class EE_JIT64;
-        friend class EE_JitTranslator;
+    template <typename T>
+    inline T EmotionEngine::get_gpr(int id, int offset)
+    {
+        return *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))];
+    }
 
-        friend void emit_dispatcher();
-        friend uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
-};
+    template <typename T>
+    inline void EmotionEngine::set_gpr(int id, T value, int offset)
+    {
+        if (id)
+            *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))] = value;
+    }
 
-template <typename T>
-inline T EmotionEngine::get_gpr(int id, int offset)
-{
-    return *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))];
-}
+    // Returns the current cycle count at a given moment
+    inline uint64_t EmotionEngine::get_cycle_count()
+    {
+        return cycle_count;
+    }
 
-template <typename T>
-inline void EmotionEngine::set_gpr(int id, T value, int offset)
-{
-    if (id)
-        *(T*)&gpr[(id * sizeof(uint64_t) * 2) + (offset * sizeof(T))] = value;
-}
+    // Return how many cycles the EE should be running until
+    inline uint64_t EmotionEngine::get_cycle_count_goal()
+    {
+        return cycle_count + cycles_to_run;
+    }
 
-// Returns the current cycle count at a given moment
-inline uint64_t EmotionEngine::get_cycle_count()
-{
-    return cycle_count;
-}
+    inline void EmotionEngine::set_cycle_count(uint64_t value)
+    {
+        cycle_count = value;
+    }
 
-// Return how many cycles the EE should be running until
-inline uint64_t EmotionEngine::get_cycle_count_goal()
-{
-    return cycle_count + cycles_to_run;
-}
-
-inline void EmotionEngine::set_cycle_count(uint64_t value)
-{
-    cycle_count = value;
-}
-
-inline void EmotionEngine::halt()
-{
-    wait_for_IRQ = true;
-    cycles_to_run = 0;
-}
-
-inline void EmotionEngine::unhalt()
-{
-    wait_for_IRQ = false;
-    if (cycles_to_run < 0)
+    inline void EmotionEngine::halt()
+    {
+        wait_for_IRQ = true;
         cycles_to_run = 0;
-}
+    }
 
-#endif // EMOTION_HPP
+    inline void EmotionEngine::unhalt()
+    {
+        wait_for_IRQ = false;
+        if (cycles_to_run < 0)
+            cycles_to_run = 0;
+    }
+}

@@ -1,16 +1,14 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.16)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2 /fp:fast")
 project(DobieStation)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-string(REPLACE "-O3" "-O2" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}") # fix Release build
-set(THREADS_PREFER_PTHREAD_FLAG ON) # -pthreads on GNU-like compilers
 
-
-# Externals
-add_subdirectory(ext/zlib)
-add_subdirectory(ext/lzma)
-add_subdirectory(ext/libFLAC)
-add_subdirectory(ext/libchdr)
+# Setup conan CMake integration
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
 # Shared packages
 find_package(Threads REQUIRED)
@@ -18,7 +16,6 @@ find_package(Threads REQUIRED)
 # Modules
 add_subdirectory(src/core)
 add_subdirectory(src/qt)
-
 
 if (MSVC)
     # Use DobieQt as Startup Project instead of ALL_BUILD

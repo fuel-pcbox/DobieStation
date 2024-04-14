@@ -1,31 +1,38 @@
-#ifndef SIF_HPP
-#define SIF_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 #include <functional>
 #include <list>
 #include <queue>
+#include <util/int128.hpp>
 
-#include "int128.hpp"
-
-class IOP_DMA;
-class DMAC;
-class EmotionEngine;
-
-struct SifRpcServer
+namespace ee
 {
-    std::string name;
-    uint32_t module_id;
-    uint32_t client_ptr;
-    std::function<void(SifRpcServer& server, uint32_t fno, uint32_t buff, uint32_t buff_size)> rpc_func;
-};
+    class DMAC;
+    class EmotionEngine;
+}
 
-class SubsystemInterface
+namespace iop
 {
+    class DMA;
+}
+
+namespace core
+{
+    struct SifRpcServer
+    {
+        std::string name;
+        uint32_t module_id;
+        uint32_t client_ptr;
+        std::function<void(SifRpcServer& server, uint32_t fno, uint32_t buff, uint32_t buff_size)> rpc_func;
+    };
+
+    class SubsystemInterface
+    {
     private:
-        EmotionEngine* ee;
-        IOP_DMA* iop_dma;
-        DMAC* dmac;
+        ee::EmotionEngine* ee;
+        iop::DMA* iop_dma;
+        ee::DMAC* dmac;
         uint32_t mscom;
         uint32_t smcom;
         uint32_t msflag;
@@ -41,11 +48,11 @@ class SubsystemInterface
 
         bool sifrpc_bind(uint32_t module, uint32_t client);
         void sifrpc_register_server(std::string name, uint32_t module_id,
-                                    std::function<void(SifRpcServer& server,
-                                                       uint32_t fno, uint32_t buff, uint32_t buff_size)>);
+            std::function<void(SifRpcServer& server,
+                uint32_t fno, uint32_t buff, uint32_t buff_size)>);
     public:
         constexpr static int MAX_FIFO_SIZE = 32;
-        SubsystemInterface(EmotionEngine* ee, IOP_DMA* iop_dma, DMAC* dmac);
+        SubsystemInterface(ee::EmotionEngine* ee, iop::DMA* iop_dma, ee::DMAC* dmac);
 
         void reset();
         void register_system_servers();
@@ -77,16 +84,15 @@ class SubsystemInterface
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
+    };
 
-inline int SubsystemInterface::get_SIF0_size()
-{
-    return SIF0_FIFO.size();
+    inline int SubsystemInterface::get_SIF0_size()
+    {
+        return SIF0_FIFO.size();
+    }
+
+    inline int SubsystemInterface::get_SIF1_size()
+    {
+        return SIF1_FIFO.size();
+    }
 }
-
-inline int SubsystemInterface::get_SIF1_size()
-{
-    return SIF1_FIFO.size();
-}
-
-#endif // SIF_HPP

@@ -1,7 +1,6 @@
 #include <cmath>
 #include <chrono>
 #include <fstream>
-
 #include "emuthread.hpp"
 
 using namespace std;
@@ -22,7 +21,7 @@ EmuThread::EmuThread()
     gsdump_reading = false;
     frame_advance = false;
     block_run_loop = false;
-    gsdump_read_buffer = new GSMessage[GSDUMP_BUFFERED_MESSAGES];
+    gsdump_read_buffer = new gs::GSMessage[GSDUMP_BUFFERED_MESSAGES];
 }
 
 EmuThread::~EmuThread()
@@ -42,22 +41,22 @@ void EmuThread::set_wavout(bool state)
     wait_for_lock([=]() { e.set_wav_output(state); } );
 }
 
-void EmuThread::set_skip_BIOS_hack(SKIP_HACK skip)
+void EmuThread::set_skip_BIOS_hack(core::SKIP_HACK skip)
 {
     wait_for_lock([=]() { e.set_skip_BIOS_hack(skip); } );
 }
 
-void EmuThread::set_ee_mode(CPU_MODE mode)
+void EmuThread::set_ee_mode(core::CPU_MODE mode)
 {
     wait_for_lock([=]() {  e.set_ee_mode(mode); } );
 }
 
-void EmuThread::set_vu0_mode(CPU_MODE mode)
+void EmuThread::set_vu0_mode(core::CPU_MODE mode)
 {
     wait_for_lock([=]() { e.set_vu0_mode(mode); });
 }
 
-void EmuThread::set_vu1_mode(CPU_MODE mode)
+void EmuThread::set_vu1_mode(core::CPU_MODE mode)
 {
     wait_for_lock([=]() { e.set_vu1_mode(mode); } );
 }
@@ -77,7 +76,7 @@ void EmuThread::load_ELF(QString name, const uint8_t *ELF, uint64_t ELF_size)
     } );
 }
 
-void EmuThread::load_CDVD(const char* name, CDVD_CONTAINER type)
+void EmuThread::load_CDVD(const char* name, cdvd::CDVD_CONTAINER type)
 {
     wait_for_lock([=]() 
     { 
@@ -116,8 +115,9 @@ bool EmuThread::gsdump_read(const char *name)
         gsdump.open(name,ios::binary);
         if (!gsdump.is_open())
             return 1;
-        e.get_gs().reset();
-        e.get_gs().load_state(gsdump);
+        
+        e.get_gs()->reset();
+        e.get_gs()->load_state(gsdump);
 
         printf("loaded gsdump\n");
         gsdump_reading = true;
@@ -137,14 +137,14 @@ void EmuThread::gsdump_single_frame()
     wait_for_lock([=]() { e.request_gsdump_single_frame(); } );
 }
 
-GSMessage& EmuThread::get_next_gsdump_message()
+gs::GSMessage& EmuThread::get_next_gsdump_message()
 {
     if(!buffered_gs_messages) {
-        gsdump.read((char*)gsdump_read_buffer, sizeof(GSMessage) * GSDUMP_BUFFERED_MESSAGES);
+        gsdump.read((char*)gsdump_read_buffer, sizeof(gs::GSMessage) * GSDUMP_BUFFERED_MESSAGES);
         current_gs_message = 0;
-        buffered_gs_messages = gsdump.gcount() / sizeof(GSMessage);
+        buffered_gs_messages = gsdump.gcount() / sizeof(gs::GSMessage);
     }
-    GSMessage& data = gsdump_read_buffer[current_gs_message];
+    gs::GSMessage& data = gsdump_read_buffer[current_gs_message];
     current_gs_message++;
     buffered_gs_messages--;
     return data;
@@ -163,46 +163,46 @@ void EmuThread::gsdump_run()
         int draws_sent = 10;
         while (true)
         {
-            GSMessage& data = get_next_gsdump_message();
+            gs::GSMessage& data = get_next_gsdump_message();
 
             switch (data.type)
             {
-                case set_xyz_t:
-                    e.get_gs().send_message(data);
-                    e.get_gs().wake_gs_thread();
+            case gs::set_xyz_t:
+                    e.get_gs()->send_message(data);
+                    e.get_gs()->wake_gs_thread();
                     if (frame_advance && data.payload.xyz_payload.drawing_kick && --draws_sent <= 0)
                     {
                         uint16_t w, h;
-                        uint32_t* frame = e.get_gs().render_partial_frame(w, h);
+                        uint32_t* frame = e.get_gs()->render_partial_frame(w, h);
                         emit completed_frame(frame, w, h, w, h);
                         pause(PAUSE_EVENT::FRAME_ADVANCE);
                         return;
                     }
                     break;
-                case render_crt_t:
+            case gs::render_crt_t:
                 {
                     printf("gsdump frame render\n");
-                    e.get_gs().render_CRT();
+                    e.get_gs()->render_CRT();
                     int w, h, new_w, new_h;
                     e.get_inner_resolution(w, h);
                     e.get_resolution(new_w, new_h);
 
-                    emit completed_frame(e.get_gs().get_framebuffer(), w, h, new_w, new_h);
+                    emit completed_frame(e.get_gs()->get_framebuffer(), w, h, new_w, new_h);
                     printf("gsdump frame render complete\n");
                     pause(PAUSE_EVENT::FRAME_ADVANCE);
                     return;
                 }
-                case gsdump_t:
+            case gs::gsdump_t:
                     pause(PAUSE_EVENT::GAME_NOT_LOADED);
                     if (gsdump.peek() != EOF)
                         Errors::die("gsdump ended before end of file!");
                     gsdump.close();
                     Errors::die("gsdump ended successfully\n");
-                case save_state_t:
-                case load_state_t:
+            case gs::save_state_t:
+            case gs::load_state_t:
                     Errors::die("save_state save/load during gsdump not supported!");
                 default:
-                    e.get_gs().send_message(data);
+                    e.get_gs()->send_message(data);
                     //e.get_gs().wake_gs_thread();
             }
             if (gsdump_eof())
@@ -282,17 +282,17 @@ void EmuThread::shutdown()
     abort = true;
 }
 
-void EmuThread::press_key(PAD_BUTTON button)
+void EmuThread::press_key(sio2::PAD_BUTTON button)
 {
     wait_for_lock([=]() { e.press_button(button); });
 }
 
-void EmuThread::release_key(PAD_BUTTON button)
+void EmuThread::release_key(sio2::PAD_BUTTON button)
 {
     wait_for_lock([=]() { e.release_button(button); });
 }
 
-void EmuThread::update_joystick(JOYSTICK joystick, JOYSTICK_AXIS axis, uint8_t val)
+void EmuThread::update_joystick(sio2::JOYSTICK joystick, sio2::JOYSTICK_AXIS axis, uint8_t val)
 {
     wait_for_lock([=]() { e.update_joystick(joystick, axis, val); });
 }

@@ -1,9 +1,10 @@
-#ifndef MAC_B_PIC_HPP
-#define MAC_B_PIC_HPP
+#pragma once
 #include "vlc_table.hpp"
 
-class Macroblock_BPic : public VLC_Table
+namespace ipu
 {
+    class Macroblock_BPic : public VLC_Table
+    {
     private:
         static VLC_Entry table[];
         static unsigned int index_table[];
@@ -11,6 +12,5 @@ class Macroblock_BPic : public VLC_Table
         constexpr static int SIZE = 11;
     public:
         Macroblock_BPic();
-};
-
-#endif // MAC_B_PIC_HPP
+    };
+}

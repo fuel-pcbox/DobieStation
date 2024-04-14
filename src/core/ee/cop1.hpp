@@ -1,35 +1,47 @@
-#ifndef COP1_HPP
-#define COP1_HPP
+#pragma once
 #include <cstdint>
 #include <fstream>
 
-class EE_JIT64;
-class EmotionEngine;
-
-struct COP1_CONTROL
+namespace ee
 {
-    bool su;
-    bool so;
-    bool sd;
-    bool si;
-    bool u;
-    bool o;
-    bool d;
-    bool i;
-    bool condition;
-};
+    class EmotionEngine;
+    namespace jit
+    {
+        class EE_JIT64;
+    }
+}
 
-union COP1_REG
+extern "C" uint8_t * exec_block_ee(ee::jit::EE_JIT64& jit, ee::EmotionEngine& ee);
+
+namespace ee
 {
-    float f;
-    uint32_t u;
-    int32_t s;
-};
+    namespace jit
+    {
+        class EE_JitTranslator;
+    }
 
-extern "C" uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
+    struct COP1_CONTROL
+    {
+        bool su;
+        bool so;
+        bool sd;
+        bool si;
+        bool u;
+        bool o;
+        bool d;
+        bool i;
+        bool condition;
+    };
 
-class Cop1
-{
+    union COP1_REG
+    {
+        float f;
+        uint32_t u;
+        int32_t s;
+    };
+
+    class Cop1
+    {
     private:
         COP1_CONTROL control;
         COP1_REG gpr[32];
@@ -40,10 +52,9 @@ class Cop1
         void check_overflow(uint32_t& dest, bool set_flags);
         void check_underflow(uint32_t& dest, bool set_flags);
     public:
-        Cop1();
+        Cop1() = default;
 
         void reset();
-
         bool get_condition();
 
         uint32_t get_gpr(int index);
@@ -81,10 +92,9 @@ class Cop1
         void save_state(std::ofstream& state);
 
         //Friends needed for JIT convenience
-        friend class EE_JIT64;
-        friend class EE_JitTranslator;
+        friend class jit::EE_JIT64;
+        friend class jit::EE_JitTranslator;
 
-        friend uint8_t* exec_block_ee(EE_JIT64& jit, EmotionEngine& ee);
-};
-
-#endif // COP1_HPP
+        friend uint8_t* exec_block_ee(jit::EE_JIT64& jit, EmotionEngine& ee);
+    };
+}

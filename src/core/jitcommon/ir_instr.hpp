@@ -1,8 +1,7 @@
-#ifndef IR_INSTR_HPP
-#define IR_INSTR_HPP
+#pragma once
 #include <cstdint>
 #include <vector>
-#include "../ee/emotion.hpp"
+#include <ee/emotion.hpp>
 
 namespace IR
 {
@@ -28,7 +27,7 @@ class Instruction
 
         // interpreter fallback
         uint32_t opcode;
-        void(*interpreter_fallback)(EmotionEngine&, uint32_t);
+        void(*interpreter_fallback)(ee::EmotionEngine&, uint32_t);
     public:
         Opcode op;
 
@@ -48,7 +47,7 @@ class Instruction
         bool get_is_likely() const;
         bool get_is_link() const;
         uint32_t get_opcode() const;
-        void(*get_interpreter_fallback() const)(EmotionEngine&, uint32_t);
+        void(*get_interpreter_fallback() const)(ee::EmotionEngine&, uint32_t);
 
         void set_jump_dest(uint32_t addr);
         void set_jump_fail_dest(uint32_t addr);
@@ -64,11 +63,9 @@ class Instruction
         void set_is_likely(bool value);
         void set_is_link(bool value);
         void set_opcode(uint32_t value);
-        void set_interpreter_fallback(void(*value)(EmotionEngine&, uint32_t));
+        void set_interpreter_fallback(void(*value)(ee::EmotionEngine&, uint32_t));
 
         bool is_jump();
 };
 
 };
-
-#endif // IR_INSTR_HPP

@@ -1,84 +1,91 @@
-#ifndef CDVD_HPP
-#define CDVD_HPP
-
+#pragma once
 #include <fstream>
 #include <memory>
 #include <algorithm>
 #include <string.h>
 #include "cdvd_container.hpp"
 
-class IOP_INTC;
-class IOP_DMA;
-class Scheduler;
-
-enum CDVD_CONTAINER
+namespace iop
 {
-    ISO,
-    CISO,
-    CHD,
-    BIN_CUE
-};
+    class INTC;
+    class DMA;
+}
 
-enum CDVD_STATUS
+namespace core
 {
-    STOPPED = 0x00,
-    SPINNING = 0x02,
-    READING = 0x06,
-    PAUSED = 0x0A,
-    SEEKING = 0x12
-};
+    class Scheduler;
+}
 
-enum class NCOMMAND
+namespace cdvd
 {
-    NONE,
-    SEEK,
-    STANDBY,
-    STOP,
-    READ_SEEK,
-    READ,
-    BREAK
-};
 
-enum CDVD_DISC_TYPE
-{
-    CDVD_DISC_NONE = 0,
-    CDVD_DISC_DETECTING = 1,
-    CDVD_DISC_DETECTING_CD = 2,
-    CDVD_DISC_DETECTING_DVD = 3,
-    CDVD_DISC_DETECTING_DUAL_DVD = 4,
-    CDVD_DISC_UNK = 5,
-    CDVD_DISC_PSCD = 0x10,
-    CDVD_DISC_PSCDDA = 0x11,
-    CDVD_DISC_PS2CD = 0x12,
-    CDVD_DISC_PS2CDDA = 0x13,
-    CDVD_DISC_PS2DVD = 0x14,
-    CDVD_DISC_CDDA = 0xFD,
-    CDVD_DISC_DVDV = 0xFE,
-    CDVD_DISC_ILL = 0xFF
-};
+    enum CDVD_CONTAINER
+    {
+        ISO,
+        CISO,
+        BIN_CUE
+    };
 
-struct RTC
-{
-    int vsyncs;
-    int second;
-    int minute;
-    int hour;
-    int day;
-    int month;
-    int year;
-};
+    enum CDVD_STATUS
+    {
+        STOPPED = 0x00,
+        SPINNING = 0x02,
+        READING = 0x06,
+        PAUSED = 0x0A,
+        SEEKING = 0x12
+    };
 
-class CDVD_Drive
-{
+    enum class NCOMMAND
+    {
+        NONE,
+        SEEK,
+        STANDBY,
+        STOP,
+        READ_SEEK,
+        READ,
+        BREAK
+    };
+
+    enum CDVD_DISC_TYPE
+    {
+        CDVD_DISC_NONE = 0,
+        CDVD_DISC_DETECTING = 1,
+        CDVD_DISC_DETECTING_CD = 2,
+        CDVD_DISC_DETECTING_DVD = 3,
+        CDVD_DISC_DETECTING_DUAL_DVD = 4,
+        CDVD_DISC_UNK = 5,
+        CDVD_DISC_PSCD = 0x10,
+        CDVD_DISC_PSCDDA = 0x11,
+        CDVD_DISC_PS2CD = 0x12,
+        CDVD_DISC_PS2CDDA = 0x13,
+        CDVD_DISC_PS2DVD = 0x14,
+        CDVD_DISC_CDDA = 0xFD,
+        CDVD_DISC_DVDV = 0xFE,
+        CDVD_DISC_ILL = 0xFF
+    };
+
+    struct RTC
+    {
+        int vsyncs;
+        int second;
+        int minute;
+        int hour;
+        int day;
+        int month;
+        int year;
+    };
+
+    class CDVD_Drive
+    {
     private:
         uint64_t last_read;
         uint64_t cycle_count;
-        IOP_INTC* intc;
-        IOP_DMA* dma;
+        iop::INTC* intc;
+        iop::DMA* dma;
         CDVD_DISC_TYPE disc_type;
         std::unique_ptr<CDVD_Container> container;
         size_t file_size;
-        Scheduler* scheduler;
+        core::Scheduler* scheduler;
         int read_bytes_left;
         int speed;
 
@@ -136,7 +143,7 @@ class CDVD_Drive
         void S_command_sub(uint8_t func);
         void add_event(uint64_t cycles);
     public:
-        CDVD_Drive(IOP_INTC* intc, IOP_DMA* dma, Scheduler* scheduler);
+        CDVD_Drive(iop::INTC* intc, iop::DMA* dma, core::Scheduler* scheduler);
         ~CDVD_Drive();
 
         std::string get_ps2_exec_path();
@@ -172,6 +179,5 @@ class CDVD_Drive
 
         void load_state(std::ifstream& state);
         void save_state(std::ofstream& state);
-};
-
-#endif // CDVD_HPP
+    };
+}

@@ -1,5 +1,5 @@
 #include <QtEndian>
-
+#include <QLocale>
 #include "bios.hpp"
 
 BiosReader::BiosReader(QString path)
@@ -65,16 +65,15 @@ BiosReader::BiosReader(QString path)
     int month = QString(romver.mid(10, 2)).toInt();
     int day = QString(romver.mid(12, 2)).toInt();
 
-    bios_date = QDate(year, month, day).toString(
-        Qt::DateFormat::LocalDate
-    );
+    auto locale = QLocale::system();
+    bios_date = locale.toString(QDate(year, month, day));
 
     valid = true;
 }
 
 QByteArray BiosReader::get_module(QString name) const
 {
-    int index = romdir.indexOf(name);
+    int index = romdir.indexOf(name.toUtf8());
     auto tag = romdir.mid(index, ROMDIR_ENTRY_SIZE);
 
     if (tag.isEmpty())

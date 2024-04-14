@@ -2,41 +2,42 @@
 #include <algorithm>
 #include <cstdio>
 
-
-int16_t Envelope::next_step(int16_t volume)
+namespace spu
 {
-    if (cycles_left > 1)
+    int16_t Envelope::next_step(int16_t volume)
     {
-        cycles_left--;
-        return 0;
+        if (cycles_left > 1)
+        {
+            cycles_left--;
+            return 0;
+        }
+
+        // Need to handle negative phase for volume sweeps eventually
+
+        cycles_left = 1 << std::max(0, shift - 11);
+        int16_t next_step = static_cast<int16_t>(step << std::max(0, 11 - shift));
+
+        if (exponential && rising && volume > 0x6000)
+            cycles_left *= 4;
+
+        if (exponential && !rising)
+            next_step = (next_step * volume) >> 15;
+
+        return next_step;
+
     }
 
-    // Need to handle negative phase for volume sweeps eventually
-
-    cycles_left = 1 << std::max(0, shift-11);
-    int16_t next_step = static_cast<int16_t>(step << std::max(0, 11-shift));
-
-    if (exponential && rising && volume > 0x6000)
-        cycles_left *= 4;
-
-    if (exponential && !rising)
-        next_step = (next_step*volume) >> 15;
-
-    return next_step;
-
-}
-
-void ADSR::update()
-{
-    set_stage(stage);
-}
-
-void ADSR::set_stage(ADSR::Stage new_stage)
-{
-    // If the parameters change it seems we need to run the next step ASAP
-    envelope.cycles_left = 0;
-    switch (new_stage)
+    void ADSR::update()
     {
+        set_stage(stage);
+    }
+
+    void ADSR::set_stage(ADSR::Stage new_stage)
+    {
+        // If the parameters change it seems we need to run the next step ASAP
+        envelope.cycles_left = 0;
+        switch (new_stage)
+        {
         case ADSR::Stage::Attack:
             target = 0x7fff;
             envelope.exponential = ((adsr1 >> 15) & 1) ? true : false;
@@ -77,27 +78,27 @@ void ADSR::set_stage(ADSR::Stage new_stage)
             break;
         case ADSR::Stage::Stopped:
             stage = new_stage;
-    }
-}
-
-void ADSR::advance()
-{
-    if (stage == ADSR::Stage::Stopped)
-    {
-        return;
+        }
     }
 
-    int16_t step = envelope.next_step(volume);
-
-    volume = static_cast<int16_t>(std::max(std::min(volume+step, 0x7fff), 0));
-
-    if (stage != Stage::Sustain)
+    void ADSR::advance()
     {
-        if ((envelope.rising && volume >= target) ||
-            (!envelope.rising && volume <= target))
+        if (stage == ADSR::Stage::Stopped)
         {
-            switch (stage)
+            return;
+        }
+
+        int16_t step = envelope.next_step(volume);
+
+        volume = static_cast<int16_t>(std::max(std::min(volume + step, 0x7fff), 0));
+
+        if (stage != Stage::Sustain)
+        {
+            if ((envelope.rising && volume >= target) ||
+                (!envelope.rising && volume <= target))
             {
+                switch (stage)
+                {
                 case Stage::Attack:
                     set_stage(Stage::Decay);
                     break;
@@ -109,33 +110,34 @@ void ADSR::advance()
                     break;
                 default:
                     break;
+                }
             }
         }
     }
-}
 
-void Volume::set(uint16_t val)
-{
-    if (!(val & 0x8000))
+    void Volume::set(uint16_t val)
     {
-        value = static_cast<int16_t>(val << 1);
-        running = false;
-        return;
+        if (!(val & 0x8000))
+        {
+            value = static_cast<int16_t>(val << 1);
+            running = false;
+            return;
+        }
+
+        running = true;
+        envelope.exponential = val & (1 << 14);
+        envelope.rising = !(val & (1 << 13));
+        envelope.negative_phase = val & (1 << 12);
+        envelope.shift = (val >> 2) & 0x1f;
+        envelope.step = val & 0x03;
+        envelope.step = envelope.rising ? (7 - envelope.step) : (-8 + envelope.step);
     }
 
-    running = true;
-    envelope.exponential = val & (1 << 14);
-    envelope.rising = !(val & (1 << 13));
-    envelope.negative_phase = val & (1 << 12);
-    envelope.shift = (val >> 2) & 0x1f;
-    envelope.step = val & 0x03;
-    envelope.step = envelope.rising ? (7 - envelope.step) : (-8 + envelope.step);
-}
-
-void Volume::advance()
-{
-    if (!running)
-        return;
-    int16_t step = envelope.next_step(value);
-    value = static_cast<int16_t>(std::max(std::min(value+step, 0x7fff), -0x8000));
+    void Volume::advance()
+    {
+        if (!running)
+            return;
+        int16_t step = envelope.next_step(value);
+        value = static_cast<int16_t>(std::max(std::min(value + step, 0x7fff), -0x8000));
+    }
 }
