@@ -1,8 +1,9 @@
-# CMake configuration for Dobiestation core libraries
 set(TARGET Core)
+
+set(CMAKE_CXX_STANDARD 20)
 include(DobieHelpers)
 
-# Add all the source files
+
 set(SOURCES
     ee/interpreter/emotionasm.cpp
     ee/interpreter/emotiondisasm.cpp
@@ -83,15 +84,85 @@ set(SOURCES
     emulator.cpp
     scheduler.cpp
     serialize.cpp
-    sif.cpp
-)
+    sif.cpp)
 
-add_library(${TARGET} ${SOURCES})
-set_source_files_properties(ee/interpreter/emotion_mmi.cpp PROPERTIES COMPILE_FLAGS "/Od /Zi")
+set(HEADERS
+    util/circularFIFO.hpp
+    emulator.hpp
+    util/errors.hpp
+    gs/gif.hpp
+    gs/gs.hpp
+    gs/gscontext.hpp
+    gs/gsmem.hpp
+    gs/gsregisters.hpp
+    gs/gsthread.hpp
+    util/int128.hpp
+    scheduler.hpp
+    sif.hpp
+    util/audio.hpp
+    ee/bios_hle.hpp
+    ee/cop0.hpp
+    ee/cop1.hpp
+    ee/cop2.hpp
+    ee/dmac.hpp
+    ee/jit/ee_jit.hpp
+    ee/jit/ee_jit64.hpp
+    ee/jit/ee_jittrans.hpp
+    ee/emotion.hpp
+    ee/interpreter/emotionasm.hpp
+    ee/interpreter/emotiondisasm.hpp
+    ee/interpreter/emotioninterpreter.hpp
+    ee/intc.hpp
+    ee/timers.hpp
+    ee/vu/vif.hpp
+    ee/vu/vu.hpp
+    ee/vu_disasm.hpp
+    ee/vu/vu_interpreter.hpp
+    ee/vu/vu_jit.hpp
+    ee/vu/vu_jit64.hpp
+    ee/vu/vu_jittrans.hpp
+    ee/ipu/chromtable.hpp
+    ee/ipu/codedblockpattern.hpp
+    ee/ipu/dct_coeff.hpp
+    ee/ipu/dct_coeff_table0.hpp
+    ee/ipu/dct_coeff_table1.hpp
+    ee/ipu/ipu.hpp
+    ee/ipu/ipu_fifo.hpp
+    ee/ipu/lumtable.hpp
+    ee/ipu/mac_addr_inc.hpp
+    ee/ipu/mac_b_pic.hpp
+    ee/ipu/mac_i_pic.hpp
+    ee/ipu/mac_p_pic.hpp
+    ee/ipu/motioncode.hpp
+    ee/ipu/vlc_table.hpp
+    iop/cdvd/bincuereader.hpp
+    iop/cdvd/cdvd_container.hpp
+    iop/cdvd/cdvd.hpp
+    iop/cdvd/cso_reader.hpp
+    iop/cdvd/iso_reader.hpp
+    iop/cdvd/chd_reader.hpp
+    iop/sio2/firewire.hpp
+    iop/sio2/gamepad.hpp
+    iop/iop.hpp
+    iop/cop0.hpp
+    iop/dma.hpp
+    iop/intc.hpp
+    iop/interpreter/iop_interpreter.hpp
+    iop/timers.hpp
+    iop/sio2/memcard.hpp
+    iop/sio2/sio2.hpp
+    iop/spu/spu.hpp
+    iop/spu/spu_adpcm.hpp
+    iop/spu/spu_envelope.hpp
+    iop/spu/spu_utils.hpp
+    jitcommon/emitter64.hpp
+    jitcommon/ir_block.hpp
+    jitcommon/ir_instr.hpp
+    jitcommon/jitcache.hpp)
 
-# Link all the sources
-target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(${TARGET} ${SOURCES} ${HEADERS})
 add_library(Dobie::Core ALIAS ${TARGET})
 
-# Add include directories
-target_link_libraries(${TARGET} ${CONAN_LIBS})
+target_include_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(${TARGET} Threads::Threads libchdr zlib)
+dobie_cxx_compile_options(${TARGET})

@@ -5,7 +5,7 @@ function(dobie_cxx_compile_options TARGET)
 
         # These probably should be fixed instead of disabled,
         # but doing so to keep the warning count more managable for now.
-        -Wno-reorder -Wno-unused-variable -Wno-unused-value
+        -Wno-reorder -Wno-unused-variable -Wno-unused-value -mavx2
 
         # Required on Debug configuration and all configurations on OSX, Dobie WILL crash otherwise.
         $<$<OR:$<CXX_COMPILER_ID:AppleClang>,$<CONFIG:Debug>>:-fomit-frame-pointer>
@@ -17,6 +17,8 @@ function(dobie_cxx_compile_options TARGET)
     )
     set(DOBIE_MSVC_FLAGS
         /W4 # Warning level 4
+        /arch:AVX2
+        /fp:fast
     )
 
     target_compile_options(${TARGET} PRIVATE

@@ -3,6 +3,7 @@
 #include <string>
 #include "bincuereader.hpp"
 #include "cdvd.hpp"
+#include "chd_reader.hpp"
 #include "cso_reader.hpp"
 #include "iso_reader.hpp"
 #include <iop/dma.hpp>
@@ -263,6 +264,9 @@ namespace cdvd
                 break;
             case CDVD_CONTAINER::CISO:
                 container = std::unique_ptr<CDVD_Container>(new CSO_Reader());
+                break;
+            case CDVD_CONTAINER::CHD:
+                container = std::unique_ptr<CDVD_Container>(new CHD_Reader());
                 break;
             case CDVD_CONTAINER::BIN_CUE:
                 container = std::unique_ptr<CDVD_Container>(new BinCueReader());

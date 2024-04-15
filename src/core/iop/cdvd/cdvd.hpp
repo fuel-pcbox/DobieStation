@@ -23,6 +23,7 @@ namespace cdvd
     {
         ISO,
         CISO,
+        CHD,
         BIN_CUE
     };
 
