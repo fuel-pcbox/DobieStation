@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include <jitcommon/ir_block.hpp>
+#include "../../jitcommon/ir_block.hpp"
 
 namespace vu
 {

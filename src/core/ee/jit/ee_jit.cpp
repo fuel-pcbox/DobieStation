@@ -1,10 +1,10 @@
 #include "ee_jit.hpp"
 #include "ee_jit64.hpp"
-#include <ee/emotion.hpp>
+#include "../emotion.hpp"
 #include "ee_jittrans.hpp"
-#include <jitcommon/jitcache.hpp>
-#include <jitcommon/emitter64.hpp>
-#include <util/errors.hpp>
+#include "../../jitcommon/jitcache.hpp"
+#include "../../jitcommon/emitter64.hpp"
+#include "../../util/errors.hpp"
 
 namespace ee
 {

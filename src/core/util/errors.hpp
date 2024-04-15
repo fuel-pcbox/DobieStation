@@ -1,5 +1,6 @@
 #pragma once
 #include <stdexcept>
+#include <cstdint>
 
 constexpr uint32_t ERROR_STRING_MAX_LENGTH = 255;
 

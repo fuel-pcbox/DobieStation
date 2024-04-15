@@ -1,11 +1,11 @@
-#include <ee/emotion.hpp>
-#include <ee/jit/ee_jit.hpp>
-#include <ee/interpreter/emotiondisasm.hpp>
-#include <ee/interpreter/emotioninterpreter.hpp>
-#include <ee/vu/vu.hpp>
-#include <util/errors.hpp>
-#include <emulator.hpp>
-#include <sif.hpp>
+#include "emotion.hpp"
+#include "jit/ee_jit.hpp"
+#include "interpreter/emotiondisasm.hpp"
+#include "interpreter/emotioninterpreter.hpp"
+#include "vu/vu.hpp"
+#include "../util/errors.hpp"
+#include "../emulator.hpp"
+#include "../sif.hpp"
 #include <fmt/core.h>
 
 namespace ee

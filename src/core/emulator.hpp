@@ -1,10 +1,11 @@
 #pragma once
+#include <atomic>
 #include <fstream>
 #include <functional>
 #include <memory>
-#include <util/int128.hpp>
-#include <iop/sio2/gamepad.hpp>
-#include <iop/cdvd/cdvd.hpp>
+#include "util/int128.hpp"
+#include "iop/sio2/gamepad.hpp"
+#include "iop/cdvd/cdvd.hpp"
 
 namespace core
 {

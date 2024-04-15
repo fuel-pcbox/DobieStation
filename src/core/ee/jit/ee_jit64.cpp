@@ -1,11 +1,11 @@
 #include <cmath>
 #include <algorithm>
 #include "ee_jit64.hpp"
-#include <ee/interpreter/emotioninterpreter.hpp>
-#include <ee/vu/vu.hpp>
-#include <gs/gif.hpp>
-#include <util/errors.hpp>
-#include <emulator.hpp>
+#include "../interpreter/emotioninterpreter.hpp"
+#include "../vu/vu.hpp"
+#include "../../gs/gif.hpp"
+#include "../../util/errors.hpp"
+#include "../../emulator.hpp"
 
 /**
     * Calling convention notes (needed for calling C++ functions within generated code)

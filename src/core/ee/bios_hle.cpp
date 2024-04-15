@@ -1,8 +1,8 @@
 #include <cstdio>
 #include "bios_hle.hpp"
-#include <ee/interpreter/emotionasm.hpp>
-#include <emulator.hpp>
-#include <gs/gs.hpp>
+#include "interpreter/emotionasm.hpp"
+#include "../emulator.hpp"
+#include "../gs/gs.hpp"
 
 namespace ee
 {

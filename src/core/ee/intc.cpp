@@ -1,6 +1,6 @@
-#include <ee/intc.hpp>
-#include <ee/emotion.hpp>
-#include <scheduler.hpp>
+#include "intc.hpp"
+#include "emotion.hpp"
+#include "../scheduler.hpp"
 #include <fmt/core.h>
 
 namespace ee

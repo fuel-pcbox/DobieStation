@@ -1,5 +1,5 @@
-#include <iop/intc.hpp>
-#include <iop/iop.hpp>
+#include "intc.hpp"
+#include "iop.hpp"
 
 namespace iop
 {

@@ -2,6 +2,10 @@
 #include <cassert>
 #include <cstring>
 
+
+namespace cdvd
+{
+
 bool CHD_Reader::open(std::string name)
 {
     chd_error err = chd_open(name.c_str(), CHD_OPEN_READ, nullptr, &m_file);
@@ -151,4 +155,6 @@ bool CHD_Reader::is_open()
 size_t CHD_Reader::get_size()
 {
     return m_size;
+}
+
 }

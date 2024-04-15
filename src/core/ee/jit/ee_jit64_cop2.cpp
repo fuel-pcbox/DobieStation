@@ -1,7 +1,7 @@
 #include <cmath>
 #include <algorithm>
 #include "ee_jit64.hpp"
-#include <emulator.hpp>
+#include "../../emulator.hpp"
 
 namespace ee
 {

@@ -2,8 +2,8 @@
 #include <cstring>
 #include <unordered_map> 
 #include "ee_jittrans.hpp"
-#include <ee/interpreter/emotioninterpreter.hpp>
-#include <util/errors.hpp>
+#include "../interpreter/emotioninterpreter.hpp"
+#include "../../util/errors.hpp"
 
 namespace ee
 {

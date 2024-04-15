@@ -1,6 +1,6 @@
-#include <ee/interpreter/emotioninterpreter.hpp>
-#include <util/simd.hpp>
-#include <util/bit.hpp>
+#include "emotioninterpreter.hpp"
+#include "../../util/simd.hpp"
+#include "../../util/bit.hpp"
 #include <fmt/core.h>
 
 namespace ee

@@ -1,5 +1,6 @@
 #include "spu.hpp"
 #include <cfenv>
+#include <cmath>
 #include <numbers>
 
 /* Requires C++20 */

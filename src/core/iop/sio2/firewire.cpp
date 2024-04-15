@@ -1,7 +1,7 @@
 #include <cstdio>
 #include "firewire.hpp"
-#include <iop/dma.hpp>
-#include <iop/intc.hpp>
+#include "../dma.hpp"
+#include "../intc.hpp"
 
 namespace sio2
 {

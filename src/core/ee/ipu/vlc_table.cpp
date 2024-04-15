@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "vlc_table.hpp"
-#include <util/errors.hpp>
+#include "../../util/errors.hpp"
 
 namespace ipu
 {

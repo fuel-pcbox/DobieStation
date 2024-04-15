@@ -8,8 +8,9 @@
 
 #include <limits>
 #include <cstring>
+#include <cstdint>
 
-#include <util/errors.hpp>
+#include "../util/errors.hpp"
 #include "jitcache.hpp"
 
 //////////////

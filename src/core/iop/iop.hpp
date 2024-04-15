@@ -1,5 +1,5 @@
 #pragma once
-#include <iop/cop0.hpp>
+#include "cop0.hpp"
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>

@@ -1,8 +1,8 @@
-#include <iop/timers.hpp>
-#include <iop/intc.hpp>
-#include <emulator.hpp>
-#include <util/errors.hpp>
-#include <scheduler.hpp>
+#include "timers.hpp"
+#include "intc.hpp"
+#include "../emulator.hpp"
+#include "../util/errors.hpp"
+#include "../scheduler.hpp"
 #include <algorithm>
 #include <cstdio>
 

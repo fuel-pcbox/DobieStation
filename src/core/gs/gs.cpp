@@ -3,9 +3,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include "ee/intc.hpp"
+#include "../ee/intc.hpp"
 #include "gs.hpp"
-#include <util/errors.hpp>
+#include "../util/errors.hpp"
 
 /**
 This is a manager for the gsthread. It deals with communication

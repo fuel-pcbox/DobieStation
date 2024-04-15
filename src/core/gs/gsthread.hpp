@@ -7,9 +7,9 @@
 #include <memory>
 #include "gscontext.hpp"
 #include "gsregisters.hpp"
-#include <util/circularFIFO.hpp>
-#include <util/int128.hpp>
-#include "jitcommon/emitter64.hpp"
+#include "../util/circularFIFO.hpp"
+#include "../util/int128.hpp"
+#include "../jitcommon/emitter64.hpp"
 
 namespace gs
 {

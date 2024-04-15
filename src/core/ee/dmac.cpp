@@ -1,12 +1,12 @@
-#include <ee/dmac.hpp>
-#include <emulator.hpp>
-#include <util/errors.hpp>
-#include <ee/emotion.hpp>
-#include <ee/vu/vu.hpp>
-#include <ee/vu/vif.hpp>
-#include <gs/gif.hpp>
-#include <ee/ipu/ipu.hpp>
-#include <sif.hpp>
+#include "dmac.hpp"
+#include "../emulator.hpp"
+#include "../util/errors.hpp"
+#include "emotion.hpp"
+#include "vu/vu.hpp"
+#include "vu/vif.hpp"
+#include "../gs/gif.hpp"
+#include "ipu/ipu.hpp"
+#include "../sif.hpp"
 #include <algorithm>
 #include <fmt/core.h>
 

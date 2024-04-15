@@ -1,6 +1,6 @@
 #pragma once
-#include <jitcommon/emitter64.hpp>
-#include <jitcommon/ir_block.hpp>
+#include "../../jitcommon/emitter64.hpp"
+#include "../../jitcommon/ir_block.hpp"
 #include "vu_jittrans.hpp"
 #include "vu.hpp"
 

@@ -1,5 +1,5 @@
-#include <iop/cop0.hpp>
-#include <util/errors.hpp>
+#include "cop0.hpp"
+#include "../util/errors.hpp"
 #include <cstdio>
 #include <cstdlib>
 

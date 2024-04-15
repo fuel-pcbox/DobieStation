@@ -1,11 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
-#include <ee/dmac.hpp>
+#include "../dmac.hpp"
 #include "vu_jit.hpp"
 #include "vif.hpp"
-#include <ee/vu/vu.hpp>
-#include <gs/gif.hpp>
-#include <util/errors.hpp>
+#include "vu.hpp"
+#include "../../gs/gif.hpp"
+#include "../../util/errors.hpp"
 
 #define printf(fmt, ...)(0)
 

@@ -6,10 +6,10 @@
 #include "chd_reader.hpp"
 #include "cso_reader.hpp"
 #include "iso_reader.hpp"
-#include <iop/dma.hpp>
-#include <iop/intc.hpp>
-#include <util/errors.hpp>
-#include <scheduler.hpp>
+#include "../dma.hpp"
+#include "../intc.hpp"
+#include "../../util/errors.hpp"
+#include "../../scheduler.hpp"
 
 namespace cdvd
 {

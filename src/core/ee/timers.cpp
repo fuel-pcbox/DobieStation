@@ -1,7 +1,7 @@
-#include <ee/timers.hpp>
-#include <ee/intc.hpp>
-#include <scheduler.hpp>
-#include <util/errors.hpp>
+#include "timers.hpp"
+#include "intc.hpp"
+#include "../scheduler.hpp"
+#include "../util/errors.hpp"
 #include <algorithm>
 #include <fmt/core.h>
 

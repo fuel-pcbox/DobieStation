@@ -58,6 +58,7 @@ set(SOURCES
     gs/gsthread.cpp
     iop/cdvd/bincuereader.cpp
     iop/cdvd/cdvd.cpp
+    iop/cdvd/chd_reader.cpp
     iop/cdvd/cso_reader.cpp
     iop/cdvd/iso_reader.cpp
     iop/sio2/firewire.cpp
@@ -164,5 +165,5 @@ add_library(${TARGET} ${SOURCES} ${HEADERS})
 add_library(Dobie::Core ALIAS ${TARGET})
 
 target_include_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(${TARGET} Threads::Threads libchdr zlib)
+target_link_libraries(${TARGET} Threads::Threads libchdr zlib fmt)
 dobie_cxx_compile_options(${TARGET})

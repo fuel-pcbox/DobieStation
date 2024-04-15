@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "dct_coeff_table1.hpp"
-#include <util/errors.hpp>
+#include "../../util/errors.hpp"
 
 #define printf(fmt, ...)(0)
 

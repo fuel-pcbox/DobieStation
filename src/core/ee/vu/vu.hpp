@@ -3,8 +3,8 @@
 #include <cstdio>
 #include <fstream>
 #include <unordered_set>
-#include <ee/emotion.hpp>
-#include <util/int128.hpp>
+#include "../emotion.hpp"
+#include "../../util/int128.hpp"
 
 namespace ee
 {

@@ -1,5 +1,5 @@
 #include "spu.hpp"
-#include <util/errors.hpp>
+#include "../../util/errors.hpp"
 
 namespace spu
 {

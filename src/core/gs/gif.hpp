@@ -4,7 +4,7 @@
 #include <fstream>
 
 #include "gs.hpp"
-#include <util/int128.hpp>
+#include "../util/int128.hpp"
 
 namespace ee
 {

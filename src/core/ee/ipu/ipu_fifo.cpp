@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "ipu_fifo.hpp"
-#include <util/errors.hpp>
+#include "../../util/errors.hpp"
 
 namespace ipu
 {

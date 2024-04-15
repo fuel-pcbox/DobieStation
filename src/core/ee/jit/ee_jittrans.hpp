@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include <jitcommon/ir_block.hpp>
-#include <ee/interpreter/emotioninterpreter.hpp>
+#include "../../jitcommon/ir_block.hpp"
+#include "../interpreter/emotioninterpreter.hpp"
 
 namespace vu
 {

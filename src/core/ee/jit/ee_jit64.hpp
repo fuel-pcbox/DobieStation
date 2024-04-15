@@ -1,9 +1,9 @@
 #pragma once
-#include <jitcommon/emitter64.hpp>
-#include <jitcommon/ir_block.hpp>
+#include "../../jitcommon/emitter64.hpp"
+#include "../../jitcommon/ir_block.hpp"
 #include "ee_jittrans.hpp"
-#include <ee/emotion.hpp>
-#include <ee/vu/vu.hpp>
+#include "../emotion.hpp"
+#include "../vu/vu.hpp"
 #include <stack>
 #include <cstddef>
 

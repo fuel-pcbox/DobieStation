@@ -3,8 +3,8 @@
 #include <queue>
 #include <fstream>
 #include <unordered_set>
-#include <ee/intc.hpp>
-#include <util/int128.hpp>
+#include "../intc.hpp"
+#include "../../util/int128.hpp"
 
 namespace gs
 {

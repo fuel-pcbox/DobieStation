@@ -1,5 +1,5 @@
 #pragma once
-#include <ee/emotion.hpp>
+#include "../emotion.hpp"
 #include <vector>
 
 namespace ee

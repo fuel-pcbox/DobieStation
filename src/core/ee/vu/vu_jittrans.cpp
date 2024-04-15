@@ -1,7 +1,7 @@
 #include <cstring>
 #include "vu_jittrans.hpp"
 #include "vu_interpreter.hpp"
-#include <util/errors.hpp>
+#include "../../util/errors.hpp"
 
 namespace vu
 { 

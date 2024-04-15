@@ -3,8 +3,8 @@
 
 #include "vu_jit64.hpp"
 #include "vu_interpreter.hpp"
-#include <gs/gif.hpp>
-#include <util/errors.hpp>
+#include "../../gs/gif.hpp"
+#include "../../util/errors.hpp"
 
 /**
     * Calling convention notes (needed for calling C++ functions within generated code)

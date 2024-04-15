@@ -1,8 +1,8 @@
 #include <cmath>
 #include <algorithm>
 #include "ee_jit64.hpp"
-#include <ee/vu/vu.hpp>
-#include <emulator.hpp>
+#include "../vu/vu.hpp"
+#include "../../emulator.hpp"
 
 namespace ee
 {

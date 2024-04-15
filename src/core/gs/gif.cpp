@@ -1,5 +1,5 @@
 #include <cstdio>
-#include "ee/dmac.hpp"
+#include "../ee/dmac.hpp"
 #include "gif.hpp"
 #include "gs.hpp"
 

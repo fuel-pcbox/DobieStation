@@ -1,10 +1,10 @@
 #include <cstdio>
 #include "gamepad.hpp"
-#include <iop/intc.hpp>
+#include "../intc.hpp"
 #include "memcard.hpp"
 #include "sio2.hpp"
 
-#include <util/errors.hpp>
+#include "../../util/errors.hpp"
 
 namespace sio2
 {

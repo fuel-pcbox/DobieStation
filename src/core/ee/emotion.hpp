@@ -3,9 +3,9 @@
 #include <fstream>
 #include <functional>
 #include <list>
-#include <ee/cop0.hpp>
-#include <ee/cop1.hpp>
-#include <util/int128.hpp>
+#include "cop0.hpp"
+#include "cop1.hpp"
+#include "../util/int128.hpp"
 #include <memory>
 
 namespace core

@@ -1,6 +1,6 @@
 #include <iomanip>
 #include <sstream>
-#include <ee/emotion.hpp>
+#include "../emotion.hpp"
 #include "emotiondisasm.hpp"
 
 namespace ee

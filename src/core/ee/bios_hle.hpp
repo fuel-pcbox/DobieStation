@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <ee/emotion.hpp>
+#include "emotion.hpp"
 
 namespace gs
 {

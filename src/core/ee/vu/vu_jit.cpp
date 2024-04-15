@@ -2,9 +2,9 @@
 #include "vu_jit64.hpp"
 #include "vu.hpp"
 #include "vu_jittrans.hpp"
-#include <jitcommon/jitcache.hpp>
-#include <jitcommon/emitter64.hpp>
-#include <util/errors.hpp>
+#include "../../jitcommon/jitcache.hpp"
+#include "../../jitcommon/emitter64.hpp"
+#include "../../util/errors.hpp"
 
 namespace vu
 {

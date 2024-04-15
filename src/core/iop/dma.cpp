@@ -1,12 +1,12 @@
-#include <iop/dma.hpp>
-#include <iop/cdvd/cdvd.hpp>
-#include <iop/intc.hpp>
-#include <iop/sio2/sio2.hpp>
-#include <iop/spu/spu.hpp>
-#include <iop/iop.hpp>
-#include <util/errors.hpp>
-#include <emulator.hpp>
-#include <sif.hpp>
+#include "dma.hpp"
+#include "cdvd/cdvd.hpp"
+#include "intc.hpp"
+#include "sio2/sio2.hpp"
+#include "spu/spu.hpp"
+#include "iop.hpp"
+#include "../util/errors.hpp"
+#include "../emulator.hpp"
+#include "../sif.hpp"
 #include <fmt/core.h>
 
 namespace iop

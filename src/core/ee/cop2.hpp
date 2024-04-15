@@ -1,5 +1,5 @@
 #pragma once
-#include <ee/vu/vu.hpp>
+#include "vu/vu.hpp"
 
 namespace ee
 {

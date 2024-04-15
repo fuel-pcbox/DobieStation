@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "emotioninterpreter.hpp"
-#include <util/errors.hpp>
+#include "../../util/errors.hpp"
 
 namespace ee
 {

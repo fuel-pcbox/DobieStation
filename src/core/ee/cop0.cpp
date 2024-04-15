@@ -1,7 +1,7 @@
-#include <ee/cop0.hpp>
-#include <ee/dmac.hpp>
-#include <emulator.hpp>
-#include <ee/emotion.hpp>
+#include "cop0.hpp"
+#include "dmac.hpp"
+#include "../emulator.hpp"
+#include "emotion.hpp"
 
 namespace ee
 {

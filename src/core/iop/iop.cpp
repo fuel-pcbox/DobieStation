@@ -1,8 +1,8 @@
-#include <iop/iop.hpp>
-#include <iop/interpreter/iop_interpreter.hpp>
-#include <ee/interpreter/emotiondisasm.hpp>
-#include <emulator.hpp>
-#include <util/errors.hpp>
+#include "iop.hpp"
+#include "interpreter/iop_interpreter.hpp"
+#include "../ee/interpreter/emotiondisasm.hpp"
+#include "../emulator.hpp"
+#include "../util/errors.hpp"
 #include <algorithm>
 #include <cstring>
 #include <fmt/core.h>
