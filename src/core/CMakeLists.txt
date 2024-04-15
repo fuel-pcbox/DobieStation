@@ -71,9 +71,9 @@ set(SOURCES
     ee/vu_jittrans.cpp
     iop/cdvd/bincuereader.cpp
     iop/cdvd/cdvd.cpp
-    iop/cdvd/cso_reader.cpp
+#    iop/cdvd/cso_reader.cpp
     iop/cdvd/iso_reader.cpp
-    iop/cdvd/chd_reader.cpp
+#    iop/cdvd/chd_reader.cpp
     iop/firewire.cpp
     iop/gamepad.cpp
     iop/iop.cpp
@@ -155,9 +155,9 @@ set(HEADERS
     ee/vu_jittrans.hpp
     iop/cdvd/bincuereader.hpp
     iop/cdvd/cdvd.hpp
-    iop/cdvd/cso_reader.hpp
+#    iop/cdvd/cso_reader.hpp
     iop/cdvd/iso_reader.hpp
-    iop/cdvd/chd_reader.hpp
+#    iop/cdvd/chd_reader.hpp
     iop/firewire.hpp
     iop/gamepad.hpp
     iop/iop.hpp
@@ -181,5 +181,5 @@ add_library(${TARGET} ${SOURCES} ${HEADERS})
 add_library(Dobie::Core ALIAS ${TARGET})
 
 target_include_directories(${TARGET} PRIVATE ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(${TARGET} Threads::Threads libchdr zlib)
+target_link_libraries(${TARGET} Threads::Threads)
 dobie_cxx_compile_options(${TARGET})
